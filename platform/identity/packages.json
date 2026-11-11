@@ -17,8 +17,9 @@
       "mesa-vulkan-drivers", "seatd"
     ],
     "desktop": ["sway", "swaybg", "waybar", "wofi", "foot", "xwayland"],
-    "audio": ["pipewire-audio", "wireplumber"]
+    "audio": ["pipewire-audio", "wireplumber"],
+    "boot": ["systemd-boot-efi", "dosfstools", "initramfs-tools"]
   },
   "excludes": ["cloud-init", "debian-installer", "tasksel"],
-  "rule": "the rootfs is built from this set plus platform/identity/; kmod and udev are required for /dev device nodes and serial/ssh login; no host state is an input"
+  "rule": "the rootfs is built from this set plus platform/identity/; kmod and udev are required for /dev device nodes and serial/ssh login; systemd-boot-efi, dosfstools and initramfs-tools provide the guest-owned EFI boot chain; no host state is an input"
 }

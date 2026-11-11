@@ -135,12 +135,12 @@ python3 scripts/verify-knix.py && git add -A && git commit -m "chore: refresh sn
 - 内核 UAPI 与设备树 compatible 已重命名；`repos/linux` 已在 arm64 Linux guest 内编译出 7.2.15 内核，其余快照不保证与上游 ABI 对齐或可编译。
 - 第三方插画、横幅与启动图保留原始构图；`artwork/logos/` 已由官方 mark 派生。
 - `repos/mesa-nightly/mesa` 为未拉取的 submodule，用户态图形栈源码不在快照内。
-- `vm-virt` 已跑通 QEMU/HVF 启动、单镜像构建与冷启复验；`native-apple` 仍只有契约定义。
+- `vm-virt` 已跑通 QEMU/HVF 启动、单镜像构建与 UEFI 自举冷启复验；`native-apple` 仍只有契约定义。
 - 内核在 Linux guest 内原生编译；macOS 宿主只提供标准 virtio，构建工具、源码副本与产物都在仓外构建盘中。
 - `knix.img` 是唯一发布产物：`build.sh --build` 在 guest 内把原生 rootfs、自编译 7.2.15 内核、770 个模块、身份与品牌装进新建空白 GPT 盘，seed 只作一次性包源与 helper 引导。receipt 记录镜像 sha256 与内核、rootfs、身份、品牌、`virt.config` 的全部输入摘要。
-- `knix.img` 没有 EFI 系统分区或 bootloader，靠 `boot-native.sh` 的 `-kernel` 直启；P2 补自有 initramfs / EFI bootloader。
+- `knix.img` 自引导：GPT 双分区（512 MiB FAT32 ESP `/dev/vda1` + ext4 root `/dev/vda2），ESP 上 `EFI/BOOT/BOOTAA64.EFI` 是 systemd-boot、`EFI/knix/` 放自编译内核与 guest 内生成的 initramfs，`loader/entries/knix.conf` 提供 `root=/dev/vda2 rw console=ttyAMA0`。`boot-native.sh` 用干净 EDK2 变量副本、不挂 `-kernel` 与 seed ISO，冷启复验通过。
 - `knix-native.img` 是 P0 阶段的开发验证盘，已退役，不是发布面；当前启动入口只指向 `knix.img`。
-- 构建盘的 `out/vmlinux.o` 曾被早期 VM 强停截断；`build-kernel.sh` 现用 ELF section header 检测并清空重建，已产出 770 个 `.ko` 与 `modules.dep`。启动所需的 virtio、ext4、PL011 与 devtmpfs 仍全部编入内核，直启不依赖 initrd。
+- 构建盘的 `out/vmlinux.o` 曾被早期 VM 强停截断；`build-kernel.sh` 现用 ELF section header 检测并清空重建，已产出 770 个 `.ko` 与 `modules.dep`。启动所需的 virtio、ext4、PL011 与 devtmpfs 仍全部编入内核，挂载根分区不依赖可加载模块。
 - `wireless-regdb` 默认指向发行版签名的 `regulatory.db`，与内核内置的上游密钥不匹配；`assemble-native.sh` 把 alternative 切到 `-upstream` 变体，冷启日志已无 `cfg80211` 告警。
 - Wayland / sway 在 headless 验证环境只校验包集与会话文件；virtio-gpu 实际渲染未验证。
 - CI 只校验仓内输入与契约；seed qcow2、QEMU/HVF 启动与镜像构建在本机执行。

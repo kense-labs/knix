@@ -15,7 +15,7 @@ MIRROR="${KNIX_MIRROR:-http://deb.debian.org/debian}"
 VARIANT="${KNIX_VARIANT:-minbase}"
 TARBALL="${KNIX_TARBALL:-/tmp/knix-rootfs.tar.zst}"
 MODE="${1:-${KNIX_MODE:---check}}"
-SETS="${KNIX_SETS:-base,firmware,graphics,desktop,audio}"
+SETS="${KNIX_SETS:-base,firmware,graphics,desktop,audio,boot}"
 
 if [ ! -f "$IDENTITY_DIR/packages.json" ]; then
   echo "identity documents missing at $IDENTITY_DIR; run inject-identity.sh first" >&2

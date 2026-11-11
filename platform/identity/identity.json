@@ -30,7 +30,7 @@
     },
     "artifact": "arch/arm64/boot/Image.gz",
     "artifacts": ["knix-Image", "Image.gz", "modules/lib/modules/7.2.15", "kernel-build.json"],
-    "boot_drivers": "built-in; direct kernel boot needs no initrd"
+    "boot_drivers": "built-in; the guest-owned EFI system partition carries systemd-boot, the kernel and its own initramfs"
   },
 
   "rootfs": {
@@ -39,7 +39,7 @@
     "artifact": "knix-rootfs.tar.zst",
     "package_set": "platform/identity/packages.json",
     "session": "platform/identity/session.json",
-    "role": "native rootfs for the next image stage; not part of the dev-preview image"
+    "role": "native rootfs for knix.img; carries the packages that build its EFI boot chain"
   },
 
   "image": {

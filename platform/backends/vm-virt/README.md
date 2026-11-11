@@ -12,21 +12,22 @@
 KNIX_DEV_DIR=../knix-m0 platform/backends/vm-virt/boot-dev.sh
 ```
 
-`boot-native.sh` 是唯一镜像 `knix.img` 的启动入口，用 `-kernel` 加载 `knix-Image`，不经过 GRUB、不借用 seed 的 initrd：
+`boot-native.sh` 是唯一镜像 `knix.img` 的 UEFI 自举入口：不挂 `-kernel`、不挂 seed ISO、不用宿主内核或 initrd。
 
 ```bash
 KNIX_DEV_DIR=../knix-m0 platform/backends/vm-virt/boot-native.sh
 ```
 
-它默认读 `$KNIX_DEV_DIR/knix.img` 与 `$KNIX_DEV_DIR/knix-Image`，内核参数为 `root=/dev/vda1 rw console=ttyAMA0`；三者都可用 `DISK` / `KERNEL` / `KERNEL_APPEND` 覆盖。`boot-dev.sh` 在未指定 `KERNEL` 时拒绝启动 `knix.img`：该盘还没有 EFI 系统分区，自引导属于 P2。镜像由 `build.sh --build` 在 guest 内组装，自带 `/lib/modules/$KVER` 与 `modules.dep`，是唯一发布产物。
+它默认读 `$KNIX_DEV_DIR/knix.img`，每次从 QEMU 的 `edk2-arm-vars.fd` 复制一份干净的 EFI 变量存储到 `AAVMF_VARS-selfboot.fd`，因此 EDK2 只能走 ESP 的 removable media path `EFI/BOOT/BOOTAA64.EFI`，启动不依赖任何 EFI Boot#### 变量。内核参数由 ESP 上的 `loader/entries/knix.conf` 提供（`root=/dev/vda2 rw console=ttyAMA0`），不来自 QEMU。`DISK` / `VARS` / `KNIX_KEEP_VARS` 可覆盖，`SEED` 固定为空（镜像没有 cloud-init）；`KERNEL` 仍是 `boot-dev.sh` 上的调试覆盖。镜像由 `build.sh --build` 在 guest 内组装，自带 `/lib/modules/$KVER` 与 `modules.dep`，是唯一发布产物。
 
 | 变量 | 默认 | 说明 |
 | --- | --- | --- |
 | `KNIX_DEV_DIR` | 仓外同级 `knix-m0/` | 镜像、seed、固件 vars、日志与 pidfile |
 | `DISK` | `$KNIX_DEV_DIR/knix.img` | 根盘；helper 构建时覆盖为 `knix-helper.img` |
-| `CODE` / `VARS` | QEMU 自带 EDK2 / 本地 vars 副本 | UEFI pflash |
+| `CODE` / `VARS` | QEMU 自带 EDK2 / `AAVMF_VARS.fd`；自举路径用 `AAVMF_VARS-selfboot.fd` | UEFI pflash |
+| `SEED` | `$KNIX_DEV_DIR/seed.iso`；自举路径为空 | cloud-init NoCloud 数据源，仅 helper 使用 |
 | `ACCEL` / `CPU` / `GIC` / `SMP` / `MEM` | `hvf` / `host` / `3` / `4` / `4096` | 启动参数 |
-| `KERNEL` / `INITRD` / `KERNEL_APPEND` | 空 | 设置 `KERNEL` 时用 `-kernel` 直启，不经过 GRUB |
+| `KERNEL` / `INITRD` / `KERNEL_APPEND` | 空 | 设置 `KERNEL` 时用 `-kernel` 直启（调试覆盖），不经过 ESP |
 | `EXTRA_DISK` | 空 | 单个附加 virtio 盘，用于 guest 内原生内核/rootfs 构建 |
 | `EXTRA_DISKS` | 空 | 空格分隔的多个附加盘，按给定顺序成为 `/dev/vdc`、`/dev/vdd`…；`build.sh --build` 用它同时挂构建盘与目标镜像 |
 | `SSH_PORT` | `2222` | 用户态网络端口转发 |

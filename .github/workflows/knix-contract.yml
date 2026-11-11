@@ -47,21 +47,35 @@ jobs:
               bad.append(("artifact", "expected exactly one knix.img"))
           if m.get("publish_surface") != ["knix.img", "origin/main"]:
               bad.append(("publish_surface", "drifted"))
+          boot = m.get("boot", {})
+          if boot.get("method") != "UEFI self-boot":
+              bad.append(("boot.method", "expected UEFI self-boot"))
+          if "BOOTAA64.EFI" not in boot.get("esp", ""):
+              bad.append(("boot.esp", "removable media path missing"))
           for stage in m.get("build_stages", []):
               rel = stage.split()[0]
               if not (root / rel).is_file():
                   bad.append(("build_stages", rel, "missing"))
+          assemble = (root / "platform/image/assemble-native.sh").read_text()
+          if "systemd-bootaa64.efi" not in assemble or "mkinitramfs" not in assemble:
+              bad.append(("assemble-native.sh", "lost the guest-owned EFI payload"))
+          if "C12A7328-F81F-11D2-BA4B-00A0C93EC93B" not in assemble:
+              bad.append(("assemble-native.sh", "lost the EFI system partition type"))
           native = (root / "platform/backends/vm-virt/boot-native.sh").read_text()
           dev = (root / "platform/backends/vm-virt/boot-dev.sh").read_text()
           if 'export DISK="${DISK:-$DEV/knix.img}"' not in native:
               bad.append(("boot-native.sh", "no longer defaults to knix.img"))
-          if "knix.img requires direct kernel boot" not in dev:
-              bad.append(("boot-dev.sh", "lost the no-EFI guard"))
+          if "AAVMF_VARS-selfboot.fd" not in native:
+              bad.append(("boot-native.sh", "lost the fresh EFI variable store"))
+          if 'export SEED="${SEED-}"' not in native:
+              bad.append(("boot-native.sh", "self-boot path must not attach a seed ISO"))
+          if 'SEED="${SEED-$DEV/seed.iso}"' not in dev:
+              bad.append(("boot-dev.sh", "seed ISO is no longer optional"))
           if bad:
               for b in bad:
                   print("CONTRACT DRIFT:", b, file=sys.stderr)
               sys.exit(1)
-          print("CONTRACT OK: %d inputs, one artifact, %d build stages, guarded launch" %
+          print("CONTRACT OK: %d inputs, one artifact, %d build stages, UEFI self-boot" %
                 (checked, len(m.get("build_stages", []))))
           PY
 

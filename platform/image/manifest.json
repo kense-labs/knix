@@ -10,7 +10,7 @@
     "owner": "platform/image/",
     "location": "$KNIX_DEV_DIR/knix.img",
     "single": true,
-    "role": "native rootfs, self-built 7.2.15 kernel and matching modules; direct -kernel boot"
+    "role": "GPT disk with a 512 MiB FAT32 EFI system partition and an ext4 root; native rootfs, self-built 7.2.15 kernel, 770 modules, guest-owned initramfs and systemd-boot"
   },
   "inputs": {
     "seed": {
@@ -22,8 +22,8 @@
     "identity_sha256": {
       "platform/identity/os-release": "e24a791e01401376908a705bb366601f34f871fa3432d542723ef1acc4554972",
       "platform/identity/knix-release": "6f0d9eb37a09f1bbf9bb51241c9aa713b3f18566761b24dcd922fb1341c06535",
-      "platform/identity/identity.json": "0c4d0a647abb529c5d86ca700c29be2b0ab84573ac0c2def09c7af8c9187dac1",
-      "platform/identity/packages.json": "13bde88b5a4dae3d58c3f500eda684f993abc21fdb1946bad0d24ae421ddb6d4",
+      "platform/identity/identity.json": "c216c0805f0dc4dd0976de4161786d4c3e16184fa4e63d24a0bab8e81659369b",
+      "platform/identity/packages.json": "bb7996b818eda8521ab69b499037f6e63a20497cc737ecbcc328c60add389a2d",
       "platform/identity/session.json": "a271f1e79b89397dae614e8351c2233e912365c03161271ef5d2698bb27078ff",
       "platform/identity/brand.manifest.json": "a6a3dbea169c6217d763ad9cf0898ca76425168994e9112982e8090de6c4db6f"
     },
@@ -51,8 +51,17 @@
     "modprobe loads a module without vermagic or unknown-symbol errors",
     "4 brand assets are byte-identical to docs/brand/",
     "no cloud-init state, no seed bootloader, no failed units",
+    "boots from its own EFI system partition with no -kernel, no seed ISO and no EFI boot variables",
+    "/efi/EFI/BOOT/BOOTAA64.EFI, /efi/loader/entries/knix.conf, vmlinuz and initrd are present",
     "identity survives a cold boot; serial console and ssh remain available without a GPU"
   ],
+  "boot": {
+    "method": "UEFI self-boot",
+    "entry": "platform/backends/vm-virt/boot-native.sh",
+    "esp": "512 MiB FAT32 on /dev/vda1; removable path EFI/BOOT/BOOTAA64.EFI",
+    "root": "/dev/vda2 ext4",
+    "append": "root=/dev/vda2 rw console=ttyAMA0"
+  },
   "receipt": "platform/image/build.sh writes $KNIX_DEV_DIR/BUILD-RECEIPT.json with the artifact sha256 and every build input digest",
   "publish_surface": ["knix.img", "origin/main"]
 }

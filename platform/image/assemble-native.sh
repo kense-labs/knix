@@ -1,23 +1,29 @@
 #!/bin/bash
-# Assemble a bootable knix system disk from the native rootfs and the kernel
-# built inside an arm64 Linux guest. Executed INSIDE that guest as root.
+# Assemble a self-booting knix system disk. Executed INSIDE the arm64 Linux
+# build guest as root.
 #
 #   sudo KNIX_TARGET_DEV=/dev/vdd bash -s < platform/image/assemble-native.sh
 #
 # The target is a blank disk, never a copy of the seed: two disks derived from
 # the same seed share an ext4 UUID and the guest will mount the wrong root.
+# The disk carries its own EFI system partition, bootloader, kernel, initramfs
+# and loader entries. No host kernel, initrd, seed ISO or EFI boot variable is
+# needed to start it.
 set -euo pipefail
 
 BUILD="${KNIX_BUILD_DIR:-/mnt/knix-build}"
 TARGET_DEV="${KNIX_TARGET_DEV:-/dev/vdd}"
-PART="${TARGET_DEV}1"
+ESP_DEV="${TARGET_DEV}1"
+ROOT_DEV="${TARGET_DEV}2"
 MOUNT="${KNIX_MOUNT:-/mnt/knix-target}"
+EFI="$MOUNT/efi"
 TARBALL="${KNIX_TARBALL:-$BUILD/knix-rootfs.tar.zst}"
 KERNEL="${KNIX_KERNEL_IMAGE:-$BUILD/knix-Image}"
 MODULES="${KNIX_MODULES_DIR:-$BUILD/modules}"
 SUMMARY="${KNIX_KERNEL_SUMMARY:-$BUILD/kernel-build.json}"
 RSUMMARY="${KNIX_ROOTFS_SUMMARY:-$BUILD/rootfs-build.json}"
 PUBKEY="${KNIX_SSH_PUBKEY_FILE:-$BUILD/knix.pub}"
+BOOT_EFI="/usr/lib/systemd/boot/efi/systemd-bootaa64.efi"
 
 # The kernel build records its own release; the module directory must match it.
 KVER="${KNIX_KERNEL_VERSION:-}"
@@ -61,16 +67,25 @@ for name, got, expected in (
     print("input OK: %s = %s" % (name, got))
 PY
 
-echo "=== partition $TARGET_DEV ==="
-umount "$PART" 2>/dev/null || true
-printf 'label: gpt\n, , L\n' | sfdisk --wipe always "$TARGET_DEV" > /dev/null
+echo "=== partition $TARGET_DEV (GPT: ESP + root) ==="
+# A previous failed assemble may have left mounts behind; clean them before
+# wiping so no bind mount survives into the next run.
+for d in sys proc dev; do umount "$MOUNT/$d" 2>/dev/null || true; done
+umount "$EFI" 2>/dev/null || true
+umount "$MOUNT" 2>/dev/null || true
+printf 'label: gpt\nsize=512M,type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B\ntype=0FC63DAF-8483-4772-8E79-3D69D8477DE4\n' \
+  | sfdisk --wipe always "$TARGET_DEV" > /dev/null
 udevadm settle 2>/dev/null || sleep 1
-[ -b "$PART" ] || { echo "partition missing: $PART" >&2; exit 1; }
+[ -b "$ESP_DEV" ] || { echo "EFI partition missing: $ESP_DEV" >&2; exit 1; }
+[ -b "$ROOT_DEV" ] || { echo "root partition missing: $ROOT_DEV" >&2; exit 1; }
 
-echo "=== filesystem ==="
-mkfs.ext4 -q -F -L KNIX-ROOT "$PART"
+echo "=== filesystems ==="
+mkfs.vfat -F32 -n KNIX-EFI "$ESP_DEV"
+mkfs.ext4 -q -F -L KNIX-ROOT "$ROOT_DEV"
 install -d -m 0755 "$MOUNT"
-mount "$PART" "$MOUNT"
+mount "$ROOT_DEV" "$MOUNT"
+install -d -m 0755 "$EFI"
+mount "$ESP_DEV" "$EFI"
 
 echo "=== unpack native rootfs ==="
 tar --zstd -xf "$TARBALL" -C "$MOUNT"
@@ -86,6 +101,48 @@ if ! chroot "$MOUNT" depmod -a "$KVER" 2>/dev/null; then
 fi
 echo "modules: $NKO .ko installed for $KVER"
 
+echo "=== guest-owned initramfs ==="
+# mkinitramfs needs a live /dev, /proc and /sys. The bind mounts come from the
+# helper guest only while the archive is generated; no helper userspace is
+# copied into the product.
+for d in dev proc sys; do
+  install -d -m 0755 "$MOUNT/$d"
+  mount --bind "/$d" "$MOUNT/$d"
+done
+if ! chroot "$MOUNT" /usr/sbin/mkinitramfs \
+       -o "/boot/initrd.img-$KVER-knix" "$KVER" > "$BUILD/initramfs.log" 2>&1; then
+  cat "$BUILD/initramfs.log" >&2
+  echo "could not build the guest-owned initramfs" >&2
+  exit 1
+fi
+for d in sys proc dev; do umount "$MOUNT/$d"; done
+[ -s "$MOUNT/boot/initrd.img-$KVER-knix" ] || { echo "empty initramfs" >&2; exit 1; }
+ls -lh "$MOUNT/boot/initrd.img-$KVER-knix"
+
+echo "=== EFI system partition ==="
+[ -f "$MOUNT$BOOT_EFI" ] || {
+  echo "missing $BOOT_EFI in rootfs (boot package set drift)" >&2
+  exit 1
+}
+install -d -m 0755 "$EFI/EFI/BOOT" "$EFI/EFI/knix" "$EFI/loader/entries"
+install -m 0644 "$MOUNT$BOOT_EFI" "$EFI/EFI/BOOT/BOOTAA64.EFI"
+install -m 0644 "$MOUNT/boot/vmlinuz-$KVER-knix" "$EFI/EFI/knix/vmlinuz-$KVER-knix"
+install -m 0644 "$MOUNT/boot/initrd.img-$KVER-knix" "$EFI/EFI/knix/initrd.img-$KVER-knix"
+# The removable media path needs no EFI Boot#### variable; EDK2 finds it on a
+# fresh variable store. loader.conf and the entry live at the ESP root.
+cat > "$EFI/loader/loader.conf" <<'LOADER'
+default knix.conf
+timeout 3
+console-mode keep
+LOADER
+cat > "$EFI/loader/entries/knix.conf" <<ENTRY
+title   Knix 0.1 (bootstrap)
+linux   /EFI/knix/vmlinuz-$KVER-knix
+initrd  /EFI/knix/initrd.img-$KVER-knix
+options root=/dev/vda2 rw console=ttyAMA0
+ENTRY
+cat "$EFI/loader/entries/knix.conf"
+
 echo "=== guest-owned configuration ==="
 # Debian ships both a distribution-signed and an upstream-signed regulatory
 # database. This kernel embeds the in-tree sforshee key, so only the upstream
@@ -98,10 +155,10 @@ for alt in regulatory.db regulatory.db.p7s; do
 done
 echo "regulatory.db: $(readlink "$MOUNT/etc/alternatives/regulatory.db")"
 
-# When this disk becomes the primary virtio disk it is /dev/vda, so the root
-# partition is /dev/vda1. All identity, users, network and authentication stay
-# here; nothing is projected from the host.
-printf '/dev/vda1 / ext4 rw,relatime 0 1\n' > "$MOUNT/etc/fstab"
+# When this disk becomes the primary virtio disk it is /dev/vda: partition 1
+# is the ESP and partition 2 is the root. All identity, users, network and
+# authentication stay here; nothing is projected from the host.
+printf '/dev/vda1 /efi vfat umask=0077,defaults 0 1\n/dev/vda2 / ext4 rw,relatime 0 1\n' > "$MOUNT/etc/fstab"
 printf '127.0.0.1 localhost\n::1 localhost ip6-localhost ip6-loopback\n127.0.1.1 knix\n' > "$MOUNT/etc/hosts"
 printf 'nameserver 10.0.2.3\n' > "$MOUNT/etc/resolv.conf"
 install -d -m 0755 "$MOUNT/etc/systemd/network" \
@@ -146,7 +203,16 @@ echo -n "brand assets: "; ls -1 "$MOUNT/usr/share/knix/brand" | wc -l
 ls -lh "$MOUNT/boot/vmlinuz-$KVER-knix"
 echo -n "kernel modules on disk: "; find "$MOUNT/lib/modules/$KVER" -type f -name '*.ko*' | wc -l
 [ -f "$MOUNT/lib/modules/$KVER/modules.dep" ] || { echo "modules.dep missing" >&2; exit 1; }
+for f in "$EFI/EFI/BOOT/BOOTAA64.EFI" \
+         "$EFI/EFI/knix/vmlinuz-$KVER-knix" \
+         "$EFI/EFI/knix/initrd.img-$KVER-knix" \
+         "$EFI/loader/loader.conf" \
+         "$EFI/loader/entries/knix.conf"; do
+  [ -s "$f" ] || { echo "missing EFI payload: $f" >&2; exit 1; }
+done
+echo "EFI payload OK: BOOTAA64.EFI + vmlinuz + initrd + loader entries"
 
 sync
+umount "$EFI"
 umount "$MOUNT"
-echo "ASSEMBLE OK: $TARGET_DEV is ready for direct kernel boot"
+echo "ASSEMBLE OK: $TARGET_DEV is ready for UEFI self-boot"

@@ -7,7 +7,10 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 DEV="${KNIX_DEV_DIR:-$(cd "$ROOT/.." && pwd)/knix-m0}"
 QEMU="${QEMU:-$(command -v qemu-system-aarch64)}"
 DISK="${DISK:-$DEV/knix.img}"
-SEED="${SEED:-$DEV/seed.iso}"
+# An empty SEED means no cloud-init datasource: the self-booting knix image
+# carries its own EFI system partition and needs none. The helper guest keeps
+# the seed ISO as its bootstrap device.
+SEED="${SEED-$DEV/seed.iso}"
 VARS="${VARS:-$DEV/AAVMF_VARS.fd}"
 SERIAL="${SERIAL:-$DEV/serial.log}"
 PIDFILE="${PIDFILE:-$DEV/qemu.pid}"
@@ -21,7 +24,7 @@ SMP="${SMP:-4}"
 MEM="${MEM:-4096}"
 KERNEL="${KERNEL:-}"
 INITRD="${INITRD:-}"
-KERNEL_APPEND="${KERNEL_APPEND:-root=/dev/vda1 ro console=ttyAMA0}"
+KERNEL_APPEND="${KERNEL_APPEND:-root=/dev/vda2 rw console=ttyAMA0}"
 EXTRA_DISK="${EXTRA_DISK:-}"
 # Space-separated list for stages that need more than one extra virtio disk
 # (for example a build disk plus a target image being assembled).
@@ -37,16 +40,14 @@ if [ -z "${CODE:-}" ]; then
 fi
 : "${CODE:?UEFI code firmware not found; set CODE=...}"
 
-# The single knix image has no EFI system partition or bootloader yet; it must
-# be started with the self-built kernel. P2 adds a self-booting path.
-if [ -z "$KERNEL" ] && [ "$DISK" = "$DEV/knix.img" ]; then
-  echo "knix.img requires direct kernel boot; use platform/backends/vm-virt/boot-native.sh" >&2
-  exit 1
-fi
-
-for f in "$QEMU" "$DISK" "$SEED" "$CODE" "$VARS"; do
+# knix.img carries its own EFI system partition. With no KERNEL, EDK2 starts it
+# through the removable media path; KERNEL stays available as a debug override.
+for f in "$QEMU" "$DISK" "$CODE" "$VARS"; do
   if [ ! -e "$f" ]; then echo "missing: $f" >&2; exit 1; fi
 done
+if [ -n "$SEED" ]; then
+  if [ ! -e "$SEED" ]; then echo "missing: $SEED" >&2; exit 1; fi
+fi
 for d in $EXTRA_LIST; do
   if [ ! -e "$d" ]; then echo "missing: $d" >&2; exit 1; fi
 done
@@ -61,13 +62,16 @@ ARGS=(
   -drive "if=pflash,format=raw,file=$CODE,readonly=on"
   -drive "if=pflash,format=raw,file=$VARS"
   -drive "if=virtio,format=qcow2,file=$DISK"
-  -drive "if=virtio,format=raw,file=$SEED,readonly=on"
   -device virtio-rng-pci
   -nic "user,model=virtio-net-pci,hostfwd=tcp::$SSH_PORT-:22"
   -display none -serial "file:$SERIAL" -monitor none
   -qmp "unix:$QMP,server=on,wait=off"
   -pidfile "$PIDFILE"
 )
+
+if [ -n "$SEED" ]; then
+  ARGS+=( -drive "if=virtio,format=raw,file=$SEED,readonly=on" )
+fi
 
 for d in $EXTRA_LIST; do
   ARGS+=( -drive "if=virtio,format=qcow2,file=$d" )

@@ -18,6 +18,7 @@ HELPER="${KNIX_HELPER_IMG:-$DEV/knix-helper.img}"
 BUILDDISK="${KNIX_BUILD_DISK:-$DEV/build-disk.qcow2}"
 KERNEL="${KNIX_KERNEL_IMAGE:-$DEV/knix-Image}"
 BOOT="$ROOT/platform/backends/vm-virt/boot-dev.sh"
+NATIVE_BOOT="$ROOT/platform/backends/vm-virt/boot-native.sh"
 MODE="${1:---check}"
 
 SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -o ConnectTimeout=5 -i $DEV/id_knix_m0 -p 2222"
@@ -160,14 +161,16 @@ $SSH knix@127.0.0.1 'sudo env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr
 tail -12 "$DEV/guest-assemble.log"
 stop_guest
 
-echo "=== cold boot verification ==="
-KNIX_DEV_DIR="$DEV" DISK="$IMAGE" KERNEL="$KERNEL" \
-  KERNEL_APPEND="root=/dev/vda1 rw console=ttyAMA0" \
-  "$BOOT" > "$DEV/boot-verify.log" 2>&1 &
+echo "=== cold boot verification (UEFI self-boot) ==="
+# boot-native.sh starts knix.img from its own ESP with no -kernel, no seed ISO
+# and a fresh EDK2 variable store. A reachable ssh proves the image self-boots.
+KNIX_DEV_DIR="$DEV" DISK="$IMAGE" \
+  "$NATIVE_BOOT" > "$DEV/boot-verify.log" 2>&1 &
 LAUNCH_PID=$!
-wait_ssh || { echo "knix.img did not boot" >&2; exit 1; }
+wait_ssh || { echo "knix.img did not self-boot" >&2; exit 1; }
 
-$SSH knix@127.0.0.1 "KNIX_KVER=$KVER KNIX_NKO=$NKO bash -s" <<'VERIFY'
+VERIFY_RC=0
+$SSH knix@127.0.0.1 "KNIX_KVER=$KVER KNIX_NKO=$NKO bash -s" <<'VERIFY' || VERIFY_RC=$?
 set -e
 . /etc/os-release
 [ "$ID" = knix ]
@@ -183,9 +186,23 @@ lsmod | grep -q br_netfilter
 [ "$(systemctl --failed --no-legend | wc -l)" -eq 0 ]
 test ! -e /var/lib/cloud
 test -x /usr/bin/sway
+# The self-boot path must be real: the kernel command line comes from the
+# loader entry on the ESP, not from QEMU, and the ESP payload is present.
+grep -q 'root=/dev/vda2' /proc/cmdline
+findmnt /efi > /dev/null
+# The ESP is mounted with umask=0077 by systemd; only root may read it.
+sudo test -f /efi/EFI/BOOT/BOOTAA64.EFI
+sudo test -f /efi/loader/entries/knix.conf
+sudo grep -q 'root=/dev/vda2' /efi/loader/entries/knix.conf
+test -f "/boot/initrd.img-$KNIX_KVER-knix"
 sha256sum "/boot/vmlinuz-$KNIX_KVER-knix"
 echo "GUEST VERIFY OK"
 VERIFY
+if [ "$VERIFY_RC" -ne 0 ]; then
+  echo "GUEST VERIFY FAILED (rc=$VERIFY_RC)" >&2
+  $SSH knix@127.0.0.1 'set +e; . /etc/os-release; echo "ID=$ID NAME=$NAME"; hostname; uname -r; systemctl --failed --no-legend; cat /proc/cmdline; findmnt /efi; sudo ls -l /efi/EFI/BOOT /efi/loader/entries' >&2 || true
+  exit 1
+fi
 
 $SSH knix@127.0.0.1 'cd /usr/share/knix/brand && sha256sum *' > "$DEV/guest-brand.sha256"
 python3 - "$MANIFEST" "$DEV/guest-brand.sha256" <<'PY'
@@ -235,8 +252,11 @@ receipt = {
     "seed_sha512": m["inputs"]["seed"]["sha512"],
     "boot": {
         "entry": "platform/backends/vm-virt/boot-native.sh",
-        "method": "direct -kernel",
-        "append": "root=/dev/vda1 rw console=ttyAMA0",
+        "method": "UEFI self-boot",
+        "esp": "EFI/BOOT/BOOTAA64.EFI (removable media path)",
+        "initrd": "EFI/knix/initrd.img-%s-knix" % kernel["kernel_version"],
+        "append": "root=/dev/vda2 rw console=ttyAMA0",
+        "seed_iso": False,
     },
     "publish_surface": identity["publish_surface"],
 }

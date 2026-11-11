@@ -54,10 +54,21 @@ at signing time, and the matching public key is distributed out of band.
 
 ## Boot
 
-The image has no EFI system partition yet (P2).
-`platform/backends/vm-virt/boot-native.sh` loads `knix-Image` with `-kernel` and
-`root=/dev/vda1 rw console=ttyAMA0`; `boot-dev.sh` refuses to boot `knix.img`
-without that kernel.
+`knix.img` is a GPT disk with a 512 MiB FAT32 EFI system partition (`/dev/vda1`)
+and an ext4 root (`/dev/vda2`). The ESP carries the whole boot chain:
+
+| Path | Role |
+| --- | --- |
+| `EFI/BOOT/BOOTAA64.EFI` | systemd-boot at the removable media path |
+| `EFI/knix/vmlinuz-7.2.15-knix` | the kernel built from `repos/linux` |
+| `EFI/knix/initrd.img-7.2.15-knix` | initramfs generated inside the arm64 guest |
+| `loader/loader.conf` · `loader/entries/knix.conf` | boot entry and `root=/dev/vda2 rw console=ttyAMA0` |
+
+`platform/backends/vm-virt/boot-native.sh` starts it through EDK2 with no
+`-kernel`, no seed ISO and a fresh EFI variable store, so the boot depends on
+neither a host kernel nor an EFI Boot#### entry. A `KERNEL` override on
+`boot-dev.sh` remains available for debugging. The receipt records the boot
+method, the ESP path and the `root=` append.
 
 ## Identity ownership
 
