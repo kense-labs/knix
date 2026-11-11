@@ -329,8 +329,10 @@ def main() -> int:
         idp / "identity.json", idp / "os-release", idp / "knix-release",
         idp / "brand.manifest.json", idp / "packages.json", idp / "session.json",
         imgp / "manifest.json", imgp / "build.sh", imgp / "inject-identity.sh",
-        imgp / "build-rootfs.sh", imgp / "build-kernel.sh", imgp / "sign.sh",
+        imgp / "build-rootfs.sh", imgp / "build-kernel.sh",
+        imgp / "assemble-native.sh", imgp / "sign.sh",
         ROOT / "platform" / "backends" / "vm-virt" / "boot-dev.sh",
+        ROOT / "platform" / "backends" / "vm-virt" / "boot-native.sh",
     ]
     for p in required:
         if not p.is_file():

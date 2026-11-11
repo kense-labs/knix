@@ -23,6 +23,10 @@ KERNEL="${KERNEL:-}"
 INITRD="${INITRD:-}"
 KERNEL_APPEND="${KERNEL_APPEND:-root=/dev/vda1 ro console=ttyAMA0}"
 EXTRA_DISK="${EXTRA_DISK:-}"
+# Space-separated list for stages that need more than one extra virtio disk
+# (for example a build disk plus a target image being assembled).
+EXTRA_DISKS="${EXTRA_DISKS:-}"
+EXTRA_LIST="$EXTRA_DISK $EXTRA_DISKS"
 
 if [ -z "${CODE:-}" ]; then
   for c in /opt/homebrew/share/qemu/edk2-aarch64-code.fd \
@@ -36,10 +40,9 @@ fi
 for f in "$QEMU" "$DISK" "$SEED" "$CODE" "$VARS"; do
   if [ ! -e "$f" ]; then echo "missing: $f" >&2; exit 1; fi
 done
-if [ -n "$EXTRA_DISK" ] && [ ! -e "$EXTRA_DISK" ]; then
-  echo "missing: $EXTRA_DISK" >&2
-  exit 1
-fi
+for d in $EXTRA_LIST; do
+  if [ ! -e "$d" ]; then echo "missing: $d" >&2; exit 1; fi
+done
 
 : > "$SERIAL"
 rm -f "$QMP"
@@ -59,10 +62,10 @@ ARGS=(
   -pidfile "$PIDFILE"
 )
 
-if [ -n "$EXTRA_DISK" ]; then
-  ARGS+=( -drive "if=virtio,format=qcow2,file=$EXTRA_DISK" )
-  echo "extra disk: $EXTRA_DISK"
-fi
+for d in $EXTRA_LIST; do
+  ARGS+=( -drive "if=virtio,format=qcow2,file=$d" )
+  echo "extra disk: $d"
+done
 
 if [ -n "$KERNEL" ]; then
   ARGS+=( -kernel "$KERNEL" -append "$KERNEL_APPEND" )

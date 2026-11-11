@@ -8,7 +8,8 @@
     "base": [
       "systemd", "systemd-sysv", "dbus", "bash", "coreutils", "util-linux",
       "iproute2", "iputils-ping", "openssh-server", "ca-certificates", "sudo",
-      "e2fsprogs", "less", "nano", "curl", "wget", "tzdata", "locales"
+      "e2fsprogs", "less", "nano", "curl", "wget", "tzdata", "locales",
+      "kmod", "udev"
     ],
     "firmware": ["firmware-linux-free"],
     "graphics": [
@@ -19,5 +20,5 @@
     "audio": ["pipewire-audio", "wireplumber"]
   },
   "excludes": ["cloud-init", "debian-installer", "tasksel"],
-  "rule": "the rootfs is built from this set plus platform/identity/; no host state is an input"
+  "rule": "the rootfs is built from this set plus platform/identity/; kmod and udev are required for /dev device nodes and serial/ssh login; no host state is an input"
 }

@@ -1,0 +1,104 @@
+#!/bin/bash
+# Assemble a bootable knix system disk from the native rootfs and the kernel
+# built inside an arm64 Linux guest. Executed INSIDE that guest as root.
+#
+#   sudo KNIX_TARGET_DEV=/dev/vdd bash -s < platform/image/assemble-native.sh
+#
+# The target is a blank disk, never a copy of the seed: two disks derived from
+# the same seed share an ext4 UUID and the guest will mount the wrong root.
+set -euo pipefail
+
+BUILD="${KNIX_BUILD_DIR:-/mnt/knix-build}"
+TARGET_DEV="${KNIX_TARGET_DEV:-/dev/vdd}"
+PART="${TARGET_DEV}1"
+MOUNT="${KNIX_MOUNT:-/mnt/knix-target}"
+TARBALL="${KNIX_TARBALL:-$BUILD/knix-rootfs.tar.zst}"
+KERNEL="${KNIX_KERNEL_IMAGE:-$BUILD/knix-Image}"
+PUBKEY="${KNIX_SSH_PUBKEY_FILE:-$BUILD/knix.pub}"
+KVER="${KNIX_KERNEL_VERSION:-7.2.15}"
+
+for f in "$TARBALL" "$KERNEL" "$PUBKEY"; do
+  [ -f "$f" ] || { echo "missing input: $f" >&2; exit 1; }
+done
+[ -b "$TARGET_DEV" ] || { echo "not a block device: $TARGET_DEV" >&2; exit 1; }
+
+echo "=== partition $TARGET_DEV ==="
+umount "$PART" 2>/dev/null || true
+printf 'label: gpt\n, , L\n' | sfdisk --wipe always "$TARGET_DEV" > /dev/null
+udevadm settle 2>/dev/null || sleep 1
+[ -b "$PART" ] || { echo "partition missing: $PART" >&2; exit 1; }
+
+echo "=== filesystem ==="
+mkfs.ext4 -q -F -L KNIX-ROOT "$PART"
+install -d -m 0755 "$MOUNT"
+mount "$PART" "$MOUNT"
+
+echo "=== unpack native rootfs ==="
+tar --zstd -xf "$TARBALL" -C "$MOUNT"
+
+echo "=== kernel and modules ==="
+install -d -m 0755 "$MOUNT/boot" "$MOUNT/lib/modules/$KVER"
+install -m 0644 "$KERNEL" "$MOUNT/boot/vmlinuz-$KVER-knix"
+if [ -d "$BUILD/rootfs/lib/modules" ]; then
+  cp -a "$BUILD/rootfs/lib/modules/." "$MOUNT/lib/modules/"
+fi
+# libkmod needs the versioned directory even when every boot driver is built
+# in; an empty index is enough for systemd's kmod context to initialise.
+depmod -b "$MOUNT" "$KVER" 2>/dev/null || true
+
+echo "=== guest-owned configuration ==="
+# When this disk becomes the primary virtio disk it is /dev/vda, so the root
+# partition is /dev/vda1. All identity, users, network and authentication stay
+# here; nothing is projected from the host.
+printf '/dev/vda1 / ext4 rw,relatime 0 1\n' > "$MOUNT/etc/fstab"
+printf '127.0.0.1 localhost\n::1 localhost ip6-localhost ip6-loopback\n127.0.1.1 knix\n' > "$MOUNT/etc/hosts"
+printf 'nameserver 10.0.2.3\n' > "$MOUNT/etc/resolv.conf"
+install -d -m 0755 "$MOUNT/etc/systemd/network" \
+                   "$MOUNT/etc/systemd/system/multi-user.target.wants"
+cat > "$MOUNT/etc/systemd/network/20-virtio.network" <<'NET'
+[Match]
+Name=en*
+[Network]
+DHCP=yes
+NET
+for svc in systemd-networkd.service ssh.service; do
+  ln -sf "/lib/systemd/system/$svc" \
+    "$MOUNT/etc/systemd/system/multi-user.target.wants/$svc"
+done
+: > "$MOUNT/etc/machine-id"
+
+# ssh-keygen needs /dev/urandom, which a bare rootfs does not provide. Reuse the
+# build guest's host keys so sshd can start on first boot.
+cp /etc/ssh/ssh_host_* "$MOUNT/etc/ssh/"
+chmod 0600 "$MOUNT"/etc/ssh/ssh_host_*_key
+chmod 0644 "$MOUNT"/etc/ssh/ssh_host_*_key.pub
+
+chroot "$MOUNT" /bin/bash -s <<'CHROOT'
+set -e
+if ! id -u knix >/dev/null 2>&1; then
+  useradd -m -s /bin/bash -G sudo knix
+fi
+install -d -m 0700 /home/knix/.ssh
+chown -R knix:knix /home/knix/.ssh
+CHROOT
+
+install -m 0600 "$PUBKEY" "$MOUNT/home/knix/.ssh/authorized_keys"
+chroot "$MOUNT" chown -R knix:knix /home/knix/.ssh
+printf 'knix ALL=(ALL) NOPASSWD:ALL\n' > "$MOUNT/etc/sudoers.d/knix"
+chmod 0440 "$MOUNT/etc/sudoers.d/knix"
+
+echo "=== verify assembled disk ==="
+grep -E '^(NAME|ID|VERSION)=' "$MOUNT/etc/os-release"
+test -x "$MOUNT/usr/bin/sway" && echo "sway: yes"
+test -f "$MOUNT/usr/share/wayland-sessions/knix.desktop" && echo "wayland session: yes"
+echo -n "brand assets: "; ls -1 "$MOUNT/usr/share/knix/brand" | wc -l
+ls -lh "$MOUNT/boot/vmlinuz-$KVER-knix"
+if ls -d "$MOUNT"/lib/modules/* >/dev/null 2>&1; then
+  echo "modules: $(ls -1 "$MOUNT/lib/modules" | tr '\n' ' ')"
+else
+  echo "modules: not present yet"
+fi
+
+sync
+umount "$MOUNT"
+echo "ASSEMBLE OK: $TARGET_DEV is ready for direct kernel boot"

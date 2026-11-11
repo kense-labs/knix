@@ -97,6 +97,11 @@ platform/image/sign.sh
 platform/image/build-kernel.sh
 platform/image/build-rootfs.sh --check
 platform/image/build-rootfs.sh --apply
+platform/image/assemble-native.sh
+
+# launch paths on the host
+platform/backends/vm-virt/boot-dev.sh
+platform/backends/vm-virt/boot-native.sh
 
 python3 scripts/verify-knix.py && git add -A && git commit -m "chore: refresh snapshots" && git push origin main
 ```
@@ -129,10 +134,12 @@ python3 scripts/verify-knix.py && git add -A && git commit -m "chore: refresh sn
 - 内核 UAPI 与设备树 compatible 已重命名；`repos/linux` 已在 arm64 Linux guest 内编译出 7.2.15 内核，其余快照不保证与上游 ABI 对齐或可编译。
 - 第三方插画、横幅与启动图保留原始构图；`artwork/logos/` 已由官方 mark 派生。
 - `repos/mesa-nightly/mesa` 为未拉取的 submodule，用户态图形栈源码不在快照内。
-- `vm-virt` 已跑通 QEMU/HVF 启动、身份注入、自编译内核直启与 dev preview 镜像；`native-apple` 仍只有契约定义。
+- `vm-virt` 已跑通 QEMU/HVF 启动、身份注入、dev preview 镜像与原生系统盘直启；`native-apple` 仍只有契约定义。
 - 内核在 Linux guest 内原生编译；macOS 宿主只提供标准 virtio，构建工具、源码副本与产物都在仓外构建盘中。
-- dev preview 镜像仍使用 seed 的引导链；自编译内核、原生 rootfs 与匹配 initrd 尚未替换镜像内的引导链。
-- 原生 rootfs 由 `mmdebstrap` 在 guest 内生成，已校验包集、身份与会话文件；Wayland / sway 实际渲染未验证。
+- `knix.img` 是 dev preview 的 bootstrap 镜像，仍走 seed 的 GRUB 引导链；`build.sh` 与 receipt 只覆盖它。
+- `knix-native.img` 是开发阶段的验证产物，不是发布面：`assemble-native.sh` 把原生 rootfs、自编译 7.2.15 内核、身份、用户与网络装进空白 GPT 盘，`boot-native.sh` 用 `-kernel` 直启，不借用 seed 的 initrd 或 bootloader。已验证串口登录、SSH、网络、桌面包集、品牌字节与零失败单元。
+- 构建盘的 `out/vmlinux.o` 在早期 VM 强停时被截断，`make modules` 的 `modpost` 失败；`/lib/modules/7.2.15` 目前只有空索引。启动所需的 virtio、ext4、PL011 与 devtmpfs 全部编入内核，不影响启动；完整 `.ko` 需清除损坏的 `out/` 重新编译。
+- Wayland / sway 在 headless 验证环境只校验包集与会话文件；virtio-gpu 实际渲染未验证。
 - CI 只校验仓内输入与契约；seed qcow2、QEMU/HVF 启动与镜像构建在本机执行。
 - Deferred：能力协商清单、宿主适配器参考实现、统计与清单生成器入库、定期重采调度、增量 diff 报告、GPU 图形路径。
 
@@ -167,10 +174,10 @@ knix/
 │   ├── CONTRACT.md
 │   ├── contract.json
 │   ├── identity/                     # identity.json · os-release · packages.json · session.json
-│   ├── image/                        # build.sh · build-kernel.sh · build-rootfs.sh · inject-identity.sh · sign.sh · RELEASE.md
+│   ├── image/                        # build.sh · build-kernel.sh · build-rootfs.sh · assemble-native.sh · inject-identity.sh · sign.sh · RELEASE.md
 │   ├── backends/
 │   │   ├── native-apple/
-│   │   └── vm-virt/                  # boot-dev.sh
+│   │   └── vm-virt/                  # boot-dev.sh · boot-native.sh
 │   └── host-adapters/                # non-normative
 ├── docs/
 │   ├── knix-architecture.svg
