@@ -13,7 +13,7 @@
 | `sign.sh` | 生成 receipt 校验和；提供密钥时追加 detached 签名 |
 | `RELEASE.md` | 发布面、校验与回滚 |
 
-`build-kernel.sh` 在 `olddefconfig` 之后把 virtio-blk / virtio-net / virtio-pci / ext4 / PL011 / devtmpfs 六项硬校验为 `=y`：原生盘靠 `-kernel` 直启，挂载根分区前没有 initrd，也没有 `/lib/modules`，这些驱动不能是模块。`modules_install` 落在构建盘的 `modules/` 下，由 `assemble-native.sh` 装进目标盘；`kernel-build.json` 记录内核版本、两个内核镜像的 sha256 与模块数量。编译前后都检查 `vmlinux.o` 的 ELF section header 表是否落在文件内，避免截断对象让 `modpost` 失败。
+`build-kernel.sh` 在 `olddefconfig` 之后把 virtio-blk / virtio-net / virtio-pci / ext4 / PL011 / devtmpfs 六项硬校验为 `=y`：原生盘靠 `-kernel` 直启，挂载根分区前没有 initrd，也没有 `/lib/modules`，这些驱动不能是模块。`modules_install` 落在构建盘的 `modules/` 下，由 `assemble-native.sh` 装进目标盘；`kernel-build.json` 记录内核版本、两个内核镜像的 sha256 与模块数量。编译前后都检查 `vmlinux.o` 的 ELF section header 表是否落在文件内，避免截断对象让 `modpost` 失败。`assemble-native.sh` 把 `modules/lib/modules/$KVER` 整目录复制进目标盘，版本从 `kernel-build.json` 读取，并用目标盘自身 rootfs 的 `depmod` 生成 `modules.dep`；模块缺失时组装直接失败。
 
 `build.sh --build` 在注入身份后显式 `sync`、等待 QEMU 正常退出、重启一次并复验身份与品牌字节，然后才写 receipt；否则 guest 页缓存里尚未落盘的写入会随 VM 停止而丢失，产生一个没有身份的镜像。构建盘上的产物同样需要在写入后 `sync`。
 

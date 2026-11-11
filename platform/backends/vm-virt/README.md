@@ -18,7 +18,7 @@ KNIX_DEV_DIR=../knix-m0 platform/backends/vm-virt/boot-dev.sh
 KNIX_DEV_DIR=../knix-m0 platform/backends/vm-virt/boot-native.sh
 ```
 
-它默认读 `$KNIX_DEV_DIR/knix-native.img` 与 `$KNIX_DEV_DIR/knix-Image`，内核参数为 `root=/dev/vda1 rw console=ttyAMA0`；三者都可用 `DISK` / `KERNEL` / `KERNEL_APPEND` 覆盖。该盘由 `assemble-native.sh` 在 guest 内组装，是开发期验证产物，不是发布面。
+它默认读 `$KNIX_DEV_DIR/knix-native.img` 与 `$KNIX_DEV_DIR/knix-Image`，内核参数为 `root=/dev/vda1 rw console=ttyAMA0`；三者都可用 `DISK` / `KERNEL` / `KERNEL_APPEND` 覆盖。该盘由 `assemble-native.sh` 在 guest 内组装，自带 `/lib/modules/$KVER` 与 `modules.dep`，是开发期验证产物，不是发布面。
 
 | 变量 | 默认 | 说明 |
 | --- | --- | --- |

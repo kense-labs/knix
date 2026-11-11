@@ -138,8 +138,9 @@ python3 scripts/verify-knix.py && git add -A && git commit -m "chore: refresh sn
 - `vm-virt` 已跑通 QEMU/HVF 启动、身份注入、dev preview 镜像与原生系统盘直启；`native-apple` 仍只有契约定义。
 - 内核在 Linux guest 内原生编译；macOS 宿主只提供标准 virtio，构建工具、源码副本与产物都在仓外构建盘中。
 - `knix.img` 是 dev preview 的 bootstrap 镜像，仍走 seed 的 GRUB 引导链；`build.sh` 与 receipt 只覆盖它。
-- `knix-native.img` 是开发阶段的验证产物，不是发布面：`assemble-native.sh` 把原生 rootfs、自编译 7.2.15 内核、身份、用户与网络装进空白 GPT 盘，`boot-native.sh` 用 `-kernel` 直启，不借用 seed 的 initrd 或 bootloader。已验证串口登录、SSH、网络、桌面包集、品牌字节与零失败单元。
-- 构建盘的 `out/vmlinux.o` 在早期 VM 强停时被截断，`make modules` 的 `modpost` 失败；`/lib/modules/7.2.15` 目前只有空索引。启动所需的 virtio、ext4、PL011 与 devtmpfs 全部编入内核，不影响启动；完整 `.ko` 需清除损坏的 `out/` 重新编译。
+- `knix-native.img` 是开发阶段的验证产物，不是发布面：`assemble-native.sh` 把原生 rootfs、自编译 7.2.15 内核、770 个模块、身份、用户与网络装进空白 GPT 盘，`boot-native.sh` 用 `-kernel` 直启，不借用 seed 的 initrd 或 bootloader。已验证串口登录、SSH、网络、桌面包集、品牌字节、`modprobe` 加载模块与零失败单元。
+- 构建盘的 `out/vmlinux.o` 曾被早期 VM 强停截断；`build-kernel.sh` 现用 ELF section header 检测并清空重建，已产出 770 个 `.ko` 与 `modules.dep`。启动所需的 virtio、ext4、PL011 与 devtmpfs 仍全部编入内核，直启不依赖 initrd。
+- 原生 rootfs 只含 `firmware-linux-free`，缺无线监管数据库 `regulatory.db`，启动时 `cfg80211` 报一次加载告警；`vm-virt` 无无线设备，P1 合并镜像时补齐。
 - Wayland / sway 在 headless 验证环境只校验包集与会话文件；virtio-gpu 实际渲染未验证。
 - CI 只校验仓内输入与契约；seed qcow2、QEMU/HVF 启动与镜像构建在本机执行。
 - Deferred：能力协商清单、宿主适配器参考实现、统计与清单生成器入库、定期重采调度、增量 diff 报告、GPU 图形路径。

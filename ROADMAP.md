@@ -17,7 +17,7 @@
 
 | # | 状态 | 依据 |
 | --- | --- | --- |
-| P0 | 进行中 | 构建盘上早期强停留下的 `out/vmlinux.o` 被截断，`modpost` 失败；`build-kernel.sh` 已支持检测损坏树、全量重编与 `modules_install` |
+| P0 | 完成 | 全量重编产出 770 个 `.ko` 与 `modules.dep`；原生盘直启后 `modprobe br_netfilter` 成功，无 vermagic / unknown symbol 错误；`/boot/vmlinuz-7.2.15-knix` 与 `kernel-build.json` 的 sha256 一致 |
 | P1 | 未开始 | `knix.img` 仍是从 seed 派生的 dev preview；`knix-native.img` 是开发期验证盘，不是发布面 |
 | P2 | 未开始 | 原生盘靠 `-kernel` 直启，尚无自有 bootloader 或 initrd |
 | P3 | 未开始 | headless 环境只校验包集与会话文件 |
