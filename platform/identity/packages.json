@@ -11,7 +11,7 @@
       "e2fsprogs", "less", "nano", "curl", "wget", "tzdata", "locales",
       "kmod", "udev"
     ],
-    "firmware": ["firmware-linux-free"],
+    "firmware": ["firmware-linux-free", "wireless-regdb"],
     "graphics": [
       "libgl1-mesa-dri", "libgbm1", "libegl1", "libwayland-client0",
       "mesa-vulkan-drivers", "seatd"

@@ -119,3 +119,34 @@ sudo sync
 echo "rootfs tarball: $TARBALL"
 ls -lh "$TARBALL"
 sha256sum "$TARBALL"
+
+# Record every input that produced this tarball. build.sh copies the summary
+# back to the host so the release receipt can be audited without mounting the
+# qcow2 build disk.
+SUMMARY="${KNIX_ROOTFS_SUMMARY:-$(dirname "$TARBALL")/rootfs-build.json}"
+sudo python3 - "$SUMMARY" "$TARBALL" "$IDENTITY_DIR/packages.json" \
+                 "$SUITE" "$VARIANT" "$ARCH" "$INCLUDE_SPEC" <<'PY'
+import hashlib, json, pathlib, sys
+out, tarball, pkgset, suite, variant, arch, include = sys.argv[1:]
+def digest(p):
+    h = hashlib.sha256()
+    with open(p, "rb") as fh:
+        for chunk in iter(lambda: fh.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+data = {
+    "schema": 1,
+    "generator": "mmdebstrap",
+    "suite": suite,
+    "variant": variant,
+    "arch": arch,
+    "artifact": pathlib.Path(tarball).name,
+    "tarball_sha256": digest(tarball),
+    "tarball_bytes": pathlib.Path(tarball).stat().st_size,
+    "package_set_sha256": digest(pkgset),
+    "package_count": len([p for p in include.split(",") if p and not p.endswith("-")]),
+}
+pathlib.Path(out).write_text(json.dumps(data, indent=2) + "\n")
+print(json.dumps(data, indent=2))
+PY
+sudo sync

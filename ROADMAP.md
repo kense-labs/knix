@@ -18,10 +18,10 @@
 | # | 状态 | 依据 |
 | --- | --- | --- |
 | P0 | 完成 | 全量重编产出 770 个 `.ko` 与 `modules.dep`；原生盘直启后 `modprobe br_netfilter` 成功，无 vermagic / unknown symbol 错误；`/boot/vmlinuz-7.2.15-knix` 与 `kernel-build.json` 的 sha256 一致 |
-| P1 | 未开始 | `knix.img` 仍是从 seed 派生的 dev preview；`knix-native.img` 是开发期验证盘，不是发布面 |
+| P1 | 完成 | `knix.img` 是唯一发布产物：原生 rootfs + 自编译 7.2.15 内核 + 770 个 `.ko`；receipt 记录内核 `config_sha256`、rootfs tarball 与全部输入摘要；`build.sh --build` 组装 + 冷启复验通过，`boot-native.sh` 为启动入口 |
 | P2 | 未开始 | 原生盘靠 `-kernel` 直启，尚无自有 bootloader 或 initrd |
 | P3 | 未开始 | headless 环境只校验包集与会话文件 |
-| P4 | 部分 | CI 已校验仓内契约、输入哈希与脚本语法；seed、QEMU/HVF 与镜像构建仍在本机 |
+| P4 | 部分 | CI 已校验仓内契约、全部 11 个输入哈希、单镜像发布面与启动入口守卫、脚本语法；seed、QEMU/HVF 与镜像构建仍在本机 |
 | P5 | 未开始 | 只有契约定义 |
 
 ## 顺序约束

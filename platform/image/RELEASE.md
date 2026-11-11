@@ -9,9 +9,17 @@ identity, the build recipe and the verification gate that reproduce it.
 | 阶段 | 命令 | 产物 |
 | --- | --- | --- |
 | 输入校验 | `platform/image/build.sh --check` | 无 |
-| 镜像构建 | `platform/image/build.sh --build` | `$KNIX_DEV_DIR/knix.img` |
+| 内核 | `platform/image/build-kernel.sh --apply`（guest） | `knix-Image` · `modules/` · `kernel-build.json` |
+| 原生 rootfs | `platform/image/build-rootfs.sh --apply`（guest） | `knix-rootfs.tar.zst` · `rootfs-build.json` |
+| 镜像构建 | `platform/image/build.sh --build`（host） | `$KNIX_DEV_DIR/knix.img` |
 | 摘要与签名 | `platform/image/sign.sh` | `BUILD-RECEIPT.json` + `.sha256`（+ 可选 `.sig`） |
 | 契约校验 | `python3 scripts/verify-knix.py` | 无 |
+
+`build.sh --build` creates a blank qcow2, assembles the native rootfs, the
+self-built kernel and its matching modules inside the helper guest, cold-boots
+the result once, verifies identity, brand bytes, module loading and failed
+units, then writes the receipt. The seed is never the source of the image
+contents.
 
 ## Verify a release
 
@@ -38,10 +46,18 @@ openssl dgst -sha256 -verify knix-release.pub \
   -signature BUILD-RECEIPT.json.sig BUILD-RECEIPT.json
 ```
 
-The receipt's `sha256` must equal `knix.img`. `.sha256` covers the receipt, not
-the image. A release key is never stored in the repository;
-`KNIX_SIGNING_KEY` selects one at signing time, and the matching public key is
-distributed out of band.
+The receipt's `sha256` must equal `knix.img`. Its `kernel`, `rootfs` and `inputs`
+sections record every digest used by the build; a mismatch there means the image
+was assembled from drifted inputs. `.sha256` covers the receipt, not the image.
+A release key is never stored in the repository; `KNIX_SIGNING_KEY` selects one
+at signing time, and the matching public key is distributed out of band.
+
+## Boot
+
+The image has no EFI system partition yet (P2).
+`platform/backends/vm-virt/boot-native.sh` loads `knix-Image` with `-kernel` and
+`root=/dev/vda1 rw console=ttyAMA0`; `boot-dev.sh` refuses to boot `knix.img`
+without that kernel.
 
 ## Identity ownership
 

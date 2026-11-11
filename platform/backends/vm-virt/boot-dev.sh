@@ -37,6 +37,13 @@ if [ -z "${CODE:-}" ]; then
 fi
 : "${CODE:?UEFI code firmware not found; set CODE=...}"
 
+# The single knix image has no EFI system partition or bootloader yet; it must
+# be started with the self-built kernel. P2 adds a self-booting path.
+if [ -z "$KERNEL" ] && [ "$DISK" = "$DEV/knix.img" ]; then
+  echo "knix.img requires direct kernel boot; use platform/backends/vm-virt/boot-native.sh" >&2
+  exit 1
+fi
+
 for f in "$QEMU" "$DISK" "$SEED" "$CODE" "$VARS"; do
   if [ ! -e "$f" ]; then echo "missing: $f" >&2; exit 1; fi
 done

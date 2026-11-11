@@ -354,14 +354,16 @@ def main() -> int:
             identity_errors.append("os-release does not match identity.json")
         if mani.get("artifact", {}).get("name") != "knix.img":
             identity_errors.append("image manifest artifact changed")
-        for rel, expected in mani.get("inputs", {}).get("identity_sha256", {}).items():
-            p = ROOT / rel
-            if not p.is_file() or hashlib.sha256(p.read_bytes()).hexdigest() != expected:
-                identity_errors.append("identity input drift: %s" % rel)
-        for rel, expected in mani.get("inputs", {}).get("brand_sha256", {}).items():
-            p = ROOT / rel
-            if not p.is_file() or hashlib.sha256(p.read_bytes()).hexdigest() != expected:
-                identity_errors.append("brand input drift: %s" % rel)
+        for group, entries in mani.get("inputs", {}).items():
+            if group == "seed" or not isinstance(entries, dict):
+                continue
+            for rel, expected in entries.items():
+                p = ROOT / rel
+                if (not p.is_file()
+                        or hashlib.sha256(p.read_bytes()).hexdigest() != expected):
+                    identity_errors.append("%s drift: %s" % (group, rel))
+        if mani.get("artifact", {}).get("single") is not True:
+            identity_errors.append("image manifest lost the single-artifact rule")
         for name, expected in bm.get("assets", {}).items():
             p = BRAND / name
             if not p.is_file() or hashlib.sha256(p.read_bytes()).hexdigest() != expected:

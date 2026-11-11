@@ -16,6 +16,7 @@ TARBALL="${KNIX_TARBALL:-$BUILD/knix-rootfs.tar.zst}"
 KERNEL="${KNIX_KERNEL_IMAGE:-$BUILD/knix-Image}"
 MODULES="${KNIX_MODULES_DIR:-$BUILD/modules}"
 SUMMARY="${KNIX_KERNEL_SUMMARY:-$BUILD/kernel-build.json}"
+RSUMMARY="${KNIX_ROOTFS_SUMMARY:-$BUILD/rootfs-build.json}"
 PUBKEY="${KNIX_SSH_PUBKEY_FILE:-$BUILD/knix.pub}"
 
 # The kernel build records its own release; the module directory must match it.
@@ -32,7 +33,33 @@ done
 [ -d "$MODROOT" ] || { echo "missing kernel modules: $MODROOT (run build-kernel.sh --apply)" >&2; exit 1; }
 NKO="$(find "$MODROOT" -type f \( -name '*.ko' -o -name '*.ko.xz' -o -name '*.ko.zst' -o -name '*.ko.gz' \) | wc -l)"
 [ "$NKO" -gt 0 ] || { echo "no kernel modules under $MODROOT" >&2; exit 1; }
+[ -f "$SUMMARY" ] || { echo "missing kernel build summary: $SUMMARY" >&2; exit 1; }
+[ -f "$RSUMMARY" ] || { echo "missing rootfs build summary: $RSUMMARY (rebuild with build-rootfs.sh --apply)" >&2; exit 1; }
 [ -b "$TARGET_DEV" ] || { echo "not a block device: $TARGET_DEV" >&2; exit 1; }
+
+# The build guest produces self-describing summaries. An image assembled from
+# drifted inputs would be unreproducible, so refuse before touching the disk.
+python3 - "$SUMMARY" "$RSUMMARY" "$KERNEL" "$TARBALL" "$NKO" <<'PY'
+import hashlib, json, pathlib, sys
+ksum, rsum, image, tarball, nko = sys.argv[1:]
+k = json.loads(pathlib.Path(ksum).read_text())
+r = json.loads(pathlib.Path(rsum).read_text())
+def digest(p):
+    h = hashlib.sha256()
+    with open(p, "rb") as fh:
+        for chunk in iter(lambda: fh.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+for name, got, expected in (
+    ("kernel image", digest(image), k["image_sha256"]),
+    ("rootfs tarball", digest(tarball), r["tarball_sha256"]),
+    ("module count", int(nko), k["module_count"]),
+):
+    if got != expected:
+        print("INPUT DRIFT %s: %s != %s" % (name, got, expected), file=sys.stderr)
+        sys.exit(1)
+    print("input OK: %s = %s" % (name, got))
+PY
 
 echo "=== partition $TARGET_DEV ==="
 umount "$PART" 2>/dev/null || true
@@ -60,6 +87,17 @@ fi
 echo "modules: $NKO .ko installed for $KVER"
 
 echo "=== guest-owned configuration ==="
+# Debian ships both a distribution-signed and an upstream-signed regulatory
+# database. This kernel embeds the in-tree sforshee key, so only the upstream
+# pair passes cfg80211 verification; the default alternative points at the
+# Debian-signed one and produces a signature warning on every boot.
+for alt in regulatory.db regulatory.db.p7s; do
+  if ! chroot "$MOUNT" update-alternatives --set "$alt" "/lib/firmware/$alt-upstream" >/dev/null 2>&1; then
+    ln -sfn "/lib/firmware/$alt-upstream" "$MOUNT/etc/alternatives/$alt"
+  fi
+done
+echo "regulatory.db: $(readlink "$MOUNT/etc/alternatives/regulatory.db")"
+
 # When this disk becomes the primary virtio disk it is /dev/vda, so the root
 # partition is /dev/vda1. All identity, users, network and authentication stay
 # here; nothing is projected from the host.

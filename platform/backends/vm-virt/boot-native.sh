@@ -1,5 +1,5 @@
 #!/bin/bash
-# Launch the native knix system disk with the kernel built from repos/linux.
+# Launch the single knix image with the kernel built from repos/linux.
 # A start path only: identity, authentication, UI and device semantics stay
 # inside the guest. See platform/CONTRACT.md.
 #
@@ -11,7 +11,7 @@ ROOT="$(cd "$HERE/../../.." && pwd)"
 DEV="${KNIX_DEV_DIR:-$(cd "$ROOT/.." && pwd)/knix-m0}"
 
 export KNIX_DEV_DIR="$DEV"
-export DISK="${DISK:-$DEV/knix-native.img}"
+export DISK="${DISK:-$DEV/knix.img}"
 export KERNEL="${KERNEL:-$DEV/knix-Image}"
 export KERNEL_APPEND="${KERNEL_APPEND:-root=/dev/vda1 rw console=ttyAMA0}"
 
@@ -20,7 +20,7 @@ if [ ! -f "$KERNEL" ]; then
   exit 1
 fi
 if [ ! -f "$DISK" ]; then
-  echo "missing native disk: $DISK (assemble it with platform/image/assemble-native.sh)" >&2
+  echo "missing image: $DISK (build it with platform/image/build.sh --build)" >&2
   exit 1
 fi
 

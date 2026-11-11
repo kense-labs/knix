@@ -12,27 +12,27 @@
 KNIX_DEV_DIR=../knix-m0 platform/backends/vm-virt/boot-dev.sh
 ```
 
-`boot-native.sh` 是原生系统盘的直启入口，用 `-kernel` 加载 `knix-Image`，不经过 GRUB、不借用 seed 的 initrd：
+`boot-native.sh` 是唯一镜像 `knix.img` 的启动入口，用 `-kernel` 加载 `knix-Image`，不经过 GRUB、不借用 seed 的 initrd：
 
 ```bash
 KNIX_DEV_DIR=../knix-m0 platform/backends/vm-virt/boot-native.sh
 ```
 
-它默认读 `$KNIX_DEV_DIR/knix-native.img` 与 `$KNIX_DEV_DIR/knix-Image`，内核参数为 `root=/dev/vda1 rw console=ttyAMA0`；三者都可用 `DISK` / `KERNEL` / `KERNEL_APPEND` 覆盖。该盘由 `assemble-native.sh` 在 guest 内组装，自带 `/lib/modules/$KVER` 与 `modules.dep`，是开发期验证产物，不是发布面。
+它默认读 `$KNIX_DEV_DIR/knix.img` 与 `$KNIX_DEV_DIR/knix-Image`，内核参数为 `root=/dev/vda1 rw console=ttyAMA0`；三者都可用 `DISK` / `KERNEL` / `KERNEL_APPEND` 覆盖。`boot-dev.sh` 在未指定 `KERNEL` 时拒绝启动 `knix.img`：该盘还没有 EFI 系统分区，自引导属于 P2。镜像由 `build.sh --build` 在 guest 内组装，自带 `/lib/modules/$KVER` 与 `modules.dep`，是唯一发布产物。
 
 | 变量 | 默认 | 说明 |
 | --- | --- | --- |
 | `KNIX_DEV_DIR` | 仓外同级 `knix-m0/` | 镜像、seed、固件 vars、日志与 pidfile |
-| `DISK` | `$KNIX_DEV_DIR/knix.img` | 根盘 |
+| `DISK` | `$KNIX_DEV_DIR/knix.img` | 根盘；helper 构建时覆盖为 `knix-helper.img` |
 | `CODE` / `VARS` | QEMU 自带 EDK2 / 本地 vars 副本 | UEFI pflash |
 | `ACCEL` / `CPU` / `GIC` / `SMP` / `MEM` | `hvf` / `host` / `3` / `4` / `4096` | 启动参数 |
 | `KERNEL` / `INITRD` / `KERNEL_APPEND` | 空 | 设置 `KERNEL` 时用 `-kernel` 直启，不经过 GRUB |
 | `EXTRA_DISK` | 空 | 单个附加 virtio 盘，用于 guest 内原生内核/rootfs 构建 |
-| `EXTRA_DISKS` | 空 | 空格分隔的多个附加盘，按给定顺序成为 `/dev/vdc`、`/dev/vdd`…；用于同时挂构建盘与目标盘 |
+| `EXTRA_DISKS` | 空 | 空格分隔的多个附加盘，按给定顺序成为 `/dev/vdc`、`/dev/vdd`…；`build.sh --build` 用它同时挂构建盘与目标镜像 |
 | `SSH_PORT` | `2222` | 用户态网络端口转发 |
 
 启动脚本只决定启动路径。身份、认证、界面、输入与设备语义全部在 Guest；宿主只提供标准 virtio。固件使用 QEMU 自带的 `edk2-aarch64-code.fd` + `edk2-arm-vars.fd`；Debian `qemu-efi-aarch64` 的 AAVMF 变体会停在固件阶段，不作为本后端的固件来源。
 
-附加构建盘是 qcow2。停止 VM 前必须在 guest 内 `sync`，否则页缓存里未回写的产物会变成 0 字节；`build.sh --build`、`build-kernel.sh`、`build-rootfs.sh` 与 `inject-identity.sh` 都已内置该步骤。
+附加构建盘是 qcow2。停止 VM 前必须在 guest 内 `sync`，否则页缓存里未回写的产物会变成 0 字节；`build.sh --build`、`build-kernel.sh`、`build-rootfs.sh`、`assemble-native.sh` 与 `inject-identity.sh` 都已内置该步骤。
 
 Deferred：能力协商清单与 `knix check` 后端探测。

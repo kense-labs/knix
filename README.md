@@ -57,7 +57,7 @@
 | 能力 | 宿主只提供标准 virtio；私有扩展可关闭且有降级路径 |
 | 归属 | 认证、界面、输入与设备语义留在 Guest |
 
-`platform/identity/` 拥有名称、版本、内核基线、包集、会话与品牌字节；`platform/image/build.sh` 是镜像构建入口，`platform/backends/vm-virt/boot-dev.sh` 是启动入口。镜像本身是派生产物，不入库。
+`platform/identity/` 拥有名称、版本、内核基线、包集、会话与品牌字节；`platform/image/build.sh` 是镜像构建入口，`platform/backends/vm-virt/boot-native.sh` 是启动入口。镜像本身是派生产物，不入库。
 
 ## Invariants
 
@@ -135,12 +135,13 @@ python3 scripts/verify-knix.py && git add -A && git commit -m "chore: refresh sn
 - 内核 UAPI 与设备树 compatible 已重命名；`repos/linux` 已在 arm64 Linux guest 内编译出 7.2.15 内核，其余快照不保证与上游 ABI 对齐或可编译。
 - 第三方插画、横幅与启动图保留原始构图；`artwork/logos/` 已由官方 mark 派生。
 - `repos/mesa-nightly/mesa` 为未拉取的 submodule，用户态图形栈源码不在快照内。
-- `vm-virt` 已跑通 QEMU/HVF 启动、身份注入、dev preview 镜像与原生系统盘直启；`native-apple` 仍只有契约定义。
+- `vm-virt` 已跑通 QEMU/HVF 启动、单镜像构建与冷启复验；`native-apple` 仍只有契约定义。
 - 内核在 Linux guest 内原生编译；macOS 宿主只提供标准 virtio，构建工具、源码副本与产物都在仓外构建盘中。
-- `knix.img` 是 dev preview 的 bootstrap 镜像，仍走 seed 的 GRUB 引导链；`build.sh` 与 receipt 只覆盖它。
-- `knix-native.img` 是开发阶段的验证产物，不是发布面：`assemble-native.sh` 把原生 rootfs、自编译 7.2.15 内核、770 个模块、身份、用户与网络装进空白 GPT 盘，`boot-native.sh` 用 `-kernel` 直启，不借用 seed 的 initrd 或 bootloader。已验证串口登录、SSH、网络、桌面包集、品牌字节、`modprobe` 加载模块与零失败单元。
+- `knix.img` 是唯一发布产物：`build.sh --build` 在 guest 内把原生 rootfs、自编译 7.2.15 内核、770 个模块、身份与品牌装进新建空白 GPT 盘，seed 只作一次性包源与 helper 引导。receipt 记录镜像 sha256 与内核、rootfs、身份、品牌、`virt.config` 的全部输入摘要。
+- `knix.img` 没有 EFI 系统分区或 bootloader，靠 `boot-native.sh` 的 `-kernel` 直启；P2 补自有 initramfs / EFI bootloader。
+- `knix-native.img` 是 P0 阶段的开发验证盘，已退役，不是发布面；当前启动入口只指向 `knix.img`。
 - 构建盘的 `out/vmlinux.o` 曾被早期 VM 强停截断；`build-kernel.sh` 现用 ELF section header 检测并清空重建，已产出 770 个 `.ko` 与 `modules.dep`。启动所需的 virtio、ext4、PL011 与 devtmpfs 仍全部编入内核，直启不依赖 initrd。
-- 原生 rootfs 只含 `firmware-linux-free`，缺无线监管数据库 `regulatory.db`，启动时 `cfg80211` 报一次加载告警；`vm-virt` 无无线设备，P1 合并镜像时补齐。
+- `wireless-regdb` 默认指向发行版签名的 `regulatory.db`，与内核内置的上游密钥不匹配；`assemble-native.sh` 把 alternative 切到 `-upstream` 变体，冷启日志已无 `cfg80211` 告警。
 - Wayland / sway 在 headless 验证环境只校验包集与会话文件；virtio-gpu 实际渲染未验证。
 - CI 只校验仓内输入与契约；seed qcow2、QEMU/HVF 启动与镜像构建在本机执行。
 - Deferred：能力协商清单、宿主适配器参考实现、统计与清单生成器入库、定期重采调度、增量 diff 报告、GPU 图形路径。

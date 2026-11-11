@@ -148,14 +148,16 @@ cp "$OUT/arch/arm64/boot/Image" "$IMAGE"
 [ -s "$IMAGE" ] || die "empty kernel image: $IMAGE"
 gzip -t "$ARTIFACT"
 
-python3 - "$SUMMARY" "$KVER" "$ARTIFACT" "$IMAGE" "$MODDIR" "$NKO" "${BOOT_DRIVERS[*]}" <<'PY'
+python3 - "$SUMMARY" "$KVER" "$ARTIFACT" "$IMAGE" "$MODDIR" "$NKO" "${BOOT_DRIVERS[*]}" "$OUT/.config" <<'PY'
 import hashlib, json, pathlib, sys
-out, kver, gz, image, moddir, nko, drivers = sys.argv[1:]
+out, kver, gz, image, moddir, nko, drivers, cfg = sys.argv[1:]
 sha = lambda p: hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
 data = {
     "schema": 1,
     "source": "repos/linux",
     "config_fragment": "arch/arm64/configs/virt.config",
+    "config_sha256": sha(cfg),
+    "config_note": "defconfig + virt.config; the regulatory.db variant is selected at assemble time",
     "kernel_version": kver,
     "image_sha256": sha(image),
     "image_gz_sha256": sha(gz),

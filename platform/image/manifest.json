@@ -1,28 +1,29 @@
 {
-  "schema": 1,
+  "schema": 2,
   "product": "knix",
   "version": "0.1",
   "stage": "dev-preview",
   "artifact": {
     "name": "knix.img",
     "format": "qcow2",
-    "virtual_size_bytes": 3221225472,
+    "virtual_size_bytes": 8589934592,
     "owner": "platform/image/",
     "location": "$KNIX_DEV_DIR/knix.img",
-    "single": true
+    "single": true,
+    "role": "native rootfs, self-built 7.2.15 kernel and matching modules; direct -kernel boot"
   },
   "inputs": {
     "seed": {
       "name": "debian-13-generic-arm64.qcow2",
       "sha512": "878f563f6c95af7fe1e8e51cd39470a1cdb570dddbee22377c85a347bce9d521d95f2cf0f825a38bc0a757889034fac6d83e932f04a3a122ab08cea68cc9ff8a",
       "virtual_size_bytes": 3221225472,
-      "role": "one-time bootstrap; not a product capability source"
+      "role": "one-time package source and helper boot; not a product capability source"
     },
     "identity_sha256": {
       "platform/identity/os-release": "e24a791e01401376908a705bb366601f34f871fa3432d542723ef1acc4554972",
       "platform/identity/knix-release": "6f0d9eb37a09f1bbf9bb51241c9aa713b3f18566761b24dcd922fb1341c06535",
       "platform/identity/identity.json": "0c4d0a647abb529c5d86ca700c29be2b0ab84573ac0c2def09c7af8c9187dac1",
-      "platform/identity/packages.json": "bdf00016c23f78596cf756713e79e3e848498454cac2d792e0a632d94a1c372e",
+      "platform/identity/packages.json": "13bde88b5a4dae3d58c3f500eda684f993abc21fdb1946bad0d24ae421ddb6d4",
       "platform/identity/session.json": "a271f1e79b89397dae614e8351c2233e912365c03161271ef5d2698bb27078ff",
       "platform/identity/brand.manifest.json": "a6a3dbea169c6217d763ad9cf0898ca76425168994e9112982e8090de6c4db6f"
     },
@@ -31,16 +32,27 @@
       "docs/brand/mark-dark.png": "092e950523d7997fb686d559fb28ba0f32fe98490cb901686ccdf5e6ab6dcc3d",
       "docs/brand/icon.svg": "06840686bcef0410ae435f62e37d12288eba0bf30620a93f4a11c54fdbf51e0e",
       "docs/brand/wordmark-light.svg": "f62f6649931f3f125a3b404141462bdfe5ebae668317b2c59d1a2372bdb90610"
+    },
+    "recipe_sha256": {
+      "repos/linux/arch/arm64/configs/virt.config": "7cd8a9d570fd42fb3fce2724f7293f2f8e4bf24193acf315b5fbd676d1963319"
     }
   },
+  "build_stages": [
+    "platform/image/build-kernel.sh --apply (inside the arm64 Linux build guest)",
+    "platform/image/build-rootfs.sh --apply (inside the arm64 Linux build guest)",
+    "platform/image/build.sh --build (on the host; assembles, boots, verifies, writes the receipt)"
+  ],
   "verification": [
-    "uname -m is aarch64",
+    "uname -m is aarch64 and uname -r is 7.2.15",
+    "/boot/vmlinuz-7.2.15-knix is byte-identical to kernel-build.json",
     "/etc/os-release reports NAME=Knix ID=knix VERSION=0.1 (bootstrap)",
     "hostname is knix",
+    "/lib/modules/7.2.15 carries the recorded module count and modules.dep",
+    "modprobe loads a module without vermagic or unknown-symbol errors",
     "4 brand assets are byte-identical to docs/brand/",
-    "identity survives a full reboot",
-    "serial console and ssh remain available without a GPU"
+    "no cloud-init state, no seed bootloader, no failed units",
+    "identity survives a cold boot; serial console and ssh remain available without a GPU"
   ],
-  "receipt": "platform/image/build.sh writes $KNIX_DEV_DIR/BUILD-RECEIPT.json with the artifact sha256",
+  "receipt": "platform/image/build.sh writes $KNIX_DEV_DIR/BUILD-RECEIPT.json with the artifact sha256 and every build input digest",
   "publish_surface": ["knix.img", "origin/main"]
 }

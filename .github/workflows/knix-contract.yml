@@ -23,26 +23,46 @@ jobs:
 
       # The seed qcow2 is pinned by SHA512 but lives outside the repository and
       # is never fetched in CI. build.sh --check validates it on a build host;
-      # here we verify every in-repo input the same script reads.
-      - name: Build inputs are reproducible
+      # here we verify every in-repo input and the single-image launch rule.
+      - name: Single-image build contract
         run: |
           python3 - <<'PY'
           import hashlib, json, pathlib, sys
           root = pathlib.Path(".")
           m = json.loads((root / "platform/image/manifest.json").read_text())
           bad = []
-          for group in ("identity_sha256", "brand_sha256"):
-              for rel, expected in m["inputs"][group].items():
+          checked = 0
+          for group, entries in m["inputs"].items():
+              if group == "seed" or not isinstance(entries, dict):
+                  continue
+              for rel, expected in entries.items():
                   p = root / rel
                   got = (hashlib.sha256(p.read_bytes()).hexdigest()
                          if p.is_file() else "missing")
+                  checked += 1
                   if got != expected:
-                      bad.append((rel, expected, got))
+                      bad.append(("input drift", group, rel))
+          art = m.get("artifact", {})
+          if art.get("name") != "knix.img" or art.get("single") is not True:
+              bad.append(("artifact", "expected exactly one knix.img"))
+          if m.get("publish_surface") != ["knix.img", "origin/main"]:
+              bad.append(("publish_surface", "drifted"))
+          for stage in m.get("build_stages", []):
+              rel = stage.split()[0]
+              if not (root / rel).is_file():
+                  bad.append(("build_stages", rel, "missing"))
+          native = (root / "platform/backends/vm-virt/boot-native.sh").read_text()
+          dev = (root / "platform/backends/vm-virt/boot-dev.sh").read_text()
+          if 'export DISK="${DISK:-$DEV/knix.img}"' not in native:
+              bad.append(("boot-native.sh", "no longer defaults to knix.img"))
+          if "knix.img requires direct kernel boot" not in dev:
+              bad.append(("boot-dev.sh", "lost the no-EFI guard"))
           if bad:
               for b in bad:
-                  print("INPUT DRIFT:", b, file=sys.stderr)
+                  print("CONTRACT DRIFT:", b, file=sys.stderr)
               sys.exit(1)
-          print("INPUTS OK: 6 identity files, 4 brand assets")
+          print("CONTRACT OK: %d inputs, one artifact, %d build stages, guarded launch" %
+                (checked, len(m.get("build_stages", []))))
           PY
 
       - name: Shell recipes parse
