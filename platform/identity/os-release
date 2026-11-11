@@ -1,0 +1,11 @@
+NAME="Knix"
+ID=knix
+ID_LIKE=debian
+PRETTY_NAME="Knix 0.1 (bootstrap)"
+VERSION="0.1 (bootstrap)"
+VERSION_ID="0.1"
+VERSION_CODENAME=bootstrap
+HOME_URL="https://github.com/kense-labs/knix"
+SUPPORT_URL="https://github.com/kense-labs/knix/issues"
+BUG_REPORT_URL="https://github.com/kense-labs/knix/issues"
+DEFAULT_HOSTNAME=knix

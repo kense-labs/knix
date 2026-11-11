@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "suite": "trixie",
+  "arch": "arm64",
+  "generator": "mmdebstrap",
+  "seed_role": "package source only; the seed distribution is not the product identity",
+  "sets": {
+    "base": [
+      "systemd", "systemd-sysv", "dbus", "bash", "coreutils", "util-linux",
+      "iproute2", "iputils-ping", "openssh-server", "ca-certificates", "sudo",
+      "e2fsprogs", "less", "nano", "curl", "wget", "tzdata", "locales"
+    ],
+    "firmware": ["firmware-linux-free"],
+    "graphics": [
+      "libgl1-mesa-dri", "libgbm1", "libegl1", "libwayland-client0",
+      "mesa-vulkan-drivers", "seatd"
+    ],
+    "desktop": ["sway", "swaybg", "waybar", "wofi", "foot", "xwayland"],
+    "audio": ["pipewire-audio", "wireplumber"]
+  },
+  "excludes": ["cloud-init", "debian-installer", "tasksel"],
+  "rule": "the rootfs is built from this set plus platform/identity/; no host state is an input"
+}

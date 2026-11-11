@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "product": "knix",
+  "version": "0.1",
+  "stage": "dev-preview",
+  "artifact": {
+    "name": "knix.img",
+    "format": "qcow2",
+    "virtual_size_bytes": 3221225472,
+    "owner": "platform/image/",
+    "location": "$KNIX_DEV_DIR/knix.img",
+    "single": true
+  },
+  "inputs": {
+    "seed": {
+      "name": "debian-13-generic-arm64.qcow2",
+      "sha512": "878f563f6c95af7fe1e8e51cd39470a1cdb570dddbee22377c85a347bce9d521d95f2cf0f825a38bc0a757889034fac6d83e932f04a3a122ab08cea68cc9ff8a",
+      "virtual_size_bytes": 3221225472,
+      "role": "one-time bootstrap; not a product capability source"
+    },
+    "identity_sha256": {
+      "platform/identity/os-release": "e24a791e01401376908a705bb366601f34f871fa3432d542723ef1acc4554972",
+      "platform/identity/knix-release": "6f0d9eb37a09f1bbf9bb51241c9aa713b3f18566761b24dcd922fb1341c06535",
+      "platform/identity/identity.json": "159a64b6356a6f90c60aaa2c2428fea566d78398b75687f2545620fc3a21c2ab",
+      "platform/identity/packages.json": "cc4ef99d486cfd11c8d73b125fa6e608ef26fb745edbe73a8063c3493b39ed92",
+      "platform/identity/session.json": "a271f1e79b89397dae614e8351c2233e912365c03161271ef5d2698bb27078ff",
+      "platform/identity/brand.manifest.json": "a6a3dbea169c6217d763ad9cf0898ca76425168994e9112982e8090de6c4db6f"
+    },
+    "brand_sha256": {
+      "docs/brand/mark-light.png": "28a962a6144b4f2c10b42238ae29d8f85a3d358c7fe10eadcc05f86aa436aacc",
+      "docs/brand/mark-dark.png": "092e950523d7997fb686d559fb28ba0f32fe98490cb901686ccdf5e6ab6dcc3d",
+      "docs/brand/icon.svg": "06840686bcef0410ae435f62e37d12288eba0bf30620a93f4a11c54fdbf51e0e",
+      "docs/brand/wordmark-light.svg": "f62f6649931f3f125a3b404141462bdfe5ebae668317b2c59d1a2372bdb90610"
+    }
+  },
+  "verification": [
+    "uname -m is aarch64",
+    "/etc/os-release reports NAME=Knix ID=knix VERSION=0.1 (bootstrap)",
+    "hostname is knix",
+    "4 brand assets are byte-identical to docs/brand/",
+    "identity survives a full reboot",
+    "serial console and ssh remain available without a GPU"
+  ],
+  "receipt": "platform/image/build.sh writes $KNIX_DEV_DIR/BUILD-RECEIPT.json with the artifact sha256",
+  "publish_surface": ["knix.img", "origin/main"]
+}

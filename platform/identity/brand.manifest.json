@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "owner": "docs/brand/",
+  "official_asset_count": 18,
+  "assets": {
+    "mark-light.png": "28a962a6144b4f2c10b42238ae29d8f85a3d358c7fe10eadcc05f86aa436aacc",
+    "mark-dark.png": "092e950523d7997fb686d559fb28ba0f32fe98490cb901686ccdf5e6ab6dcc3d",
+    "icon.svg": "06840686bcef0410ae435f62e37d12288eba0bf30620a93f4a11c54fdbf51e0e",
+    "wordmark-light.svg": "f62f6649931f3f125a3b404141462bdfe5ebae668317b2c59d1a2372bdb90610"
+  },
+  "install_path": "/usr/share/knix/brand/",
+  "rule": "bytes are copied verbatim; never re-render, resize or recolour"
+}

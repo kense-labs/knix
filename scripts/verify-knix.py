@@ -321,6 +321,57 @@ def main() -> int:
             "logo drift: %s" % (logo_check.stdout.strip().splitlines()[-1:] or
                                 [logo_check.stderr.strip()[:120]]))
 
+    # I15 -- identity, image manifest and brand bytes agree with every build input
+    identity_errors = []
+    idp = ROOT / "platform" / "identity"
+    imgp = ROOT / "platform" / "image"
+    required = [
+        idp / "identity.json", idp / "os-release", idp / "knix-release",
+        idp / "brand.manifest.json", idp / "packages.json", idp / "session.json",
+        imgp / "manifest.json", imgp / "build.sh", imgp / "inject-identity.sh",
+        imgp / "build-rootfs.sh", imgp / "build-kernel.sh", imgp / "sign.sh",
+        ROOT / "platform" / "backends" / "vm-virt" / "boot-dev.sh",
+    ]
+    for p in required:
+        if not p.is_file():
+            identity_errors.append("missing %s" % p.relative_to(ROOT))
+    if not identity_errors:
+        try:
+            ident = json.loads((idp / "identity.json").read_text(encoding="utf-8"))
+            mani = json.loads((imgp / "manifest.json").read_text(encoding="utf-8"))
+            bm = json.loads((idp / "brand.manifest.json").read_text(encoding="utf-8"))
+            session = json.loads((idp / "session.json").read_text(encoding="utf-8"))
+        except (OSError, ValueError) as exc:
+            ident, mani, bm, session = {}, {}, {"assets": {}}, {}
+            identity_errors.append("unreadable identity/manifest: %s" % exc)
+        osrel = (idp / "os-release").read_text(encoding="utf-8") if (idp / "os-release").is_file() else ""
+        if not (ident.get("product") == ident.get("id") == "knix"
+                and ident.get("publish_surface") == ["knix.img", "origin/main"]):
+            identity_errors.append("identity.json fields drifted")
+        if ('NAME="%s"' % ident.get("name")) not in osrel or ("ID=%s" % ident.get("id")) not in osrel:
+            identity_errors.append("os-release does not match identity.json")
+        if mani.get("artifact", {}).get("name") != "knix.img":
+            identity_errors.append("image manifest artifact changed")
+        for rel, expected in mani.get("inputs", {}).get("identity_sha256", {}).items():
+            p = ROOT / rel
+            if not p.is_file() or hashlib.sha256(p.read_bytes()).hexdigest() != expected:
+                identity_errors.append("identity input drift: %s" % rel)
+        for rel, expected in mani.get("inputs", {}).get("brand_sha256", {}).items():
+            p = ROOT / rel
+            if not p.is_file() or hashlib.sha256(p.read_bytes()).hexdigest() != expected:
+                identity_errors.append("brand input drift: %s" % rel)
+        for name, expected in bm.get("assets", {}).items():
+            p = BRAND / name
+            if not p.is_file() or hashlib.sha256(p.read_bytes()).hexdigest() != expected:
+                identity_errors.append("brand manifest drift: %s" % name)
+        if session.get("host_adapters") != "none":
+            identity_errors.append("session claims host adapters")
+        if "| I15 |" not in readme:
+            identity_errors.append("README lost I15")
+    require(not identity_errors,
+            "identity and image manifest agree with every build input",
+            "identity/image contract: %s" % identity_errors[:4])
+
     # the only collection mechanism still parses
     try:
         ast.parse((ROOT / "scripts" / "collect-knix.py").read_text(encoding="utf-8"))

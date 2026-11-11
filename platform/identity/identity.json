@@ -1,0 +1,54 @@
+{
+  "schema": 1,
+  "product": "knix",
+  "name": "Knix",
+  "version": "0.1",
+  "version_codename": "bootstrap",
+  "stage": "dev-preview",
+  "id": "knix",
+  "id_like": "debian",
+  "default_hostname": "knix",
+  "home_url": "https://github.com/kense-labs/knix",
+  "support_url": "https://github.com/kense-labs/knix/issues",
+  "bug_report_url": "https://github.com/kense-labs/knix/issues",
+
+  "os_release": "platform/identity/os-release",
+  "knix_release": "platform/identity/knix-release",
+  "brand_manifest": "platform/identity/brand.manifest.json",
+  "package_set": "platform/identity/packages.json",
+  "session": "platform/identity/session.json",
+
+  "kernel": {
+    "source": "repos/linux",
+    "version": "7.2.15",
+    "arch": "arm64",
+    "toolchain": "native aarch64 gcc 14 + GNU make 4.4 inside an arm64 Linux guest",
+    "build_entry": "platform/image/build-kernel.sh",
+    "configs": {
+      "native-apple": "arch/arm64/configs/knix.config",
+      "vm-virt": "arch/arm64/configs/virt.config"
+    },
+    "artifact": "arch/arm64/boot/Image.gz"
+  },
+
+  "rootfs": {
+    "generator": "mmdebstrap",
+    "build_entry": "platform/image/build-rootfs.sh",
+    "artifact": "knix-rootfs.tar.zst",
+    "package_set": "platform/identity/packages.json",
+    "session": "platform/identity/session.json",
+    "role": "native rootfs for the next image stage; not part of the dev-preview image"
+  },
+
+  "image": {
+    "owner": "platform/image/",
+    "artifact": "knix.img",
+    "format": "qcow2",
+    "manifest": "platform/image/manifest.json",
+    "seed": "debian-13-generic-arm64.qcow2",
+    "seed_role": "one-time bootstrap, never a product capability source"
+  },
+
+  "publish_surface": ["knix.img", "origin/main"],
+  "origin_url": "git@github.com:kense-labs/knix.git"
+}

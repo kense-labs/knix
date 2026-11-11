@@ -6,4 +6,24 @@
 
 产品身份由 `platform/identity/` 定义；后端不改变 `knix.img` 与 `origin/main`。
 
-Deferred：镜像构建、能力协商清单与 `knix check` 后端探测。
+`boot-dev.sh` 是可复现启动入口：
+
+```bash
+KNIX_DEV_DIR=../knix-m0 platform/backends/vm-virt/boot-dev.sh
+```
+
+| 变量 | 默认 | 说明 |
+| --- | --- | --- |
+| `KNIX_DEV_DIR` | 仓外同级 `knix-m0/` | 镜像、seed、固件 vars、日志与 pidfile |
+| `DISK` | `$KNIX_DEV_DIR/knix.img` | 根盘 |
+| `CODE` / `VARS` | QEMU 自带 EDK2 / 本地 vars 副本 | UEFI pflash |
+| `ACCEL` / `CPU` / `GIC` / `SMP` / `MEM` | `hvf` / `host` / `3` / `4` / `4096` | 启动参数 |
+| `KERNEL` / `INITRD` / `KERNEL_APPEND` | 空 | 设置 `KERNEL` 时用 `-kernel` 直启，不经过 GRUB |
+| `EXTRA_DISK` | 空 | 附加 virtio 盘，用于 guest 内原生内核/rootfs 构建 |
+| `SSH_PORT` | `2222` | 用户态网络端口转发 |
+
+启动脚本只决定启动路径。身份、认证、界面、输入与设备语义全部在 Guest；宿主只提供标准 virtio。固件使用 QEMU 自带的 `edk2-aarch64-code.fd` + `edk2-arm-vars.fd`；Debian `qemu-efi-aarch64` 的 AAVMF 变体会停在固件阶段，不作为本后端的固件来源。
+
+附加构建盘是 qcow2。停止 VM 前必须在 guest 内 `sync`，否则页缓存里未回写的产物会变成 0 字节；`build.sh --build`、`build-kernel.sh`、`build-rootfs.sh` 与 `inject-identity.sh` 都已内置该步骤。
+
+Deferred：能力协商清单与 `knix check` 后端探测。

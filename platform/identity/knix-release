@@ -1,0 +1,5 @@
+NAME=Knix
+VERSION=0.1
+CODENAME=bootstrap
+PRODUCT_ID=knix
+STAGE=dev-preview

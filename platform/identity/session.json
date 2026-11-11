@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "knix-wayland",
+  "display": "wayland",
+  "compositor": "sway",
+  "seat": "seat0",
+  "user": "knix",
+  "autologin": true,
+  "environment": {
+    "XDG_SESSION_TYPE": "wayland",
+    "XDG_CURRENT_DESKTOP": "Knix",
+    "XDG_SESSION_DESKTOP": "Knix",
+    "QT_QPA_PLATFORM": "wayland",
+    "MOZ_ENABLE_WAYLAND": "1"
+  },
+  "input": { "backend": "libinput", "owner": "guest" },
+  "output": { "backend": "drm", "device": "virtio-gpu", "owner": "guest" },
+  "authentication": { "owner": "guest" },
+  "host_adapters": "none",
+  "fallback": "serial console and ssh remain available when no GPU is present"
+}
