@@ -2,7 +2,7 @@
 
 43 个公开仓库默认分支的源码快照 monorepo，SHA 锁定，单一 `main` 发布面。
 
-[First principles](#first-principles) · [Architecture](#architecture) · [Run backends](#run-backends) · [Invariants](#invariants) · [Operations](#operations) · [Do not](#do-not) · [Known Limitations](#known-limitations-and-deferred-work) · [Scale](#scale-and-status)
+[First principles](#first-principles) · [Architecture](#architecture) · [Run backends](#run-backends) · [Invariants](#invariants) · [Operations](#operations) · [Do not](#do-not) · [Known Limitations](#known-limitations-and-deferred-work) · [Scale](#scale-and-status) · [Roadmap](ROADMAP.md)
 
 > [!NOTE]
 > 机器真源：[repos.json](repos.json)。
@@ -94,7 +94,8 @@ platform/image/build.sh --build
 platform/image/sign.sh
 
 # inside the arm64 Linux build guest; scripts are streamed over ssh
-platform/image/build-kernel.sh
+platform/image/build-kernel.sh --check
+platform/image/build-kernel.sh --apply
 platform/image/build-rootfs.sh --check
 platform/image/build-rootfs.sh --apply
 platform/image/assemble-native.sh     # requires root
@@ -163,6 +164,7 @@ python3 scripts/verify-knix.py && git add -A && git commit -m "chore: refresh sn
 ```
 knix/
 ├── README.md
+├── ROADMAP.md
 ├── repos.json
 ├── .github/workflows/                # knix-contract.yml
 ├── scripts/

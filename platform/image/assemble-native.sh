@@ -14,12 +14,24 @@ PART="${TARGET_DEV}1"
 MOUNT="${KNIX_MOUNT:-/mnt/knix-target}"
 TARBALL="${KNIX_TARBALL:-$BUILD/knix-rootfs.tar.zst}"
 KERNEL="${KNIX_KERNEL_IMAGE:-$BUILD/knix-Image}"
+MODULES="${KNIX_MODULES_DIR:-$BUILD/modules}"
+SUMMARY="${KNIX_KERNEL_SUMMARY:-$BUILD/kernel-build.json}"
 PUBKEY="${KNIX_SSH_PUBKEY_FILE:-$BUILD/knix.pub}"
-KVER="${KNIX_KERNEL_VERSION:-7.2.15}"
+
+# The kernel build records its own release; the module directory must match it.
+KVER="${KNIX_KERNEL_VERSION:-}"
+if [ -z "$KVER" ] && [ -f "$SUMMARY" ]; then
+  KVER="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["kernel_version"])' "$SUMMARY")"
+fi
+KVER="${KVER:-7.2.15}"
+MODROOT="$MODULES/lib/modules/$KVER"
 
 for f in "$TARBALL" "$KERNEL" "$PUBKEY"; do
   [ -f "$f" ] || { echo "missing input: $f" >&2; exit 1; }
 done
+[ -d "$MODROOT" ] || { echo "missing kernel modules: $MODROOT (run build-kernel.sh --apply)" >&2; exit 1; }
+NKO="$(find "$MODROOT" -type f \( -name '*.ko' -o -name '*.ko.xz' -o -name '*.ko.zst' -o -name '*.ko.gz' \) | wc -l)"
+[ "$NKO" -gt 0 ] || { echo "no kernel modules under $MODROOT" >&2; exit 1; }
 [ -b "$TARGET_DEV" ] || { echo "not a block device: $TARGET_DEV" >&2; exit 1; }
 
 echo "=== partition $TARGET_DEV ==="
@@ -37,14 +49,15 @@ echo "=== unpack native rootfs ==="
 tar --zstd -xf "$TARBALL" -C "$MOUNT"
 
 echo "=== kernel and modules ==="
-install -d -m 0755 "$MOUNT/boot" "$MOUNT/lib/modules/$KVER"
+install -d -m 0755 "$MOUNT/boot" "$MOUNT/lib/modules"
 install -m 0644 "$KERNEL" "$MOUNT/boot/vmlinuz-$KVER-knix"
-if [ -d "$BUILD/rootfs/lib/modules" ]; then
-  cp -a "$BUILD/rootfs/lib/modules/." "$MOUNT/lib/modules/"
+cp -a "$MODROOT" "$MOUNT/lib/modules/"
+# Generate the index with the target's own kmod. The helper guest is only a
+# compiler; its userspace is not a product input.
+if ! chroot "$MOUNT" depmod -a "$KVER" 2>/dev/null; then
+  depmod -b "$MOUNT" "$KVER" || { echo "could not generate modules.dep" >&2; exit 1; }
 fi
-# libkmod needs the versioned directory even when every boot driver is built
-# in; an empty index is enough for systemd's kmod context to initialise.
-depmod -b "$MOUNT" "$KVER" 2>/dev/null || true
+echo "modules: $NKO .ko installed for $KVER"
 
 echo "=== guest-owned configuration ==="
 # When this disk becomes the primary virtio disk it is /dev/vda, so the root
@@ -93,11 +106,8 @@ test -x "$MOUNT/usr/bin/sway" && echo "sway: yes"
 test -f "$MOUNT/usr/share/wayland-sessions/knix.desktop" && echo "wayland session: yes"
 echo -n "brand assets: "; ls -1 "$MOUNT/usr/share/knix/brand" | wc -l
 ls -lh "$MOUNT/boot/vmlinuz-$KVER-knix"
-if ls -d "$MOUNT"/lib/modules/* >/dev/null 2>&1; then
-  echo "modules: $(ls -1 "$MOUNT/lib/modules" | tr '\n' ' ')"
-else
-  echo "modules: not present yet"
-fi
+echo -n "kernel modules on disk: "; find "$MOUNT/lib/modules/$KVER" -type f -name '*.ko*' | wc -l
+[ -f "$MOUNT/lib/modules/$KVER/modules.dep" ] || { echo "modules.dep missing" >&2; exit 1; }
 
 sync
 umount "$MOUNT"

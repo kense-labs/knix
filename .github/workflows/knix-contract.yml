@@ -59,5 +59,8 @@ jobs:
               print("parsed", p)
           PY
 
+      - name: Kernel config fragment resolves
+        run: KNIX_KERNEL_SRC=repos/linux KNIX_KERNEL_OUT=/tmp/knix-out bash platform/image/build-kernel.sh --check
+
       - name: Rootfs package set resolves
         run: KNIX_IDENTITY_DIR=platform/identity bash platform/image/build-rootfs.sh --check

@@ -4,7 +4,7 @@ knix 产品身份的单一所有者：品牌、内核基线、包集、镜像定
 
 | 文件 | 角色 |
 | --- | --- |
-| `identity.json` | 身份机器真源：版本、内核基线、原生 rootfs 定义、镜像与发布面；内核工具链为 arm64 Linux guest 内的原生 gcc + GNU make |
+| `identity.json` | 身份机器真源：版本、内核基线（含内核产物清单与内置驱动约束）、原生 rootfs 定义、镜像与发布面；内核工具链为 arm64 Linux guest 内的原生 gcc + GNU make |
 | `os-release` | 写入 `knix.img` 的 `/etc/os-release` 字节 |
 | `knix-release` | 写入 `knix.img` 的 `/etc/knix-release` 字节 |
 | `brand.manifest.json` | `docs/brand/` 官方资产哈希与安装路径，字节原样复制 |
