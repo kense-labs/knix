@@ -238,6 +238,80 @@ def main() -> int:
             "README has no self-narration and retires the upstream Makefile",
             "README regained meta-narration or dropped the Makefile ban")
 
+    # I14 -- run backends are launch paths, never capability sources
+    boundary_errors = []
+    contract_path = ROOT / "platform" / "contract.json"
+    if not contract_path.is_file():
+        boundary_errors.append("platform/contract.json missing")
+    else:
+        try:
+            contract = json.loads(contract_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as exc:
+            contract = {}
+            boundary_errors.append("contract.json unreadable: %s" % exc)
+        contract_doc = ROOT / "platform" / "CONTRACT.md"
+        contract_text = (contract_doc.read_text(encoding="utf-8")
+                         if contract_doc.is_file() else "")
+        missing_clauses = [c for c in contract.get("required_clauses", [])
+                           if c not in contract_text]
+        if missing_clauses:
+            boundary_errors.append("contract clauses: %s" % missing_clauses)
+        if "platform/CONTRACT.md" not in readme or "## Run backends" not in readme:
+            boundary_errors.append("README lost the boundary pointer")
+        backend_dirs = [ROOT / "platform" / "backends" / b
+                        for b in contract.get("backends", [])]
+        if not backend_dirs or not all(d.is_dir() for d in backend_dirs):
+            boundary_errors.append("backend directories incomplete")
+        surface = contract.get("publish_surface", [])
+        if len(surface) != 2 or "origin/main" not in surface:
+            boundary_errors.append("publish surface changed: %s" % surface)
+        for rel in contract.get("non_normative", []):
+            d = ROOT / rel
+            note = d / "README.md"
+            if (not d.is_dir() or not note.is_file()
+                    or "non-normative" not in note.read_text(encoding="utf-8")):
+                boundary_errors.append("non-normative marker missing: %s" % rel)
+            elif any(p.is_file() and p.suffix != ".md" for p in d.rglob("*")):
+                boundary_errors.append("host adapter carries an artifact: %s" % rel)
+        ns = contract.get("host_namespace", "")
+        if ns:
+            gr = subprocess.run(
+                ["git", "grep", "--no-index", "-l", "-F", ns, "--", "repos/"],
+                cwd=ROOT, capture_output=True, text=True)
+            if gr.stdout.splitlines():
+                boundary_errors.append("host namespace in repos/: %s"
+                                       % gr.stdout.splitlines()[:3])
+        deny = contract.get("deny_in_publishable_code", [])
+        for rel in contract.get("publishable_dirs", []):
+            d = ROOT / rel
+            if not d.is_dir():
+                boundary_errors.append("publishable dir missing: %s" % rel)
+                continue
+            for p in d.rglob("*"):
+                if (not p.is_file() or p.suffix == ".md"
+                        or any(part in SKIP_DIRS for part in p.parts)):
+                    continue
+                try:
+                    body = p.read_text(encoding="utf-8")
+                except (OSError, UnicodeDecodeError):
+                    continue
+                hit = next((w for w in deny if w in body), None)
+                if hit:
+                    boundary_errors.append("host dependency in %s: %s"
+                                           % (p.relative_to(ROOT), hit))
+        remotes = subprocess.run(["git", "remote"], cwd=ROOT,
+                                 capture_output=True, text=True).stdout.split()
+        if remotes != ["origin"]:
+            boundary_errors.append("remotes: %s" % remotes)
+        else:
+            url = subprocess.run(["git", "remote", "get-url", "origin"], cwd=ROOT,
+                                 capture_output=True, text=True).stdout.strip()
+            if url != contract.get("origin_url"):
+                boundary_errors.append("origin differs from the contract: %s" % url)
+    require(not boundary_errors,
+            "product boundary holds (backends, host adapters, single origin)",
+            "product boundary: %s" % boundary_errors[:4])
+
     # I11 -- the whole derived logo set is reproducible from the official marks
     logo_check = subprocess.run(
         [sys.executable, str(ROOT / "scripts" / "make-knix-logos.py"), "--check"],

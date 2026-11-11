@@ -2,7 +2,7 @@
 
 43 个公开仓库默认分支的源码快照 monorepo，SHA 锁定，单一 `main` 发布面。
 
-[First principles](#first-principles) · [Architecture](#architecture) · [Invariants](#invariants) · [Operations](#operations) · [Do not](#do-not) · [Known Limitations](#known-limitations-and-deferred-work) · [Scale](#scale-and-status)
+[First principles](#first-principles) · [Architecture](#architecture) · [Run backends](#run-backends) · [Invariants](#invariants) · [Operations](#operations) · [Do not](#do-not) · [Known Limitations](#known-limitations-and-deferred-work) · [Scale](#scale-and-status)
 
 > [!NOTE]
 > 机器真源：[repos.json](repos.json)。
@@ -41,6 +41,22 @@
 3. **Verify** — `python3 scripts/verify-knix.py`。
 4. **Publish** — 单次提交推送 `origin/main`。
 
+## Run backends
+
+| 后端 | 内核基线 | 设备语义 |
+| --- | --- | --- |
+| `native-apple` | `knix.config` · `CONFIG_ARCH_APPLE` | `m1n1` · `u-boot` · `devicetrees` |
+| `vm-virt` | `virt.config` | 标准 virtio · QEMU |
+
+`platform/CONTRACT.md` 拥有产品边界；后端是启动方式，不是能力来源。`platform/host-adapters/` 为非规范资产，可选、默认关闭、不进入镜像。
+
+| 规则 | 内容 |
+| --- | --- |
+| 单一身份 | 一个 `knix.img`、一个 `origin/main`、一套品牌 |
+| 单一真源 | `repos.json` 的 43 条、SHA 与统计不随后端改变 |
+| 能力 | 宿主只提供标准 virtio；私有扩展可关闭且有降级路径 |
+| 归属 | 认证、界面、输入与设备语义留在 Guest |
+
 ## Invariants
 
 | # | 不变量 |
@@ -58,6 +74,7 @@
 | I11 | `repos/artwork/logos/` 全部资产由 `docs/brand/` 官方 mark 派生 |
 | I12 | `repos/` 内无悬空符号链接 |
 | I13 | `README.md` 无自指元叙述与解释性说明 |
+| I14 | 运行后端不越产品边界；宿主适配器不进入镜像与发布清单 |
 
 ## Operations
 
@@ -85,6 +102,8 @@ python3 scripts/verify-knix.py && git add -A && git commit -m "chore: refresh sn
 - 绕过 `make-knix-logos.py` 直接改写 `artwork/logos` 的派生资产。
 - 运行 `repos/artwork/logos/Makefile` 重新生成 logo。
 - 改写统计数字或采集时间。
+- 让宿主适配器参与构建、启动、认证或镜像。
+- 把宿主状态当作 knix 的硬件语义。
 - 新增发布分支、tag 或第二个 origin。
 
 ## Known Limitations and Deferred Work
@@ -96,7 +115,9 @@ python3 scripts/verify-knix.py && git add -A && git commit -m "chore: refresh sn
 - 统计为采集时刻值。
 - 内核 UAPI 与设备树 compatible 已重命名；快照不保证与上游 ABI 对齐或可编译。
 - 第三方项目 logo、内核与 U-Boot 启动图、插画与横幅保持上游原样。
-- Deferred：统计与清单生成器入库、定期重采调度、增量 diff 报告。
+- `repos/mesa-nightly/mesa` 为未拉取的 submodule，用户态图形栈源码不在快照内。
+- 两个运行后端目前只有契约定义，尚无镜像构建与能力协商实现。
+- Deferred：镜像构建与 rootfs 工具链、能力协商清单、宿主适配器参考实现、统计与清单生成器入库、定期重采调度、增量 diff 报告。
 
 ## Scale and status
 
@@ -123,6 +144,15 @@ knix/
 │   ├── collect-knix.py
 │   ├── make-knix-logos.py
 │   └── verify-knix.py
+├── platform/
+│   ├── CONTRACT.md
+│   ├── contract.json
+│   ├── identity/
+│   ├── image/
+│   ├── backends/
+│   │   ├── native-apple/
+│   │   └── vm-virt/
+│   └── host-adapters/                # non-normative
 ├── docs/
 │   ├── knix-architecture.svg
 │   ├── knix-architecture.png

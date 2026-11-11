@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "product": "knix",
+  "boundary_verdict": "without a host, knix still builds, boots, checks, updates and publishes",
+  "identity_owner": "platform/identity/",
+  "image_owner": "platform/image/",
+  "backends": ["native-apple", "vm-virt"],
+  "publish_surface": ["knix.img", "origin/main"],
+  "non_normative": ["platform/host-adapters/"],
+  "publishable_dirs": ["platform/identity/", "platform/image/", "platform/backends/", "scripts/"],
+  "host_namespace": "org.knix.host",
+  "deny_in_publishable_code": [
+    "CoreWLAN",
+    "CoreAudio",
+    "IOBluetooth",
+    "CoreBrightness",
+    "DisplayServices",
+    "MultitouchSupport",
+    "LocalAuthentication",
+    "VideoToolbox",
+    "IOSurface",
+    "10.0.2.2",
+    "192.168.77.1",
+    "org.knix.host"
+  ],
+  "required_clauses": [
+    "## Verdict",
+    "## Ownership",
+    "## Run backends",
+    "## Backend rules",
+    "## Capability rules",
+    "## Host adapters",
+    "## ABI",
+    "## Gate"
+  ],
+  "origin_url": "git@github.com:kense-labs/knix.git"
+}
