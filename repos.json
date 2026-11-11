@@ -7,7 +7,7 @@
   "count": 43,
   "totals": {
     "snapshot_files": 147032,
-    "snapshot_bytes": 2076107035,
+    "snapshot_bytes": 2081410824,
     "upstream_history_bytes": 8943190016,
     "default_branches": {
       "knix": 6,
@@ -67,7 +67,7 @@
       "upstream_size_kb": 1906,
       "local_path": "repos/artwork",
       "snapshot_files": 105,
-      "snapshot_bytes": 2236593
+      "snapshot_bytes": 7540382
     },
     {
       "name": "knix-audio",

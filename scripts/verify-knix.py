@@ -148,22 +148,26 @@ def main() -> int:
             "identifiers unified (%s)" % ", ".join(sorted(branches)),
             "manifest still carries an old identifier")
 
-    # I8 -- official Kense marks, both on disk and embedded in the SVG
+    # I8 -- every official asset in docs/brand/ matches ../kense byte-for-byte
+    local_assets = sorted(p for p in BRAND.iterdir() if p.is_file())
     ok_marks = True
     for n, h in MARK_HASHES.items():
         p = BRAND / n
         if not p.exists() or hashlib.sha256(p.read_bytes()).hexdigest() != h:
             ok_marks = False
+    mismatched = []
     if KENSE_BRAND.is_dir():
-        for n, h in MARK_HASHES.items():
-            p = KENSE_BRAND / n
-            if not p.exists() or hashlib.sha256(p.read_bytes()).hexdigest() != h:
-                ok_marks = False
-        notes.append("OK: ../kense official mark sources checked")
+        for p in local_assets:
+            q = KENSE_BRAND / p.name
+            if (not q.exists()
+                    or hashlib.sha256(q.read_bytes()).hexdigest()
+                    != hashlib.sha256(p.read_bytes()).hexdigest()):
+                mismatched.append(p.name)
     else:
         notes.append("SKIP: ../kense brand sources not present locally")
-    require(ok_marks, "2 official mark PNGs match the brand contract",
-            "mark PNG bytes differ from the official contract")
+    require(ok_marks and not mismatched,
+            "%d official assets match the brand contract" % len(local_assets),
+            "brand asset mismatch: %s" % mismatched[:5])
 
     svg = SVG.read_text(encoding="utf-8")
     embedded = [base64.b64decode(b) for b in
@@ -198,6 +202,15 @@ def main() -> int:
     require(not TOKEN_RE.search(readme),
             "README contains 0 upstream traces",
             "README still contains an upstream token")
+
+    # I11 -- the whole derived logo set is reproducible from the official marks
+    logo_check = subprocess.run(
+        [sys.executable, str(ROOT / "scripts" / "make-knix-logos.py"), "--check"],
+        cwd=ROOT, capture_output=True, text=True)
+    require(logo_check.returncode == 0 and "CHECK OK" in logo_check.stdout,
+            "96 logo assets are byte-derived from the official marks",
+            "logo drift: %s" % (logo_check.stdout.strip().splitlines()[-1:] or
+                                [logo_check.stderr.strip()[:120]]))
 
     # the only collection mechanism still parses
     try:

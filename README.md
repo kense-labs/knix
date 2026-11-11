@@ -58,6 +58,7 @@
 | I8 | `docs/brand/` 官方 mark 字节与品牌契约一致 |
 | I9 | 单一 `main` 分支，无 tag / submodule |
 | I10 | `README.md` 无上游品牌字面与代号残留 |
+| I11 | `repos/artwork/logos/` 全部资产由 `docs/brand/` 官方 mark 派生 |
 
 ## Operations
 
@@ -82,6 +83,7 @@ python3 scripts/verify-knix.py && git add -A && git commit -m "chore: refresh sn
 - 改动 `repos/` 内的 `LICENSE` / `COPYING`。
 - 回退或混用旧标识符。
 - 手工编辑 `docs/brand/` 的 PNG，或调整 logo 尺寸与配色。
+- 绕过 `make-knix-logos.py` 直接改写 `artwork/logos` 的派生资产。
 - 在本页或架构图中修改统计数字。
 - 新增发布分支、tag 或第二个 origin。
 
@@ -100,7 +102,7 @@ python3 scripts/verify-knix.py && git add -A && git commit -m "chore: refresh sn
 | --- | --- |
 | 仓库数 | 43 |
 | 文件数 | 147,032 |
-| 源码总体积 | 1.93 GB（2,076,107,035 字节） |
+| 源码总体积 | 1.94 GB（2,081,410,824 字节） |
 | 上游完整历史体积 | 8.33 GB |
 | 默认分支 | main 28 · master 9 · 其余 6 |
 | 已归档 / fork | 14 / 9 |
@@ -117,6 +119,7 @@ knix/
 ├── repos.json
 ├── scripts/
 │   ├── collect-knix.py
+│   ├── make-knix-logos.py
 │   └── verify-knix.py
 ├── docs/
 │   ├── knix-architecture.svg
@@ -130,3 +133,5 @@ knix/
 ## License and attribution
 
 各仓库源码版权归各自上游项目及贡献者所有，`LICENSE` / `COPYING` 随快照完整保留；许可标识见 `repos.json` 的 `license` 字段。本仓库不改变也不重新授权上游代码的许可。
+
+`repos/artwork/logos/` 的图形由 `docs/brand/` 官方资产派生；上游 `LICENSE` 文本原样保留。
