@@ -329,8 +329,8 @@ static int __maybe_unused ak7375_vcm_resume(struct device *dev)
 }
 
 static const struct of_device_id ak7375_of_table[] = {
-	{ .compatible = "asahi-kasei,ak7345", .data = &ak7345_cdef, },
-	{ .compatible = "asahi-kasei,ak7375", .data = &ak7375_cdef, },
+	{ .compatible = "knix-kasei,ak7345", .data = &ak7345_cdef, },
+	{ .compatible = "knix-kasei,ak7375", .data = &ak7375_cdef, },
 	{ /* sentinel */ }
 };
 MODULE_DEVICE_TABLE(of, ak7375_of_table);

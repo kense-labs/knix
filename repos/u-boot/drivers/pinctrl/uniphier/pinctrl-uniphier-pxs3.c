@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2017-2021 Socionext Inc.
- *   Author: Masahiro Yamada <yamada.masahiro@socionext.com>
+ *   Author: Mknixro Yamada <yamada.mknixro@socionext.com>
  *   Author: Dai Okamura <dai.okamura@socionext.com>
  */
 

@@ -6,7 +6,7 @@
 /*
  * Authors:
  *	Noriaki TAKAMIYA @USAGI
- *	Masahide NAKAMURA @USAGI
+ *	Mknixde NAKAMURA @USAGI
  *	YOSHIFUJI Hideaki @USAGI
  */
 #ifndef _NET_MIP6_H

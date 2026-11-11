@@ -7,13 +7,13 @@ title: AGX Driver Notes
 * [AGX](../hw/soc/agx.md) (somewhat outdated)
 
 ## Git links
-* [Upstream Mesa](https://gitlab.freedesktop.org/mesa/mesa) ([merge requests](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests?label_name%5B%5D=asahi))
-* [Asahi Mesa](https://gitlab.freedesktop.org/asahi/mesa) (`mesa-asahi-edge` releases cut from here)
+* [Upstream Mesa](https://gitlab.freedesktop.org/mesa/mesa) ([merge requests](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests?label_name%5B%5D=knix))
+* [Knix Mesa](https://gitlab.freedesktop.org/knix/mesa) (`mesa-knix-edge` releases cut from here)
 * [Lina's WIP kernel branch](https://github.com/Knix/linux/tree/gpu/rust-wip) (UAPI may be out of sync with mesa)
 
 ## UAPI design
 
-The [UAPI](https://github.com/Knix/linux/blob/asahi-wip/include/uapi/drm/asahi_drm.h) design is inspired by the upcoming [Intel Xe UAPI](https://cgit.freedesktop.org/drm/drm-xe/tree/include/uapi/drm/xe_drm.h?h=drm-xe-next).
+The [UAPI](https://github.com/Knix/linux/blob/knix-wip/include/uapi/drm/knix_drm.h) design is inspired by the upcoming [Intel Xe UAPI](https://cgit.freedesktop.org/drm/drm-xe/tree/include/uapi/drm/xe_drm.h?h=drm-xe-next).
 
 * File: An open file descriptor to the DRM device
 * VM: A GPU address space
@@ -91,7 +91,7 @@ Userspace can optionally request feedback from command execution. This is done b
 
 ### FAQ
 
-* **What's up with the `struct drm_asahi_cmd_render` mess?**
+* **What's up with the `struct drm_knix_cmd_render` mess?**
   The firmware commands directly specify all these low-level render details and we cannot expose those structures directly to userspace, since it is not safe to do so. There is no other way, and macOS does the same thing... (at least it's less of a mess than PowerVR!)
 
 ### TODO
@@ -105,7 +105,7 @@ Upstreaming blockers (affect current draft UAPI):
 
 Other:
 
-* [ ] Implement `DRM_IOCTL_ASAHI_GET_TIME`
+* [ ] Implement `DRM_IOCTL_KNIX_GET_TIME`
 * [ ] Implement RTKit runtime-PM (sleep ASC when GPU is idle, macOS does this on laptops)
 * [ ] Reverse engineer and implement blit commands
 * [ ] Hook up firmware KTrace to Linux tracing

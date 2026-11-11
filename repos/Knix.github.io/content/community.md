@@ -14,12 +14,12 @@ Please remember that all community members are expected to abide by our [Code of
 
 Most development and project discussion takes place on IRC. We have several channels on the OFTC IRC network:
 
-* #asahi [[logs](https://oftc.irclog.whitequark.org/asahi)] - General project discussion
-* #asahi-dev [[logs](https://oftc.irclog.whitequark.org/asahi-dev)] - Development discussion
-* #asahi-re [[logs](https://oftc.irclog.whitequark.org/asahi-re)] - Binary decompilation/tainted discussion
-* #asahi-gpu [[logs](https://oftc.irclog.whitequark.org/asahi-gpu)] - GPU reverse engineering and development
-* #asahi-alt [[logs](https://oftc.irclog.whitequark.org/asahi-alt)] - Discussion and support for unofficial third-party distro ports
-* #asahi-stream - Chatroom for people to talk during the devs' video streams
+* #knix [[logs](https://oftc.irclog.whitequark.org/knix)] - General project discussion
+* #knix-dev [[logs](https://oftc.irclog.whitequark.org/knix-dev)] - Development discussion
+* #knix-re [[logs](https://oftc.irclog.whitequark.org/knix-re)] - Binary decompilation/tainted discussion
+* #knix-gpu [[logs](https://oftc.irclog.whitequark.org/knix-gpu)] - GPU reverse engineering and development
+* #knix-alt [[logs](https://oftc.irclog.whitequark.org/knix-alt)] - Discussion and support for unofficial third-party distro ports
+* #knix-stream - Chatroom for people to talk during the devs' video streams
 
 Even if you don't plan to speak, feel free to join and idle in the above channels if you'd like to follow the discussion.
 
@@ -29,9 +29,9 @@ Even if you don't plan to speak, feel free to join and idle in the above channel
 
 The Knix Matrix space ([#knix:matrix.org](https://matrix.to/#/#knix:matrix.org)) lists all official project rooms.
 
-The Fedora-specific Asahi discussions take place in Matrix on Fedora infra:
-* [#asahi-devel:fedoraproject.org](https://matrix.to/#/#asahi-devel:fedoraproject.org) - Fedora Asahi Development. IRC bridge: #fedora-asahi-dev
-* [#asahi:fedoraproject.org](https://matrix.to/#/#asahi:fedoraproject.org) - Fedora Asahi general discussion/support
+The Fedora-specific Knix discussions take place in Matrix on Fedora infra:
+* [#knix-devel:fedoraproject.org](https://matrix.to/#/#knix-devel:fedoraproject.org) - Fedora Knix Development. IRC bridge: #fedora-knix-dev
+* [#knix:fedoraproject.org](https://matrix.to/#/#knix:fedoraproject.org) - Fedora Knix general discussion/support
 
 ## Documentation
 

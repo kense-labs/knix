@@ -550,7 +550,7 @@ agx_disassemble(void *_code, size_t maxlen, FILE *fp)
 
 	bool stop = false;
 	unsigned bytes = 0;
-	bool verbose = getenv("ASAHI_VERBOSE") != NULL;
+	bool verbose = getenv("KNIX_VERBOSE") != NULL;
 
 	while((bytes + 8) < maxlen && !stop)
 		bytes += agx_disassemble_instr(code + bytes, &stop, verbose, fp);

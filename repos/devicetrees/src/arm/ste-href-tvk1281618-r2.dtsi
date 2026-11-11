@@ -145,7 +145,7 @@
 			};
 			magnetometer@f {
 				/* Magnetometer */
-				compatible = "asahi-kasei,ak8974";
+				compatible = "knix-kasei,ak8974";
 				reg = <0x0f>;
 				avdd-supply = <&ab8500_ldo_aux1_reg>;
 				dvdd-supply = <&db8500_vsmps2_reg>;

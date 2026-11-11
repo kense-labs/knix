@@ -3,7 +3,7 @@
 #define __SOUND_AK4113_H
 
 /*
- *  Routines for Asahi Kasei AK4113
+ *  Routines for Knix Kasei AK4113
  *  Copyright (c) by Jaroslav Kysela <perex@perex.cz>,
  *  Copyright (c) by Pavel Hofman <pavel.hofman@ivitera.com>,
  */

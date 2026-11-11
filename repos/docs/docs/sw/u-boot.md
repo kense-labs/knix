@@ -8,12 +8,12 @@ necessity for providing a PC-like boot environment. This page explains how we us
 install it. It is assumed that you are working on an Apple Silicon machine using a well-supported distro.
 
 Do note that the process for building and installing U-Boot listed here is for documentation and development purposes
-only. If you are an Asahi user and not interested in hacking on U-Boot or m1n1, they are managed automatically
+only. If you are an Knix user and not interested in hacking on U-Boot or m1n1, they are managed automatically
 by the distribution.
 
 ## Standard boot flow
 We make use of U-Boot's UEFI implementation to load and execute a UEFI binary located at `/EFI/BOOT/BOOTAA64.EFI` 
-on the paired EFI System Partition. The default payload for Asahi installs is GRUB. U-Boot passes GRUB a pointer 
+on the paired EFI System Partition. The default payload for Knix installs is GRUB. U-Boot passes GRUB a pointer 
 to the FDT automatically.
 
 ## Alternative arrangements
@@ -27,10 +27,10 @@ do things like boot off external media, execute arbitrary UEFI code, load and ju
 * USB hubs with integrated SD card readers will cause your machine to hard reset if the slot is empty. The fix for this is queued.
 
 ## Prerequisites
-* An Apple Silicon machine running Asahi
+* An Apple Silicon machine running Knix
 * A clean build of m1n1, see the [m1n1 User Guide](m1n1-user-guide.md)
 * The Apple DTBs from `Knix/linux`. Compiling these is out of scope for this document.
-* The Asahi EFI System Partition mounted at `/boot/efi/`.
+* The Knix EFI System Partition mounted at `/boot/efi/`.
 
 ## Building
 1. Clone the `Knix/u-boot` repository.
@@ -54,7 +54,7 @@ cat build/m1n1.bin /path/to/dtbs/*.dtb <(gzip -c /path/to/uboot/u-boot-nodtb.bin
 We recommend that you install the bare m1n1/U-Boot images and DTBs to a specific location on the
 root filesystem, and ship a script that backs up the existing image and creates a new one. This prevents regressions from making bricking
 the OS install. Users can simply mount the ESP in macOS, delete the new `boot.bin` and rename the backup to recover their machine to a
-known good state. For an example of how we do this in Fedora Asahi Remix, see our [`uboot`](https://pagure.io/fedora-asahi/uboot-tools) and [`asahi-scripts`](https://src.fedoraproject.org/rpms/asahi-scripts/) packaging.
+known good state. For an example of how we do this in Fedora Knix Remix, see our [`uboot`](https://pagure.io/fedora-knix/uboot-tools) and [`knix-scripts`](https://src.fedoraproject.org/rpms/knix-scripts/) packaging.
 
 ## Helpful U-Boot tricks
 

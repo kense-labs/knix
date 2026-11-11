@@ -105,7 +105,7 @@ wrap_IOConnectCallMethod(
 
 		pandecode_cmdstream(req->cmdbuf, false);
 
-		if (getenv("ASAHI_DUMP"))
+		if (getenv("KNIX_DUMP"))
 			pandecode_dump_mappings();
 
 		/* fallthrough */

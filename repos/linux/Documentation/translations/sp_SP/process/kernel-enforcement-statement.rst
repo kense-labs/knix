@@ -167,7 +167,7 @@ en el pasado, o trabajaremos en el futuro.
 - Dan Williams
 - Rafael J. Wysocki
 - Arvind Yadav
-- Masahiro Yamada
+- Mknixro Yamada
 - Wei Yongjun
 - Lv Zheng
 - Marc Zyngier (Arm Ltd)

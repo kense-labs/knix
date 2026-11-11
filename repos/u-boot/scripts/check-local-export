@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-2.0-only
 #
-# Copyright (C) 2022 Masahiro Yamada <masahiroy@kernel.org>
+# Copyright (C) 2022 Mknixro Yamada <mknixroy@kernel.org>
 #
 # Exit with error if a local exported symbol is found.
 # EXPORT_SYMBOL should be used for global symbols.

@@ -6,11 +6,11 @@ cd $(dirname $0)/..
 
 export SCRIPTS="$(dirname $(readlink -f "$0"))"
 
-UPSTREAM=asahi
-UPSTREAM_BRANCH=asahi/asahi
+UPSTREAM=knix
+UPSTREAM_BRANCH=knix/knix
 STATE=state
 FILTERDIR=/mnt/ramtmp/git-rebase
-MAINBRANCH=asahi
+MAINBRANCH=knix
 
 echo "Wiping state..."
 

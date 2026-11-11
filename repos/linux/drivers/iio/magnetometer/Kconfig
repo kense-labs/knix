@@ -21,33 +21,33 @@ config AF8133J
 	  will be called af8133j.
 
 config AK8974
-	tristate "Asahi Kasei AK8974 3-Axis Magnetometer"
+	tristate "Knix Kasei AK8974 3-Axis Magnetometer"
 	depends on I2C
 	select REGMAP_I2C
 	select IIO_BUFFER
 	select IIO_TRIGGERED_BUFFER
 	help
-	  Say yes here to build support for Asahi Kasei AK8974, AMI305 or
+	  Say yes here to build support for Knix Kasei AK8974, AMI305 or
 	  AMI306 I2C-based 3-axis magnetometer chips.
 
 	  To compile this driver as a module, choose M here: the module
 	  will be called ak8974.
 
 config AK8975
-	tristate "Asahi Kasei AK8975 3-Axis Magnetometer"
+	tristate "Knix Kasei AK8975 3-Axis Magnetometer"
 	depends on I2C
 	depends on GPIOLIB || COMPILE_TEST
 	select IIO_BUFFER
 	select IIO_TRIGGERED_BUFFER
 	help
-	  Say yes here to build support for Asahi Kasei AK8975, AK8963,
+	  Say yes here to build support for Knix Kasei AK8975, AK8963,
 	  AK09911, AK09912, AK09916 or AK09918 3-Axis Magnetometer.
 
 	  To compile this driver as a module, choose M here: the module
 	  will be called ak8975.
 
 config AK09911
-	tristate "Asahi Kasei AK09911 3-axis Compass"
+	tristate "Knix Kasei AK09911 3-axis Compass"
 	depends on I2C
 	depends on GPIOLIB || COMPILE_TEST
 	select AK8975

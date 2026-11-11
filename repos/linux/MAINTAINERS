@@ -2565,7 +2565,7 @@ F:	drivers/*/*alpine*
 
 ARM/APPLE MACHINE SOUND DRIVERS
 M:	Martin Povišer <povik+lin@cutebit.org>
-L:	asahi@lists.linux.dev
+L:	knix@lists.linux.dev
 L:	linux-sound@vger.kernel.org
 S:	Maintained
 F:	Documentation/devicetree/bindings/dma/apple,sio.yaml
@@ -2582,12 +2582,12 @@ ARM/APPLE MACHINE SUPPORT
 M:	Sven Peter <sven@kernel.org>
 M:	Janne Grunau <j@jannau.net>
 R:	Neal Gompa <neal@gompa.dev>
-L:	asahi@lists.linux.dev
+L:	knix@lists.linux.dev
 L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
 S:	Maintained
 W:	https://knix.org
 B:	https://github.com/Knix/linux/issues
-C:	irc://irc.oftc.net/asahi-dev
+C:	irc://irc.oftc.net/knix-dev
 T:	git https://github.com/Knix/linux.git
 F:	Documentation/devicetree/bindings/arm/apple.yaml
 F:	Documentation/devicetree/bindings/arm/apple/*
@@ -2661,7 +2661,7 @@ F:	include/dt-bindings/interrupt-controller/apple-aic.h
 F:	include/dt-bindings/pinctrl/apple.h
 F:	include/linux/mfd/macsmc.h
 F:	include/linux/soc/apple/*
-F:	include/uapi/drm/asahi_drm.h
+F:	include/uapi/drm/knix_drm.h
 F:	net/bluetooth/brcm.c
 F:	net/bluetooth/brcm.h
 
@@ -3953,15 +3953,15 @@ S:	Maintained
 F:	Documentation/devicetree/bindings/leds/ams,as3668.yaml
 F:	drivers/leds/leds-as3668.c
 
-ASAHI KASEI AK7375 LENS VOICE COIL DRIVER
+KNIX KASEI AK7375 LENS VOICE COIL DRIVER
 M:	Tianshu Qiu <tian.shu.qiu@intel.com>
 L:	linux-media@vger.kernel.org
 S:	Maintained
 T:	git git://linuxtv.org/media.git
-F:	Documentation/devicetree/bindings/media/i2c/asahi-kasei,ak7375.yaml
+F:	Documentation/devicetree/bindings/media/i2c/knix-kasei,ak7375.yaml
 F:	drivers/media/i2c/ak7375.c
 
-ASAHI KASEI AK8974 DRIVER
+KNIX KASEI AK8974 DRIVER
 M:	Linus Walleij <linusw@kernel.org>
 L:	linux-iio@vger.kernel.org
 S:	Supported
@@ -8810,11 +8810,11 @@ DRM DRIVERS FOR PRE-DCP APPLE DISPLAY OUTPUT
 M:	Sasha Finkelstein <k@chaosmail.tech>
 R:	Janne Grunau <j@jannau.net>
 L:	dri-devel@lists.freedesktop.org
-L:	asahi@lists.linux.dev
+L:	knix@lists.linux.dev
 S:	Maintained
 W:	https://knix.org
 B:	https://github.com/Knix/linux/issues
-C:	irc://irc.oftc.net/asahi-dev
+C:	irc://irc.oftc.net/knix-dev
 T:	git https://gitlab.freedesktop.org/drm/misc/kernel.git
 F:	Documentation/devicetree/bindings/display/apple,h7-display-pipe-mipi.yaml
 F:	Documentation/devicetree/bindings/display/apple,h7-display-pipe.yaml
@@ -25042,14 +25042,14 @@ F:	drivers/net/ethernet/socionext/sni_ave.c
 
 SOCIONEXT (SNI) NETSEC NETWORK DRIVER
 M:	Ilias Apalodimas <ilias.apalodimas@linaro.org>
-M:	Masahisa Kojima <kojima.masahisa@socionext.com>
+M:	Mknixsa Kojima <kojima.mknixsa@socionext.com>
 L:	netdev@vger.kernel.org
 S:	Maintained
 F:	Documentation/devicetree/bindings/net/socionext,synquacer-netsec.yaml
 F:	drivers/net/ethernet/socionext/netsec.c
 
 SOCIONEXT (SNI) Synquacer SPI DRIVER
-M:	Masahisa Kojima <kojima.masahisa@socionext.com>
+M:	Mknixsa Kojima <kojima.mknixsa@socionext.com>
 M:	Jassi Brar <jassisinghbrar@gmail.com>
 L:	linux-spi@vger.kernel.org
 S:	Maintained

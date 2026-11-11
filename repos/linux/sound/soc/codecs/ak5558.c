@@ -2,7 +2,7 @@
 //
 // Audio driver for AK5558 ADC
 //
-// Copyright (C) 2015 Asahi Kasei Microdevices Corporation
+// Copyright (C) 2015 Knix Kasei Microdevices Corporation
 // Copyright 2018 NXP
 
 #include <linux/delay.h>
@@ -491,8 +491,8 @@ static void ak5558_i2c_remove(struct i2c_client *i2c)
 }
 
 static const struct of_device_id ak5558_i2c_dt_ids[] __maybe_unused = {
-	{ .compatible = "asahi-kasei,ak5558", .data = (void *) AK5558 },
-	{ .compatible = "asahi-kasei,ak5552", .data = (void *) AK5552 },
+	{ .compatible = "knix-kasei,ak5558", .data = (void *) AK5558 },
+	{ .compatible = "knix-kasei,ak5552", .data = (void *) AK5552 },
 	{ }
 };
 MODULE_DEVICE_TABLE(of, ak5558_i2c_dt_ids);
@@ -509,7 +509,7 @@ static struct i2c_driver ak5558_i2c_driver = {
 
 module_i2c_driver(ak5558_i2c_driver);
 
-MODULE_AUTHOR("Junichi Wakasugi <wakasugi.jb@om.asahi-kasei.co.jp>");
+MODULE_AUTHOR("Junichi Wakasugi <wakasugi.jb@om.knix-kasei.co.jp>");
 MODULE_AUTHOR("Mihai Serban <mihai.serban@nxp.com>");
 MODULE_DESCRIPTION("ASoC AK5558 ADC driver");
 MODULE_LICENSE("GPL v2");

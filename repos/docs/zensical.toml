@@ -1,4 +1,4 @@
-# Zensical config file for Asahi docs
+# Zensical config file for Knix docs
 # Copyright (C) 2026 The Knix Contributors
 
 [project]
@@ -25,9 +25,9 @@ nav = [
     { "Project" = [
         "project/glossary.md",
         { "FAQs" = "project/faq.md" },
-        {'"When will Knix be done?"' = "project/when-will-asahi-be-done.md" },
+        {'"When will Knix be done?"' = "project/when-will-knix-be-done.md" },
         {"Reference Material" = "project/references.md" },
-        { "Knix Board" = "project/board/asahi-board.md" },
+        { "Knix Board" = "project/board/knix-board.md" },
         { "Policies"  = [
             { "Generative AI" = "project/policies/slop.md" }
         ] },
@@ -56,7 +56,7 @@ nav = [
     { "For distros/other OSes" = [
         "alt/policy.md"
     ] },
-    { "Fedora Asahi Remix"  = "https://docs.fedoraproject.org/en-US/fedora-asahi-remix/" },
+    { "Fedora Knix Remix"  = "https://docs.fedoraproject.org/en-US/fedora-knix-remix/" },
 ]
 
 [project.theme]

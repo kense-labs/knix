@@ -816,6 +816,6 @@ static struct platform_driver synquacer_spi_driver = {
 module_platform_driver(synquacer_spi_driver);
 
 MODULE_DESCRIPTION("Socionext Synquacer HS-SPI controller driver");
-MODULE_AUTHOR("Masahisa Kojima <masahisa.kojima@linaro.org>");
+MODULE_AUTHOR("Mknixsa Kojima <mknixsa.kojima@linaro.org>");
 MODULE_AUTHOR("Jassi Brar <jaswinder.singh@linaro.org>");
 MODULE_LICENSE("GPL v2");

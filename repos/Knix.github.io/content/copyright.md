@@ -91,7 +91,7 @@ We are committed to ensuring that all source code and documentation produced by 
 
 We recognize that a true textbook clean-room approach is not sustainable for most open source projects of this nature. Thus, we aim to ensure that Knix's code and contributions are effectively equivalent to what a clean-room approach would produce, without mandating the overhead of a true clean-room process.
 
-In order to protect contributors and developers who want to stay away from such subjects, we require that all reverse engineering discussion happen in the #asahi-re and #asahi-gpu (for GPU RE) IRC channels.
+In order to protect contributors and developers who want to stay away from such subjects, we require that all reverse engineering discussion happen in the #knix-re and #knix-gpu (for GPU RE) IRC channels.
 
 ## Non-reverse-engineering development
 
@@ -149,7 +149,7 @@ Especial caution must be applied for the graphics stack: contributors **must not
 
 Contributors doing binary reverse engineering are responsible for any legal consequences of their work, including any consequences of the license associated with said code.
 
-**Important**: In order to ensure the legal safety of project members that don't want to involve themselves in this reverse engineering approach, *all* such discussion is allowed **only** in the #asahi-re IRC channel. This will be strictly enforced, and work involving binary RE on other #asahi-* channels will lead to a kick or a ban. Additionally, do not paste any decompiled/disassembled code into the IRC channels. These channels are publicly logged.
+**Important**: In order to ensure the legal safety of project members that don't want to involve themselves in this reverse engineering approach, *all* such discussion is allowed **only** in the #knix-re IRC channel. This will be strictly enforced, and work involving binary RE on other #knix-* channels will lead to a kick or a ban. Additionally, do not paste any decompiled/disassembled code into the IRC channels. These channels are publicly logged.
 
 ## Usage of unreleased materials
 

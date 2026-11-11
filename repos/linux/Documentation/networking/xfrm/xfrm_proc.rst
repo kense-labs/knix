@@ -4,7 +4,7 @@
 XFRM proc - /proc/net/xfrm_* files
 ==================================
 
-Masahide NAKAMURA <nakam@linux-ipv6.org>
+Mknixde NAKAMURA <nakam@linux-ipv6.org>
 
 
 Transformation Statistics

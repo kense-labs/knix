@@ -20,7 +20,7 @@ Release Statistics for U-Boot v2018.01
    Simon Glass                        56 (7.1%)
    Marek Vasut                        54 (6.9%)
    Philipp Tomsich                    51 (6.5%)
-   Masahiro Yamada                    39 (5.0%)
+   Mknixro Yamada                    39 (5.0%)
    Kever Yang                         23 (2.9%)
    Patrice Chotard                    18 (2.3%)
    Jagan Teki                         15 (1.9%)
@@ -157,7 +157,7 @@ Release Statistics for U-Boot v2018.01
    Name                               Count
    =================================  =====
    Marek Vasut                        20756 (29.9%)
-   Masahiro Yamada                    5822 (8.4%)
+   Mknixro Yamada                    5822 (8.4%)
    Michal Simek                       4873 (7.0%)
    Heinrich Schuchardt                4043 (5.8%)
    Kever Yang                         3956 (5.7%)
@@ -321,7 +321,7 @@ Release Statistics for U-Boot v2018.01
    =================================  =====
    Alexander Graf                     74 (31.5%)
    Michal Simek                       43 (18.3%)
-   Masahiro Yamada                    17 (7.2%)
+   Mknixro Yamada                    17 (7.2%)
    Stefan Roese                       14 (6.0%)
    Boris Brezillon                    10 (4.3%)
    Alexey Brodkin                     7 (3.0%)

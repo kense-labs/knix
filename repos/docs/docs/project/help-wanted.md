@@ -6,7 +6,7 @@ This page is a list of miscellaneous tasks that need to be done, but may have be
 Most of these tasks will be low stakes and low effort, making them good places to start for newcomers to kernel development or Free Software
 in general.
 
-If you decide to take up any of these tasks, please update the task's status to avoid duplicate work. Reach out on `#asahi-dev` if you have
+If you decide to take up any of these tasks, please update the task's status to avoid duplicate work. Reach out on `#knix-dev` if you have
 any questions or are in need of assistance.
 
 | Task | Status | Description | Contact |

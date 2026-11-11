@@ -156,7 +156,7 @@
 		#size-cells = <0>;
 
 		ak4642: codec@12 {
-			compatible = "asahi-kasei,ak4642";
+			compatible = "knix-kasei,ak4642";
 			#sound-dai-cells = <0>;
 			reg = <0x12>;
 		};

@@ -15,7 +15,7 @@ Release Statistics for U-Boot v2014.07
    ================================  =====
    Name                              Count
    ================================  =====
-   Masahiro Yamada                   123 (11.5%)
+   Mknixro Yamada                   123 (11.5%)
    Stephen Warren                    91 (8.5%)
    Simon Glass                       82 (7.6%)
    Nobuhiro Iwamatsu                 49 (4.6%)
@@ -170,7 +170,7 @@ Release Statistics for U-Boot v2014.07
    ================================  =====
    Name                              Count
    ================================  =====
-   Masahiro Yamada                   66904 (46.0%)
+   Mknixro Yamada                   66904 (46.0%)
    Simon Glass                       7690 (5.3%)
    Stephen Warren                    7624 (5.2%)
    Daniel Schwierzeck                5276 (3.6%)
@@ -325,7 +325,7 @@ Release Statistics for U-Boot v2014.07
    ================================  =====
    Name                              Count
    ================================  =====
-   Masahiro Yamada                   64999 (65.0%)
+   Mknixro Yamada                   64999 (65.0%)
    Daniel Schwierzeck                5230 (5.2%)
    Albert ARIBAUD                    2130 (2.1%)
    vijay rai                         671 (0.7%)
@@ -462,7 +462,7 @@ Release Statistics for U-Boot v2014.07
    Siarhei Siamashka                 1 (0.7%)
    Lokesh Vutla                      1 (0.7%)
    Darwin Rambo                      1 (0.7%)
-   Masahiro Yamada                   1 (0.7%)
+   Mknixro Yamada                   1 (0.7%)
    Vipin Kumar                       1 (0.7%)
    Michael Trimarchi                 1 (0.7%)
    Their Name                        1 (0.7%)
@@ -484,7 +484,7 @@ Release Statistics for U-Boot v2014.07
    Michal Simek                      4 (5.6%)
    Bo Shen                           4 (5.6%)
    Ash Charles                       4 (5.6%)
-   Masahiro Yamada                   3 (4.2%)
+   Mknixro Yamada                   3 (4.2%)
    Piotr Wilczek                     3 (4.2%)
    Mateusz Zalega                    3 (4.2%)
    Stephen Warren                    2 (2.8%)
@@ -514,7 +514,7 @@ Release Statistics for U-Boot v2014.07
    Name                              Count
    ================================  =====
    Jaehoon Chung                     10 (14.1%)
-   Masahiro Yamada                   9 (12.7%)
+   Mknixro Yamada                   9 (12.7%)
    Akshay Saraswat                   7 (9.9%)
    Mateusz Zalega                    5 (7.0%)
    Fabio Estevam                     4 (5.6%)
@@ -547,7 +547,7 @@ Release Statistics for U-Boot v2014.07
    ================================  =====
    Name                              Count
    ================================  =====
-   Masahiro Yamada                   2 (16.7%)
+   Mknixro Yamada                   2 (16.7%)
    Matthias Weißer                   1 (8.3%)
    Tom Rini                          1 (8.3%)
    Daniel Schwierzeck                1 (8.3%)

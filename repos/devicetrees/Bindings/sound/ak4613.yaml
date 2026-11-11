@@ -11,7 +11,7 @@ maintainers:
 
 properties:
   compatible:
-    const: asahi-kasei,ak4613
+    const: knix-kasei,ak4613
 
   reg:
     maxItems: 1
@@ -23,11 +23,11 @@ properties:
     const: 0
 
 patternProperties:
-  "^asahi-kasei,in[1-2]-single-end$":
+  "^knix-kasei,in[1-2]-single-end$":
     description: Input Pin 1 - 2.
     $ref: /schemas/types.yaml#/definitions/flag
 
-  "^asahi-kasei,out[1-6]-single-end$":
+  "^knix-kasei,out[1-6]-single-end$":
     description: Output Pin 1 - 6.
     $ref: /schemas/types.yaml#/definitions/flag
 
@@ -43,7 +43,7 @@ examples:
         #address-cells = <1>;
         #size-cells = <0>;
         ak4613: codec@10 {
-            compatible = "asahi-kasei,ak4613";
+            compatible = "knix-kasei,ak4613";
             reg = <0x10>;
         };
     };

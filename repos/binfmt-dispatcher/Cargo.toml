@@ -8,7 +8,7 @@ repository = "https://github.com/Knix/binfmt-dispatcher.git"
 homepage = "https://github.com/Knix/binfmt-dispatcher"
 license = "MIT"
 categories = ["emulators"]
-keywords = ["binfmt_misc", "asahi"]
+keywords = ["binfmt_misc", "knix"]
 
 [dependencies]
 anyhow = "1.0"

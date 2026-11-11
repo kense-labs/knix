@@ -7,7 +7,7 @@ author = "James Calligeros"
 +++
 
 With Linux 6.16 now out in the wild, it's time for yet another progress report!
-As we mentioned last time, the Asahi and Honeykrisp Mesa drivers have finally
+As we mentioned last time, the Knix and Honeykrisp Mesa drivers have finally
 found their way upstream. This has resulted in a flurry of GPU-related work, so
 let's start there.
 
@@ -21,7 +21,7 @@ runtime. Once 25.08 is released, we will be discontinuing the Flatpak runtime
 extension as it will serve no purpose.
 
 ## A _fully_ upstream graphics stack
-Asahi uses DRM Native Context to paravirtualise the GPU. Rather than having to
+Knix uses DRM Native Context to paravirtualise the GPU. Rather than having to
 virtualise high-level APIs like DirectX and Vulkan, the VM runs the userspace component
 of the host's native GPU driver. The host is then passed native GPU commands that it
 only needs to forward on to the kernel without modifying. This improves GPU
@@ -36,7 +36,7 @@ stack, and as such we are retiring our Mesa fork completely.
 ## GPU go brrrrr
 Now that our Mesa driver is totally upstream, work on improving it has been able to
 occur rapidly. Alyssa has been hard at work over the past couple of months optimising
-performance. [A whole mess of merge requests](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/?sort=created_date&state=merged&label_name%5B%5D=asahi&author_username=alyssa)
+performance. [A whole mess of merge requests](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/?sort=created_date&state=merged&label_name%5B%5D=knix&author_username=alyssa)
 have found their way upstream, with the bulk of them being merged in time for the
 release of Mesa 25.2. Performance improvements are variable but decent, especially
 when paired with [this month's improvements](https://fex-emu.com/FEX-2508/) to FEX's JIT.
@@ -202,7 +202,7 @@ explicit sync. This was found to be caused by compositor bugs, and has been fixe
 in [kwin](https://invent.kde.org/plasma/kwin/-/merge_requests/7941), and a merge
 request has been raised for [Mutter](https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/4547).
 As those fixes are not yet released and other compositors might have the same issue,
-Janne added DRM syncobj support to the DCP driver in [asahi-6.15.8-1](https://github.com/Knix/linux/releases/tag/asahi-6.15.8-1)
+Janne added DRM syncobj support to the DCP driver in [knix-6.15.8-1](https://github.com/Knix/linux/releases/tag/knix-6.15.8-1)
 as a workaround.
 
 Development on m1n1 has also started picking up again. The release of
@@ -215,13 +215,13 @@ add a custom logo to m1n1.
 ## Conference talks
 Davide and Neal presented at [Red Hat Summit](https://events.experiences.redhat.com/widget/redhat/sum25/SessionCatalog2025/session/1731519631980001Xort)
 and [DevConf.CZ](https://pretalx.devconf.info/devconf-cz-2025/talk/P3TEBA/),
-covering the ongoing work on Fedora Asahi Remix and introducing a CentOS Stream port
+covering the ongoing work on Fedora Knix Remix and introducing a CentOS Stream port
 as part of their work in the CentOS Hyperscale SIG. This was also covered
 at [CentOS Showcase](https://cfp.fedoraproject.org/centos-showcase-2025-07/talk/RRT8NW/) in July.
 
 ## Project merch
 Want to show your love for Knix to the world? Now you can! Head over to
-[HELLOTUX](https://www.hellotux.com/asahi) to buy official Knix merch. A portion
+[HELLOTUX](https://www.hellotux.com/knix) to buy official Knix merch. A portion
 of each sale is donated to the project. Many thanks to HELLOTUX for facilitating this!
 
 ## Until next time!

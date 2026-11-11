@@ -16,7 +16,7 @@ Release Statistics for U-Boot v2016.03
    Name                              Count
    ================================  =====
    Simon Glass                       309 (22.5%)
-   Masahiro Yamada                   113 (8.2%)
+   Mknixro Yamada                   113 (8.2%)
    Bin Meng                          95 (6.9%)
    Michal Simek                      95 (6.9%)
    Stephen Warren                    81 (5.9%)
@@ -151,7 +151,7 @@ Release Statistics for U-Boot v2016.03
    Name                              Count
    ================================  =====
    Simon Glass                       28854 (31.8%)
-   Masahiro Yamada                   6517 (7.2%)
+   Mknixro Yamada                   6517 (7.2%)
    Bin Meng                          6203 (6.8%)
    Stephen Warren                    5173 (5.7%)
    Stefan Roese                      3598 (4.0%)
@@ -375,7 +375,7 @@ Release Statistics for U-Boot v2016.03
    Marek Vasut                       3 (0.4%)
    Peng Fan                          2 (0.3%)
    Joe Hershberger                   2 (0.3%)
-   Masahiro Yamada                   2 (0.3%)
+   Mknixro Yamada                   2 (0.3%)
    Wenyou Yang                       1 (0.1%)
    Purna Chandra Mandal              1 (0.1%)
    Minkyu Kang                       1 (0.1%)
@@ -437,7 +437,7 @@ Release Statistics for U-Boot v2016.03
    Wenyou Yang                       15 (9.8%)
    Miao Yan                          8 (5.2%)
    Stephen Warren                    5 (3.3%)
-   Masahiro Yamada                   2 (1.3%)
+   Mknixro Yamada                   2 (1.3%)
    Łukasz Majewski                   2 (1.3%)
    Lubomir Rintel                    2 (1.3%)
    Gregory CLEMENT                   2 (1.3%)

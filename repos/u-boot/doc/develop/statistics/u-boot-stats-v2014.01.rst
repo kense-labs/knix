@@ -15,7 +15,7 @@ Release Statistics for U-Boot v2014.01
    ================================  =====
    Name                              Count
    ================================  =====
-   Masahiro Yamada                   127 (13.0%)
+   Mknixro Yamada                   127 (13.0%)
    Nobuhiro Iwamatsu                 50 (5.1%)
    Fabio Estevam                     43 (4.4%)
    Tom Rini                          34 (3.5%)
@@ -178,7 +178,7 @@ Release Statistics for U-Boot v2014.01
    ================================  =====
    Name                              Count
    ================================  =====
-   Masahiro Yamada                   25093 (24.7%)
+   Mknixro Yamada                   25093 (24.7%)
    Nobuhiro Iwamatsu                 8890 (8.8%)
    Eric Nelson                       5909 (5.8%)
    Rajeshwari S Shinde               5438 (5.4%)
@@ -341,7 +341,7 @@ Release Statistics for U-Boot v2014.01
    ================================  =====
    Name                              Count
    ================================  =====
-   Masahiro Yamada                   20766 (41.5%)
+   Mknixro Yamada                   20766 (41.5%)
    Tom Rini                          3933 (7.9%)
    Rob Herring                       1586 (3.2%)
    Eric Nelson                       1163 (2.3%)

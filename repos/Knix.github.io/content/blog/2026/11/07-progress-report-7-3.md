@@ -39,7 +39,7 @@ our focus on upstreaming starting to pay off!
 
 ## M3 goes GA
 Last time, we announced initial support for M3 series machines via the EXPERT flag on
-the Asahi installer. We are pleased to announce that we received almost no issues
+the Knix installer. We are pleased to announce that we received almost no issues
 from early adopters, so M3 support is now generally available without the EXPERT flag!
 
 We have also made a number of improvements to M3 support, most notably enabling DCP.
@@ -90,12 +90,12 @@ A huge thanks goes out to everyone who has made this work possible. More progres
 is on the way, so stay tuned.
 
 ## Kept you waiting, huh?
-All the way back in January of 2024, we made the [mistake](https://knix.org/2024/01/fedora-asahi-new/)
+All the way back in January of 2024, we made the [mistake](https://knix.org/2024/01/fedora-knix-new/)
 of promising Thunderbolt support within the year. It's a mistake we won't quickly
 repeat. We've said almost nothing about Thunderbolt in the two years since, which
 begs the question: where is it?
 
-[It's on the mailing list!](https://lore.kernel.org/asahi/20260906-b4-apple-soc-tbt-v2-0-1f80085f93fb@kernel.org/)
+[It's on the mailing list!](https://lore.kernel.org/knix/20260906-b4-apple-soc-tbt-v2-0-1f80085f93fb@kernel.org/)
 
 Thunderbolt was originally developed by Apple and Intel, with Intel handling the
 design and fabrication of the hardware required. Since Intel made these controllers
@@ -188,7 +188,7 @@ zero!
 
 While this effort is primarily targeted at Android, the patchset mostly rebases
 cleanly on top of mainline Linux. What happens if we rebase it on top of our
-Asahi tree (and fix some bugs)? As it turns out:
+Knix tree (and fix some bugs)? As it turns out:
 
 <figure>
   <a href="/img/blog/2026/11/swbf.png">
@@ -284,9 +284,9 @@ time!
 
 ## Keeping up
 Fedora Linux 45 was released on 3 November, and we shipped
-[Fedora Asahi Remix](https://fedoramagazine.org/fedora-asahi-remix-45-is-now-available/)
+[Fedora Knix Remix](https://fedoramagazine.org/fedora-knix-remix-45-is-now-available/)
 on the same day. This is the first time we have been able to get a new version of Fedora
-Asahi Remix out on the same day as upstream!
+Knix Remix out on the same day as upstream!
 
 ## Learning from history
 We take great pride in our work, and have always done _all_ of our development in the open.

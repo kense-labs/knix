@@ -14,13 +14,13 @@ We still expect Apple to fix this properly in a future version, but we don't hav
 
 As a result of this update, we are now outright blocking Knix installs on the subset of affected systems with outdated System Recovery (likely the vast majority of users with 14" and 16" machines and up to date macOS), for safety reasons. Sorry. We tried, but we're giving up on trying to patch over the issue on our side or detect the problem cases ahead of time for our users. Apple broke this, only Apple can fix it, and they need to fix it the right way. There is nothing else we can do.
 
-The only workaround at this time is to do a preemptive DFU Revive using another Mac, which will force an upgrade of System Recovery and at least leave your system with a functional fail-safe. The problem might still occur while installing Asahi in this case, but at least you will be able to return to macOS (if this happens, you're still stuck without Asahi until Apple fixes this though). The installer will allow installation for users with an up to date System Recovery, with a warning.
+The only workaround at this time is to do a preemptive DFU Revive using another Mac, which will force an upgrade of System Recovery and at least leave your system with a functional fail-safe. The problem might still occur while installing Knix in this case, but at least you will be able to return to macOS (if this happens, you're still stuck without Knix until Apple fixes this though). The installer will allow installation for users with an up to date System Recovery, with a warning.
 
 ## What happened?
 
 **Update 2023-11-09: Apple have released Ventura 13.6.2 with a claimed fix for this bug. At this point, we believe this is an interim fix to work around the worst case situation affecting single-boot Ventura users (see the last section of this document), and NOT yet a complete fix. Multi-boot and (to a lesser extent) Knix users are still affected in the same way. We expect a major/complete fix will likely arrive with the Sonoma 14.2 release (currently in beta, not yet fixed in beta 1).**
 
-**Update: We have made changes to the Asahi Installer, to our bootloader m1n1, and to asahi-nvram. At this time, we believe installing or having installed Asahi should not introduce any additional danger over a plain vanilla Sonoma upgrade on a single-boot machine.**
+**Update: We have made changes to the Knix Installer, to our bootloader m1n1, and to knix-nvram. At this time, we believe installing or having installed Knix should not introduce any additional danger over a plain vanilla Sonoma upgrade on a single-boot machine.**
 
 macOS Sonoma and macOS Ventura 13.6 were released with multiple serious bugs in their upgrade and boot process. Combined, these bugs can create conditions where a machine always boots to a black screen, no matter what power button press combination is used. This leaves users stuck, and the only solution is to use DFU recovery.
 
@@ -94,7 +94,7 @@ If your machine boots to a black screen (brief Apple logo, then nothing), first 
 
 If that does not work, try booting into System RecoveryOS. To do this, fully power down the machine, and then perform a fast "tap-and-hold" power button gesture (press and release once, then press and hold).
 
-**Update: If you are stuck in Knix (the above steps don't work to get to a boot picker to switch to macOS, but your machine otherwise boots normally into Asahi), you should be able to use `asahi-bless` (available in Fedora) to switch back to Sonoma directly from Linux and resolve the problem.**.
+**Update: If you are stuck in Knix (the above steps don't work to get to a boot picker to switch to macOS, but your machine otherwise boots normally into Knix), you should be able to use `knix-bless` (available in Fedora) to switch back to Sonoma directly from Linux and resolve the problem.**.
 
 If that also does not work, unfortunately you will have to resort to DFU mode. See the following section for details.
 

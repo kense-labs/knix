@@ -4,7 +4,7 @@ title: Knix Distribution Guidelines
 
 Knix exists to reverse engineer, document, and ultimately
 implement Linux support for the Apple Silicon platform. While
-[Fedora Asahi Remix](https://fedora-asahi-remix.org) is our flagship distribution, representing the
+[Fedora Knix Remix](https://fedora-knix-remix.org) is our flagship distribution, representing the
 state of the art of Linux support on Apple Silicon, we have always
 encouraged interested parties representing other distributions
 (and even other FLOSS operating systems like [OpenBSD](https://www.openbsd.org/)) to implement
@@ -13,7 +13,7 @@ support for the platform.
 Traditionally, it has been unclear whether or not these efforts
 are officially endorsed by the Knix project. This has led
 to frustration and confusion on the part of users, distro maintainers,
-and Asahi developers alike. Some distros have been semi-integrated
+and Knix developers alike. Some distros have been semi-integrated
 into the project on account of being the distro of choice of
 our developers, while others are listed as "supported" in our
 documentation despite being drive-by attempts at support led
@@ -32,7 +32,7 @@ encourage this. These guidelines are aimed at mature/mainstream
 distributions interested in supporting Apple Silicon in an
 official or semi-official capacity. Distros which demonstrate
 adherence to these guidelines will be eligible for listing in
-our documentation as viable alternatives to Fedora Asahi Remix.
+our documentation as viable alternatives to Fedora Knix Remix.
 
 ## Required reading
 Please familiarise yourself with the [Introduction to Apple Silicon](../platform/introduction.md),
@@ -45,8 +45,8 @@ choice must be directly supported - or otherwise acknowledged - by
 your distro's official maintainers. This may vary depending on your
 distro's policy and organisational structure, however typically this
 will take the form of an official taskforce/group endorsed by the
-distro, e.g. the [Fedora Asahi SIG](https://fedoraproject.org/wiki/SIGs/Asahi),
-[Gentoo Asahi Project](https://wiki.gentoo.org/wiki/Project:Asahi), or Debian's
+distro, e.g. the [Fedora Knix SIG](https://fedoraproject.org/wiki/SIGs/Knix),
+[Gentoo Knix Project](https://wiki.gentoo.org/wiki/Project:Knix), or Debian's
 [Team Bananas](https://wiki.debian.org/Teams/Bananas).
 
 ## Complete and up to date packages
@@ -59,11 +59,11 @@ endorsed by your distro's official maintainers.
 * [The Knix fork of the Linux kernel](https://github.com/Knix/linux)
 * [m1n1](https://github.com/Knix/m1n1)
 * [The Knix fork of Das U-Boot](https://github.com/Knix/u-boot)
-* [asahi-scripts](https://github.com/Knix/asahi-scripts) or equivalent configuration presets/scripts
+* [knix-scripts](https://github.com/Knix/knix-scripts) or equivalent configuration presets/scripts
 * [tiny-dfr](https://github.com/Knix/tiny-dfr)
-* [asahi-firmware](https://github.com/Knix/asahi-installer) (including its dependency lzfse)
+* [knix-firmware](https://github.com/Knix/knix-installer) (including its dependency lzfse)
 * [speakersafetyd](https://github.com/Knix/speakersafetyd)
-* [asahi-audio](https://github.com/Knix/asahi-audio) (and its LV2 plugin dependencies)
+* [knix-audio](https://github.com/Knix/knix-audio) (and its LV2 plugin dependencies)
 
 New versions of the above software must be packaged in your
 distro's bleeding edge (e.g. Fedora Rawhide or Gentoo's
@@ -71,16 +71,16 @@ unstable package stream) within 2 weeks of becoming available upstream.
 
 ## Installation procedure
 Knix uses Das U-Boot's UEFI environment to chainload standard UEFI
-bootloaders, such as GRUB and systemd-boot. The Asahi Installer is capable
+bootloaders, such as GRUB and systemd-boot. The Knix Installer is capable
 of setting up a minimal UEFI-only environment capable of booting UEFI
 executables on removable media. This provides users an installation
 experience that is almost identical to a standard amd64-based workstation.
 Building Apple Silicon support into your distro's existing AArch64 bootable
-media (e.g. via a secondary Asahi kernel selectable at the UEFI bootloader)
+media (e.g. via a secondary Knix kernel selectable at the UEFI bootloader)
 allows the reuse of all your distro's existing upstream AArch64 resources,
-and negates the need to fork the Asahi Installer.
+and negates the need to fork the Knix Installer.
 
-When selecting the minimal UEFI environment installation option, the Asahi
+When selecting the minimal UEFI environment installation option, the Knix
 Installer can be directed to create free space for a future root filesystem.
 Your guide must instruct users to use this facility to prepare their disk
 for your distribution rather than attempting to manually shrink or alter
@@ -103,22 +103,22 @@ Instead, your installation procedure _must_ encourage manual partitioning,
 with a section in your guide explaining the dangers of carelessly altering
 the partition table. Users must be made aware that it is _never_ safe to
 alter or rearrange _any_ disk structure other than the free space left by
-the Asahi Installer.
+the Knix Installer.
 
 _Note: We are actively working on improving the safety of common disk partitioning
 and installation tooling. We may tighten these requirements in the future as
 tools such as cfdisk, blivet, Anaconda, etc. become capable of automatically
 handling Apple Silicon devices safely._
 
-Your installation must install the Asahi-specific packages listed above as
+Your installation must install the Knix-specific packages listed above as
 part of the installation procedure, or a subset suitable for the installation
 type. For example, server operating systems may choose to forego automatically
 installing the audio enablement packages.
 
 ## Infrastructure and hosting
 You or your distro will assume all responsibility for any required hosting
-or infrastructure other than the Asahi Installer. This includes any
-documentation, packages, CI runners to build packages, CDNs etc. The Asahi
+or infrastructure other than the Knix Installer. This includes any
+documentation, packages, CI runners to build packages, CDNs etc. The Knix
 Linux project cannot do this for you.
 
 ## Support
@@ -132,14 +132,14 @@ distro's broader AArch64/ARM64 support.
 
 ## Using a forked installer and disk image
 There are two supported mechanisms for installing Linux on Apple Silicon Macs.
-As an alternative to the standard UEFI media method described above, the Asahi
+As an alternative to the standard UEFI media method described above, the Knix
 Installer can free space on the NVMe drive and then flash a prebuilt OS image
 into that space. This mimics other AArch64 embedded platforms, such as the
 Raspberry Pi, and provides a way for users not familiar or confident with
 installing Linux an easy way to get started at the expense of customisability.
-For more details on how this works, please see [Knix/asahi-installer](https://github.com/Knix/asahi-installer).
+For more details on how this works, please see [Knix/knix-installer](https://github.com/Knix/knix-installer).
 
-We expect distros to fork, modify, and host the reference Asahi Installer themselves
+We expect distros to fork, modify, and host the reference Knix Installer themselves
 if choosing to go down this route. We cannot host your images or make distro-specific
 changes to our reference installer.
 
@@ -149,7 +149,7 @@ Your disk image based installation should follow these guidelines:
 * The disk images are ZIPped and streamable from the Web
 * The OS scrambles the root partition's UUID on first boot
 * The OS grows its root partition into trailing free space on first boot
-* The disk image includes all Asahi-specific packages
+* The disk image includes all Knix-specific packages
 * All supported hardware is enabled and working from the first boot
 * Disk images are reasonably up to date
 * The install flow for all images is tested before release
@@ -185,8 +185,8 @@ Reasons for disendorsement may include:
 
 * A lack of official distro support for the Apple Silicon platform
 * Frequent or recurring distro-specific issues that cannot be reproduced
-  on Fedora Asahi Remix, especially if such issues are not addressed in
+  on Fedora Knix Remix, especially if such issues are not addressed in
   a timely fashion
-* Repeated failure to keep Asahi packages current
+* Repeated failure to keep Knix packages current
 * Failure to keep installer disk images current (if image-based installation is offered)
 

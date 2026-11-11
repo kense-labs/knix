@@ -137,7 +137,7 @@
 	status = "okay";
 
 	magnetometer@d {
-		compatible = "asahi-kasei,ak8963";
+		compatible = "knix-kasei,ak8963";
 		reg = <0x0d>;
 		interrupts-extended = <&tlmm 66 IRQ_TYPE_EDGE_RISING>;
 		vdd-supply = <&pm8226_l19>;

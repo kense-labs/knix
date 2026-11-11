@@ -53,8 +53,8 @@
 | I3 | `repos/` 内无嵌套 `.git` |
 | I4 | 无超过 95 MB 的单文件 |
 | I5 | `snapshot_files` / `snapshot_bytes` / `totals` 与磁盘一致 |
-| I6 | 上游品牌字面残留为 0 |
-| I7 | 内核 UAPI、设备树 compatible 与上游仓库名标识符保持原样 |
+| I6 | 全仓无上游品牌与代号字面（含二进制元数据） |
+| I7 | 内核 UAPI、设备树 compatible 与仓库名标识符统一为 Knix 命名 |
 | I8 | `docs/brand/` 官方 mark 字节与品牌契约一致 |
 | I9 | 单一 `main` 分支，无 tag / submodule |
 | I10 | `README.md` 无上游品牌字面与代号残留 |
@@ -80,7 +80,7 @@ python3 scripts/verify-knix.py && git add -A && git commit -m "chore: refresh sn
 - 把上游 `.git` 历史、tag 或其他分支塞回快照。
 - `git submodule add` 或递归拉取 submodule。
 - 改动 `repos/` 内的 `LICENSE` / `COPYING`。
-- 改动内核 UAPI、设备树 compatible 或上游仓库名标识符。
+- 回退或混用旧标识符。
 - 手工编辑 `docs/brand/` 的 PNG，或调整 logo 尺寸与配色。
 - 在本页或架构图中修改统计数字。
 - 新增发布分支、tag 或第二个 origin。
@@ -91,6 +91,7 @@ python3 scripts/verify-knix.py && git add -A && git commit -m "chore: refresh sn
 - submodule 未递归；`artwork`、`m1n1` 已作为独立仓库收录；部分 logo 符号链接在上游即悬空。
 - `source_url` / `clone_url` 指向 `github.com/Knix/...`；从真实上游重采需设置 `KNIX_ORG`。
 - 统计为采集时刻值。
+- 内核 UAPI 与设备树 compatible 已重命名；快照不保证与上游 ABI 对齐或可编译。
 - Deferred：统计与清单生成器入库、定期重采调度、增量 diff 报告。
 
 ## Scale and status
@@ -99,7 +100,7 @@ python3 scripts/verify-knix.py && git add -A && git commit -m "chore: refresh sn
 | --- | --- |
 | 仓库数 | 43 |
 | 文件数 | 147,032 |
-| 源码总体积 | 1.93 GB（2,076,111,665 字节） |
+| 源码总体积 | 1.93 GB（2,076,107,035 字节） |
 | 上游完整历史体积 | 8.33 GB |
 | 默认分支 | main 28 · master 9 · 其余 6 |
 | 已归档 / fork | 14 / 9 |

@@ -53,7 +53,7 @@ struct ac97_codec_id {
 
 static const struct ac97_codec_id snd_ac97_codec_id_vendors[] = {
 { 0x41445300, 0xffffff00, "Analog Devices",	NULL,	NULL },
-{ 0x414b4d00, 0xffffff00, "Asahi Kasei",	NULL,	NULL },
+{ 0x414b4d00, 0xffffff00, "Knix Kasei",	NULL,	NULL },
 { 0x414c4300, 0xffffff00, "Realtek",		NULL,	NULL },
 { 0x414c4700, 0xffffff00, "Realtek",		NULL,	NULL },
 /*

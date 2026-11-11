@@ -899,7 +899,7 @@ Instalatzailea irten egingo da eta aldaketa guztiak galduko dira.</translation>
     <message>
       <location filename="../src/modules/users/Config.cpp" line="534"/>
       <source>Your passwords do not match!</source>
-      <translation>Pasahitzak ez datoz bat!</translation>
+      <translation>Pknixtzak ez datoz bat!</translation>
     </message>
     <message>
       <location filename="../src/modules/users/Config.cpp" line="548"/>
@@ -1442,18 +1442,18 @@ Instalatzailea irten egingo da eta aldaketa guztiak galduko dira.</translation>
     <message>
       <location filename="../src/modules/partition/gui/EncryptWidget.ui" line="59"/>
       <source>Passphrase</source>
-      <translation>Pasahitza</translation>
+      <translation>Pknixtza</translation>
     </message>
     <message>
       <location filename="../src/modules/partition/gui/EncryptWidget.ui" line="69"/>
       <source>Confirm passphrase</source>
-      <translation>Berretsi pasahitza</translation>
+      <translation>Berretsi pknixtza</translation>
     </message>
     <message>
       <location filename="../src/modules/partition/gui/EncryptWidget.cpp" line="134"/>
       <location filename="../src/modules/partition/gui/EncryptWidget.cpp" line="144"/>
       <source>Please enter the same passphrase in both boxes.</source>
-      <translation>Mesedez sartu pasahitz berdina bi kutxatan.</translation>
+      <translation>Mesedez sartu pknixtz berdina bi kutxatan.</translation>
     </message>
   </context>
   <context>
@@ -2215,17 +2215,17 @@ Instalatzailea irten egingo da eta aldaketa guztiak galduko dira.</translation>
     <message>
       <location filename="../src/modules/users/CheckPWQuality.cpp" line="51"/>
       <source>Password is too short</source>
-      <translation>Pasahitza laburregia da</translation>
+      <translation>Pknixtza laburregia da</translation>
     </message>
     <message>
       <location filename="../src/modules/users/CheckPWQuality.cpp" line="67"/>
       <source>Password is too long</source>
-      <translation>Pasahitza luzeegia da</translation>
+      <translation>Pknixtza luzeegia da</translation>
     </message>
     <message>
       <location filename="../src/modules/users/CheckPWQuality.cpp" line="188"/>
       <source>Password is too weak</source>
-      <translation>Pasahitza ahulegia da</translation>
+      <translation>Pknixtza ahulegia da</translation>
     </message>
     <message>
       <location filename="../src/modules/users/CheckPWQuality.cpp" line="196"/>
@@ -2240,12 +2240,12 @@ Instalatzailea irten egingo da eta aldaketa guztiak galduko dira.</translation>
     <message>
       <location filename="../src/modules/users/CheckPWQuality.cpp" line="201"/>
       <source>The password is the same as the old one</source>
-      <translation>Pasahitza aurreko zahar baten berdina da</translation>
+      <translation>Pknixtza aurreko zahar baten berdina da</translation>
     </message>
     <message>
       <location filename="../src/modules/users/CheckPWQuality.cpp" line="203"/>
       <source>The password is a palindrome</source>
-      <translation>Pasahitza palindromoa da</translation>
+      <translation>Pknixtza palindromoa da</translation>
     </message>
     <message>
       <location filename="../src/modules/users/CheckPWQuality.cpp" line="205"/>
@@ -2255,7 +2255,7 @@ Instalatzailea irten egingo da eta aldaketa guztiak galduko dira.</translation>
     <message>
       <location filename="../src/modules/users/CheckPWQuality.cpp" line="207"/>
       <source>The password is too similar to the old one</source>
-      <translation>Pasahitza aurreko zahar baten oso antzerakoa da</translation>
+      <translation>Pknixtza aurreko zahar baten oso antzerakoa da</translation>
     </message>
     <message>
       <location filename="../src/modules/users/CheckPWQuality.cpp" line="209"/>
@@ -2275,12 +2275,12 @@ Instalatzailea irten egingo da eta aldaketa guztiak galduko dira.</translation>
     <message>
       <location filename="../src/modules/users/CheckPWQuality.cpp" line="221"/>
       <source>The password contains too few digits</source>
-      <translation>Pasahitzak zenbaki gutxiegi ditu</translation>
+      <translation>Pknixtzak zenbaki gutxiegi ditu</translation>
     </message>
     <message>
       <location filename="../src/modules/users/CheckPWQuality.cpp" line="228"/>
       <source>The password contains too few uppercase letters</source>
-      <translation>Pasahitzak maiuskula gutxiegi ditu</translation>
+      <translation>Pknixtzak maiuskula gutxiegi ditu</translation>
     </message>
     <message numerus="yes">
       <location filename="../src/modules/users/CheckPWQuality.cpp" line="232"/>
@@ -2293,17 +2293,17 @@ Instalatzailea irten egingo da eta aldaketa guztiak galduko dira.</translation>
     <message>
       <location filename="../src/modules/users/CheckPWQuality.cpp" line="235"/>
       <source>The password contains too few lowercase letters</source>
-      <translation>Pasahitzak minuskula gutxiegi ditu</translation>
+      <translation>Pknixtzak minuskula gutxiegi ditu</translation>
     </message>
     <message>
       <location filename="../src/modules/users/CheckPWQuality.cpp" line="242"/>
       <source>The password contains too few non-alphanumeric characters</source>
-      <translation>Pasahitzak alfabetokoak ez diren karaktere gutxiegi ditu</translation>
+      <translation>Pknixtzak alfabetokoak ez diren karaktere gutxiegi ditu</translation>
     </message>
     <message>
       <location filename="../src/modules/users/CheckPWQuality.cpp" line="249"/>
       <source>The password is too short</source>
-      <translation>Pasahitza motzegia da</translation>
+      <translation>Pknixtza motzegia da</translation>
     </message>
     <message>
       <location filename="../src/modules/users/CheckPWQuality.cpp" line="258"/>
@@ -2610,13 +2610,13 @@ Instalatzailea irten egingo da eta aldaketa guztiak galduko dira.</translation>
     <message>
       <location filename="../src/modules/users/page_usersetup.ui" line="325"/>
       <source>Choose a password to keep your account safe.</source>
-      <translation>Aukeratu pasahitza zure kontua babesteko.</translation>
+      <translation>Aukeratu pknixtza zure kontua babesteko.</translation>
     </message>
     <message>
       <location filename="../src/modules/users/page_usersetup.ui" line="349"/>
       <location filename="../src/modules/users/page_usersetup.ui" line="374"/>
       <source>&lt;small&gt;Enter the same password twice, so that it can be checked for typing errors. A good password will contain a mixture of letters, numbers and punctuation, should be at least eight characters long, and should be changed at regular intervals.&lt;/small&gt;</source>
-      <translation>&lt;small&gt;Pasahitza berbera birritan sartu, idazketa akatsak ez dauden egiaztatzeko. Pasahitza on batek letrak, zenbakiak eta puntuazio sinboloak izan behar ditu, zortzi karaktere gutxienez izan behar ditu eta tarteka-marteka aldatu behar izango litzateke.&lt;/small&gt;</translation>
+      <translation>&lt;small&gt;Pknixtza berbera birritan sartu, idazketa akatsak ez dauden egiaztatzeko. Pknixtza on batek letrak, zenbakiak eta puntuazio sinboloak izan behar ditu, zortzi karaktere gutxienez izan behar ditu eta tarteka-marteka aldatu behar izango litzateke.&lt;/small&gt;</translation>
     </message>
     <message>
       <location filename="../src/modules/users/page_usersetup.ui" line="355"/>
@@ -2643,23 +2643,23 @@ Instalatzailea irten egingo da eta aldaketa guztiak galduko dira.</translation>
     <message>
       <location filename="../src/modules/users/page_usersetup.ui" line="465"/>
       <source>Log in automatically without asking for the password.</source>
-      <translation>Hasi saioa automatikoki pasahitza eskatu gabe.</translation>
+      <translation>Hasi saioa automatikoki pknixtza eskatu gabe.</translation>
     </message>
     <message>
       <location filename="../src/modules/users/page_usersetup.ui" line="472"/>
       <source>Use the same password for the administrator account.</source>
-      <translation>Erabili pasahitz bera administratzaile kontuan.</translation>
+      <translation>Erabili pknixtz bera administratzaile kontuan.</translation>
     </message>
     <message>
       <location filename="../src/modules/users/page_usersetup.ui" line="495"/>
       <source>Choose a password for the administrator account.</source>
-      <translation>Aukeratu pasahitz bat administratzaile kontuarentzat.</translation>
+      <translation>Aukeratu pknixtz bat administratzaile kontuarentzat.</translation>
     </message>
     <message>
       <location filename="../src/modules/users/page_usersetup.ui" line="519"/>
       <location filename="../src/modules/users/page_usersetup.ui" line="544"/>
       <source>&lt;small&gt;Enter the same password twice, so that it can be checked for typing errors.&lt;/small&gt;</source>
-      <translation>&lt;small&gt;Sartu pasahitza birritan, honela tekleatze erroreak egiaztatzeko.&lt;/small&gt;</translation>
+      <translation>&lt;small&gt;Sartu pknixtza birritan, honela tekleatze erroreak egiaztatzeko.&lt;/small&gt;</translation>
     </message>
   </context>
   <context>
@@ -3540,7 +3540,7 @@ Irteera:
     <message>
       <location filename="../src/modules/users/SetPasswordJob.cpp" line="40"/>
       <source>Set password for user %1</source>
-      <translation>Ezarri %1 erabiltzailearen pasahitza</translation>
+      <translation>Ezarri %1 erabiltzailearen pknixtza</translation>
     </message>
     <message>
       <location filename="../src/modules/users/SetPasswordJob.cpp" line="47"/>
@@ -4392,7 +4392,7 @@ Irteera:
     <message>
       <location filename="../src/modules/usersq/usersq.qml" line="207"/>
       <source>Choose a password to keep your account safe.</source>
-      <translation>Aukeratu pasahitza zure kontua babesteko.</translation>
+      <translation>Aukeratu pknixtza zure kontua babesteko.</translation>
     </message>
     <message>
       <location filename="../src/modules/usersq/usersq.qml" line="217"/>
@@ -4437,7 +4437,7 @@ Irteera:
     <message>
       <location filename="../src/modules/usersq/usersq.qml" line="301"/>
       <source>Use the same password for the administrator account.</source>
-      <translation>Erabili pasahitz bera administratzaile kontuan.</translation>
+      <translation>Erabili pknixtz bera administratzaile kontuan.</translation>
     </message>
     <message>
       <location filename="../src/modules/usersq/usersq.qml" line="314"/>

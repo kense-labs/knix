@@ -8,13 +8,13 @@ author = "Alyssa Rosenzweig"
 
 For years, the M1 has only supported OpenGL 4.1. That changes
 today -- with our release of full OpenGL® 4.6 and OpenGL® ES 3.2!
-[Install Fedora](https://fedora-asahi-remix.org/) for the latest M1/M2-series
+[Install Fedora](https://fedora-knix-remix.org/) for the latest M1/M2-series
 drivers.
 
 Already installed? Just <code style="white-space:nowrap">dnf upgrade \-\-refresh</code>.
 
 Unlike the vendor's non-conformant 4.1 drivers, our [open
-source](https://gitlab.freedesktop.org/asahi/mesa) Linux drivers are
+source](https://gitlab.freedesktop.org/knix/mesa) Linux drivers are
 **conformant** to the latest OpenGL versions, finally promising broad
 compatibility with modern OpenGL workloads, like
 [Blender](https://www.blender.org/).
@@ -41,7 +41,7 @@ Compared to 4.1, OpenGL 4.6 adds dozens of required features, including:
 
 * Robustness
 * SPIR-V
-* [Clip control](/blog/asahi-gpu-part-6.html)
+* [Clip control](/blog/knix-gpu-part-6.html)
 * Cull distance
 * [Compute shaders](/blog/first-conformant-m1-gpu-driver.html)
 * Upgraded transform feedback

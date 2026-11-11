@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
- * ak4619.c -- Asahi Kasei ALSA SoC Audio driver
+ * ak4619.c -- Knix Kasei ALSA SoC Audio driver
  *
  * Copyright (C) 2023 Renesas Electronics Corporation
  * Khanh Le <khanh.le.xr@renesas.com>
@@ -821,7 +821,7 @@ static const struct regmap_config ak4619_regmap_cfg = {
 };
 
 static const struct of_device_id ak4619_of_match[] = {
-	{ .compatible = "asahi-kasei,ak4619",	.data = &ak4619_regmap_cfg },
+	{ .compatible = "knix-kasei,ak4619",	.data = &ak4619_regmap_cfg },
 	{},
 };
 MODULE_DEVICE_TABLE(of, ak4619_of_match);

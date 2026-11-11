@@ -322,7 +322,7 @@
 	status = "okay";
 
 	ak09912: magnetometer@c {
-		compatible = "asahi-kasei,ak09912";
+		compatible = "knix-kasei,ak09912";
 		reg = <0xc>;
 
 		interrupt-parent = <&tlmm>;

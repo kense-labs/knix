@@ -64,7 +64,7 @@ Available options:
 
 If `DISPLAY` is set, `muvm` uses X11 forwarding to allow you to run graphical applications in the microVM.
 
-GPU acceleration is also enabled on systems supporting [DRM native context](https://indico.freedesktop.org/event/2/contributions/53/attachments/76/121/XDC2022_%20virtgpu%20drm%20native%20context.pdf) (freedreno, amdgpu, asahi).
+GPU acceleration is also enabled on systems supporting [DRM native context](https://indico.freedesktop.org/event/2/contributions/53/attachments/76/121/XDC2022_%20virtgpu%20drm%20native%20context.pdf) (freedreno, amdgpu, knix).
 
 ## Running x86/x86_64 on aarch64
 

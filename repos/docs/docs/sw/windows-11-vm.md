@@ -3,7 +3,7 @@ title: How to create a Windows 11 VM
 ---
 
 ### Introduction
-Here's a simple guide to install Windows 11 on Fedora Asahi Remix!
+Here's a simple guide to install Windows 11 on Fedora Knix Remix!
 This is going over how to install, configure, and manage your own instance of Windows 11 if you ever need anything from windows besides having to switch hardware or use bare metal windows machines. 
 Credits to: aykevl and Davide Cavalca
 

@@ -34,7 +34,7 @@ Beware that devices names might change on your particular machine or configurati
 Shutdown (powered-off state) and connect the USB cable to the target machine and then issue the following command on the host:
 
 ```shell
-~/asahi/m1n1/proxyclient/tools/picocom-sec.sh
+~/knix/m1n1/proxyclient/tools/picocom-sec.sh
 ```
 
 Now start the tethered machine. The `picocom-sec.sh` script waits for the device and connect to it once it appears, that will trigger m1n1 hypervisor backdoor and you should see some output on the terminal:
@@ -52,7 +52,7 @@ baudrate is    : 500000
 From now on m1n1 hypervisor is ready to accept command through m1n1 proxy client tools:
 
 ```shell
-$ python3 ~/asahi/m1n1/proxyclient/tools/shell.py
+$ python3 ~/knix/m1n1/proxyclient/tools/shell.py
 :
 :
 TTY> Waiting for proxy connection... . Connected!
@@ -103,7 +103,7 @@ Python 3.10.8
 
 ### Installing LLVM
 
-You'll need a C compiler to build m1n1 and its dependencies, and for building kernel too. LLVM is the recommended compiler for Asahi (I think ?):
+You'll need a C compiler to build m1n1 and its dependencies, and for building kernel too. LLVM is the recommended compiler for Knix (I think ?):
 
 ```shell
 brew install llvm
@@ -149,32 +149,32 @@ brew install img4tool
 
 If you intend to boot a stock macOS kernel, you'll need these tools to extract the actual kernel file from the kernlecache of a macOS install on the target machine. In the absence of precompiled version for macOS you'll have to compile it.
 
-For this step, setup a `asahi` folder in your home directory and clone everything there, additionally install everything in an `~/asahi/deps` folder so as to not mess up with the rest of the system.
+For this step, setup a `knix` folder in your home directory and clone everything there, additionally install everything in an `~/knix/deps` folder so as to not mess up with the rest of the system.
 
 First clone, build and install `libgeneral`
 
 ```shell
-cd ~/asahi
+cd ~/knix
 git clone https://github.com/tihmstar/libgeneral.git
 cd libgeneral
 ./autogen.sh
-./configure --prefix=/Users/alexis/asahi/deps
+./configure --prefix=/Users/alexis/knix/deps
 make && make install
 ```
 
 Then clone, build and install `img4tool`
 
 ```shell
-cd ~/asahi
+cd ~/knix
 git clone https://github.com/tihmstar/img4tool.git
 cd img4tool
 ./autogen.sh
-PKG_CONFIG_PATH=~/asahi/deps/lib/pkgconfig ./configure --prefix=~/asahi/deps
+PKG_CONFIG_PATH=~/knix/deps/lib/pkgconfig ./configure --prefix=~/knix/deps
 make && make install
 ```
 
 Update your `PATH` variable so that you're able access `img4tool` binary
 
 ```shell
-export PATH=~/asahi/deps/bin:$PATH
+export PATH=~/knix/deps/bin:$PATH
 ```

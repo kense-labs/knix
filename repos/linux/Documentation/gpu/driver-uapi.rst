@@ -30,7 +30,7 @@ drm/xe uAPI
 
 .. kernel-doc:: include/uapi/drm/xe_drm.h
 
-drm/asahi uAPI
+drm/knix uAPI
 ================
 
-.. kernel-doc:: include/uapi/drm/asahi_drm.h
+.. kernel-doc:: include/uapi/drm/knix_drm.h

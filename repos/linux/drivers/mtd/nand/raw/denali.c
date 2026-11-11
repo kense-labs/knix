@@ -4,7 +4,7 @@
  * Copyright © 2009-2010, Intel Corporation and its suppliers.
  *
  * Copyright (c) 2017-2019 Socionext Inc.
- *   Reworked by Masahiro Yamada <yamada.masahiro@socionext.com>
+ *   Reworked by Mknixro Yamada <yamada.mknixro@socionext.com>
  */
 
 #include <linux/bitfield.h>

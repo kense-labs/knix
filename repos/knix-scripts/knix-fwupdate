@@ -1,0 +1,53 @@
+#!/bin/sh
+# SPDX-License-Identifier: MIT
+
+set -eu
+
+unset PYTHON
+
+[ -e /etc/default/knix-fwupdate ] && . /etc/default/knix-fwupdate
+
+: "${KNIXFW:=}"
+: "${VENDORFW:=}"
+: "${VENDORFWTMP:=/run/.vendorfw-tmp}"
+: "${PYTHON:=/usr/bin/python3}"
+
+if [ -e "$(dirname "$0")"/functions.sh ]; then
+    . "$(dirname "$0")"/functions.sh
+else
+    . /usr/share/knix-scripts/functions.sh
+fi
+
+umount=false
+
+if [ -z "$KNIXFW" ] && [ -z "$VENDORFW" ]; then
+    mount_sys_esp /run/.system-efi
+    KNIXFW="/run/.system-efi/knix/"
+    VENDORFW="/run/.system-efi/vendorfw"
+    umount=true
+fi
+
+if [ ! -e "${KNIXFW}/all_firmware.tar.gz" ]; then
+    echo "No firmware tarball found, skipping extraction"
+    exit 0
+fi
+
+if [ ! -d "$VENDORFW" ]; then
+  mkdir -p "$VENDORFW"
+fi
+
+if [ ! -d "$VENDORFWTMP" ]; then
+  mkdir -p "$VENDORFWTMP"
+fi
+
+echo "Upgrading vendor firmware package"
+knix-fwextract "$KNIXFW" "$VENDORFWTMP"
+rm -rf "$VENDORFW".new
+mv "${VENDORFWTMP}" "$VENDORFW".new
+rm -rf "$VENDORFW"
+mv "$VENDORFW".new "$VENDORFW"
+rm -rf "$VENDORFWTMP"
+echo "Firmware upgraded"
+
+$umount && umount /run/.system-efi
+true

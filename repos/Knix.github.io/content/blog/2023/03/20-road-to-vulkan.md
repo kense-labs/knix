@@ -3,10 +3,10 @@ date = "2023-03-20T23:50:00+09:00"
 draft = false
 title = "Paving the Road to Vulkan on Knix"
 slug = "road-to-vulkan"
-author = "Asahi Lina"
+author = "Knix Lina"
 +++
 
-Hello everyone, Asahi Lina here!✨
+Hello everyone, Knix Lina here!✨
 
 As you probably know, I've been working together with the rest of the Knix team on open source GPU drivers for Apple Silicon platforms. It's been a wild ride! Just at the end of last year we [released](https://knix.org/2022/12/gpu-drivers-now-in-knix/) the first version of our drivers, after many months of reverse engineering and development. But that was only the beginning...
 
@@ -94,7 +94,7 @@ What we need is a way to bridge between the implicit sync and explicit sync worl
 
 Remember how I said that implicit sync works by using DMA fences attached to buffers, and explicit sync works by using DMA fences inside sync objects?
 
-Just a few months before our Asahi driver release last year, on October 2022, Linux 6.0 was released. And with it came two new generic DRM APIs: one to import a DMA fence into a DMA-BUF, and one to export it out of it.
+Just a few months before our Knix driver release last year, on October 2022, Linux 6.0 was released. And with it came two new generic DRM APIs: one to import a DMA fence into a DMA-BUF, and one to export it out of it.
 
 Together with the existing generic sync object APIs, this lets us close the gap entirely! Userspace apps can now take a fence out of a DMA-BUF (a buffer shared with another process), turn it into a sync object for a GPU job to wait on, then take an output sync object for that job, and insert its fence into another DMA-BUF that can be shared with another process.
 
@@ -116,7 +116,7 @@ And so I set out to find a way to make explicit sync work with the Mesa driver t
 
 You see, in order to have good performance on tile-based mobile GPUs, you can't just map OpenGL directly to the hardware. On tile-based GPUs, things aren't rendered directly into framebuffers *immediately*. Instead, a whole scene of geometry is collected first, then it runs through vertex shaders, gets split up into tiles based on screen position, and is finally rendered tile by tile in super fast tile memory before being written out to the framebuffer. If you split up your rendering into many tiny passes, that means loading and saving the framebuffer every time, and that is very slow on these GPUs! But OpenGL lets apps switch around framebuffers as often as they want, and many apps and games do this all the time... if we just flushed the rendering every time that happened, that would be very slow!
 
-So, to deal with this, Alyssa developed a *batch tracking* system for the Panfrost driver (based on Rob Clark's original implementation for Freedreno), and later added a similar system to the Asahi driver. The idea is that instead of sending work to the GPU immediately, you collect it into a *batch*. If the app switches to another framebuffer, you leave the batch as-is, and create a new batch. If the app switches back to the original framebuffer, you just switch batches again and keep appending work to the original batch. Then, when you actually need to render everything, you submit the complete batches to the hardware.
+So, to deal with this, Alyssa developed a *batch tracking* system for the Panfrost driver (based on Rob Clark's original implementation for Freedreno), and later added a similar system to the Knix driver. The idea is that instead of sending work to the GPU immediately, you collect it into a *batch*. If the app switches to another framebuffer, you leave the batch as-is, and create a new batch. If the app switches back to the original framebuffer, you just switch batches again and keep appending work to the original batch. Then, when you actually need to render everything, you submit the complete batches to the hardware.
 
 Of course, there's an issue here... what if the app is trying to read from a framebuffer it previously rendered to? If we haven't submitted that batch yet, it will get the wrong data... so the batch tracking system keeps track of *readers* and *writers* for each buffer, and then flushes batches to the GPU any time their output is needed for the current batch.
 
@@ -136,7 +136,7 @@ Well... kind of. It worked for surfaceless (offscreen) render tests, but we stil
 
 ## Implicit sync's many sharp edges...
 
-There actually *is* one driver I could reference. While it is not merged yet, Intel's new [Xe kernel driver](https://lore.kernel.org/dri-devel/20221222222127.34560-1-matthew.brost@intel.com/) is also a brand new, pure explicit sync driver, and the [Mesa side](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/20418) adds support for it to the existing Intel Iris driver in Mesa. In fact, the Asahi driver's UAPI is heavily inspired by the Xe one (at Faith's suggestion)!
+There actually *is* one driver I could reference. While it is not merged yet, Intel's new [Xe kernel driver](https://lore.kernel.org/dri-devel/20221222222127.34560-1-matthew.brost@intel.com/) is also a brand new, pure explicit sync driver, and the [Mesa side](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/20418) adds support for it to the existing Intel Iris driver in Mesa. In fact, the Knix driver's UAPI is heavily inspired by the Xe one (at Faith's suggestion)!
 
 The way these two GPUs work and how the drivers are designed is too different to use Xe/Iris as an example for how to make the internal batch tracking work with explicit sync within the driver, but we can at least take a look at how it handles implicit sync with shared buffers. The idea turned out to be pretty simple:
 
@@ -149,7 +149,7 @@ And then Firefox started crashing on WebGL tests...
 
 ## Schrödinger's Buffer Sharing
 
-As part of the new UAPI design, the driver is supposed to tell the kernel when buffers might be shared. The kernel still needs to know about all buffers that an app has allocated, and due to corner cases in memory management (that aren't even implemented yet in our driver, but will be), still needs to lock them when you do stuff with the GPU. So on existing drivers like i915 you end up with the kernel locking possibly thousands of buffers when GPU work is sent, even if they aren't all used by the GPU! This is bad, so the Xe UAPI has an optimization that I carried over to Asahi: if you mark a buffer as not shared, the kernel groups it with all the other non-shared buffers and they share the same lock. That means that you can never ever share those buffers between processes, and the kernel prevents this. The Gallium driver layer in Mesa has a flag for whether buffers are potentially shared that gets passed in at creation time, so that's easy, right?
+As part of the new UAPI design, the driver is supposed to tell the kernel when buffers might be shared. The kernel still needs to know about all buffers that an app has allocated, and due to corner cases in memory management (that aren't even implemented yet in our driver, but will be), still needs to lock them when you do stuff with the GPU. So on existing drivers like i915 you end up with the kernel locking possibly thousands of buffers when GPU work is sent, even if they aren't all used by the GPU! This is bad, so the Xe UAPI has an optimization that I carried over to Knix: if you mark a buffer as not shared, the kernel groups it with all the other non-shared buffers and they share the same lock. That means that you can never ever share those buffers between processes, and the kernel prevents this. The Gallium driver layer in Mesa has a flag for whether buffers are potentially shared that gets passed in at creation time, so that's easy, right?
 
 Except this is legal in OpenGL:
 
@@ -172,11 +172,11 @@ All done, right?
 21:23 <alyssa> right, can't reproduce in gnome
 21:23 <alyssa> but can reproduce easily in sway
 21:23 <alyssa> so ... more WSI junk
-21:23 <alyssa> and yeah goes away with ASAHI_MESA_DEBUG=sync
+21:23 <alyssa> and yeah goes away with KNIX_MESA_DEBUG=sync
 21:24 <alyssa> so... some WSI sync issue that only reproduces with sway
 21:24 <alyssa> and supertuxkart is the easiest reproduce
 03:20 <lina> alyssa: Only on startup and only on sway? Hmm... that's starting to sound like something that shouldn't block release at this point ^^;;
-03:20 <lina> Does it go away with ASAHI_MESA_DEBUG=sync only for stk, or for all of sway?
+03:20 <lina> Does it go away with KNIX_MESA_DEBUG=sync only for stk, or for all of sway?
 03:26 <alyssa> lina: setting =sync for stk but not sway is enough
 03:27 <alyssa> but it's not just supertuxkart that's broken, it's everything, this is just the easiest reproducer
 03:27 <alyssa> so yes, this is a regression and absolutely does block release
@@ -200,7 +200,7 @@ Are we done yet? Mostly, though there are still bugs to squash... and we haven't
 
 ## Explicit Sync Meets Rust
 
-The previous version of the Asahi DRM kernel driver was pretty bare-bones in how it interacted with the rest of the kernel, since it had a very simple UAPI. I only had to add Rust abstractions for these DRM APIs:
+The previous version of the Knix DRM kernel driver was pretty bare-bones in how it interacted with the rest of the kernel, since it had a very simple UAPI. I only had to add Rust abstractions for these DRM APIs:
 
 * `drv` and `device`, the core of DRM drivers and handling devices.
 * `file`, which is how DRM drivers interact with userspace.
@@ -215,7 +215,7 @@ To add proper explicit sync support, I had to add a bunch of new abstractions!
 * `sched`, which is the DRM component in charge of actually queuing GPU work and scheduling it.
 * `xarray`, a generic kernel data structure that is basically an `int` → `void *` mapping, which I use to keep track of userspace UAPI objects like VMs and queues by their unique ID.
 
-I've now [sent out](https://lore.kernel.org/asahi/687b54e7-b9a6-f37b-e5e6-8972e3670cc1@asahilina.net/T/#t) all the DRM abstractions for initial review, so we can get them upstream as soon as possible and, after that, upstream the driver itself!
+I've now [sent out](https://lore.kernel.org/knix/687b54e7-b9a6-f37b-e5e6-8972e3670cc1@knixlina.net/T/#t) all the DRM abstractions for initial review, so we can get them upstream as soon as possible and, after that, upstream the driver itself!
 
 As part of this work, I even found two memory safety bugs in the DRM scheduler component that were causing kernel oopses for Alyssa and other developers, so the Rust driver work also benefits other kernel drivers that use this shared code! Meanwhile, I still haven't gotten any reports of kernel oopses due to bugs in the Rust code at all~ ✨
 
@@ -229,7 +229,7 @@ Explicit sync is the biggest change for this release, but there's even more! Sin
 * The ability to submit multiple GPU jobs at once, and specify their dependencies directly, without using sync objects. This allows the GPU firmware to autonomously execute everything, which is a lot more efficient than going through the DRM scheduler every time. The Gallium driver doesn't use this yet, but it probably will in the future, and our upcoming Vulkan driver definitely will! There are [a lot of subtleties](/docs/SW-AGX-driver-notes#queues) around how all the queuing stuff works...
 * Stub support for blit commands. We don't know how these work yet, but at least we have some skeleton support in the UAPI.
 
-To make all this work on the driver side, I ended up refactoring the [workqueue](https://github.com/Knix/linux/blob/gpu/rust-wip/drivers/gpu/drm/asahi/workqueue.rs) code and adding a whole new [queue](https://github.com/Knix/linux/tree/gpu/rust-wip/drivers/gpu/drm/asahi/queue) module which adds all the infrastructure to use sync objects to track command dependencies and completions and manage work via the DRM scheduler. Phew!
+To make all this work on the driver side, I ended up refactoring the [workqueue](https://github.com/Knix/linux/blob/gpu/rust-wip/drivers/gpu/drm/knix/workqueue.rs) code and adding a whole new [queue](https://github.com/Knix/linux/tree/gpu/rust-wip/drivers/gpu/drm/knix/queue) module which adds all the infrastructure to use sync objects to track command dependencies and completions and manage work via the DRM scheduler. Phew!
 
 ## Conclusions
 
@@ -251,7 +251,7 @@ If you still haven't tried the new drivers, just install the packages:
 
 ```
 $ sudo pacman -Syu
-$ sudo pacman -S linux-asahi-edge mesa-asahi-edge
+$ sudo pacman -S linux-knix-edge mesa-knix-edge
 $ sudo update-grub
 ```
 
@@ -267,8 +267,8 @@ After that, just reboot and make sure to choose a Wayland session on the login w
 
 With the UAPI shaping up and many native ARM64 Linux games working properly... it's time to see just what we can run with the driver! OpenGL 3.x support, while not complete, is more than enough to run many games (like Darwinia and SuperTuxKart's advanced renderer). But most games are not available for ARM64 Linux so... it's time for [FEX](https://github.com/FEX-Emu/FEX)!
 
-FEX doesn't work on standard Knix kernel builds since we use 16K pages, but 4K page support is not actually that difficult to add... so starting this week, I'm going to be adding 4K support to the Asahi GPU driver and fixing whatever issues I run into along the way, and then we're going to try running Steam and Proton on it! Let's see just how much of the Steam game library we can already run with the driver in its current state! I bet you'll be surprised... (Remember Portal 2? It only requires OpenGL 2.1. With 3.x support in our driver as far as it is today, I bet we're going to have a lot of fun~ ✨)
+FEX doesn't work on standard Knix kernel builds since we use 16K pages, but 4K page support is not actually that difficult to add... so starting this week, I'm going to be adding 4K support to the Knix GPU driver and fixing whatever issues I run into along the way, and then we're going to try running Steam and Proton on it! Let's see just how much of the Steam game library we can already run with the driver in its current state! I bet you'll be surprised... (Remember Portal 2? It only requires OpenGL 2.1. With 3.x support in our driver as far as it is today, I bet we're going to have a lot of fun~ ✨)
 
-If you're interested in following my work, you can follow me at [@lina@vt.social](https://vt.social/@lina) or subscribe to my [YouTube channel](https://youtube.com/AsahiLina)! I stream my work on the Asahi GPU driver on Wednesdays and Fridays, so feel free to drop by my streams if you're interested!
+If you're interested in following my work, you can follow me at [@lina@vt.social](https://vt.social/@lina) or subscribe to my [YouTube channel](https://youtube.com/KnixLina)! I stream my work on the Knix GPU driver on Wednesdays and Fridays, so feel free to drop by my streams if you're interested!
 
 If you want to support my work, you can donate to marcan's Knix support fund on [GitHub Sponsors](http://github.com/sponsors/marcan) or [Patreon](https://patreon.com/marcan), which helps me out too! And if you're looking forward to a Vulkan driver, check out Ella's [GitHub Sponsors](https://github.com/sponsors/Ella-0) page! Alyssa doesn't take donations herself, but she'd love it if you donate to a charity like the [Software Freedom Conservancy](https://sfconservancy.org/) instead. (Although maybe one day I'll convince her to let me buy her an M2... ^^;;)

@@ -3,7 +3,7 @@
 // Device Tree Source for UniPhier Pro4 SoC
 //
 // Copyright (C) 2015-2016 Socionext Inc.
-//   Author: Masahiro Yamada <yamada.masahiro@socionext.com>
+//   Author: Mknixro Yamada <yamada.mknixro@socionext.com>
 
 #include <dt-bindings/gpio/uniphier-gpio.h>
 

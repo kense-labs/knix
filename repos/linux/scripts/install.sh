@@ -4,7 +4,7 @@
 # Copyright (C) 1995 by Linus Torvalds
 #
 # Adapted from code in arch/i386/boot/Makefile by H. Peter Anvin
-# Common code factored out by Masahiro Yamada
+# Common code factored out by Mknixro Yamada
 
 set -e
 

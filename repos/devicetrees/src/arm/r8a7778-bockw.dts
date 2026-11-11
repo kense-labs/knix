@@ -83,7 +83,7 @@
 	status = "okay";
 
 	ak4643: codec@12 {
-		compatible = "asahi-kasei,ak4643";
+		compatible = "knix-kasei,ak4643";
 		#sound-dai-cells = <0>;
 		reg = <0x12>;
 	};

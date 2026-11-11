@@ -15,7 +15,7 @@ Release Statistics for U-Boot v2017.11
    ================================  =====
    Name                              Count
    ================================  =====
-   Masahiro Yamada                   77 (7.8%)
+   Mknixro Yamada                   77 (7.8%)
    Heinrich Schuchardt               68 (6.9%)
    Bin Meng                          64 (6.5%)
    Philipp Tomsich                   51 (5.2%)
@@ -155,7 +155,7 @@ Release Statistics for U-Boot v2017.11
    Adam Ford                         5520 (4.8%)
    Rob Clark                         4926 (4.2%)
    Wenyou Yang                       4547 (3.9%)
-   Masahiro Yamada                   4398 (3.8%)
+   Mknixro Yamada                   4398 (3.8%)
    Marek Behún                       3793 (3.3%)
    Lokesh Vutla                      3722 (3.2%)
    Tuomas Tynkkynen                  3380 (2.9%)
@@ -280,7 +280,7 @@ Release Statistics for U-Boot v2017.11
    Name                              Count
    ================================  =====
    Tuomas Tynkkynen                  1809 (8.0%)
-   Masahiro Yamada                   630 (2.8%)
+   Mknixro Yamada                   630 (2.8%)
    Paul Burton                       109 (0.5%)
    Stefan Roese                      56 (0.2%)
    Anatolij Gustschin                34 (0.1%)
@@ -324,7 +324,7 @@ Release Statistics for U-Boot v2017.11
    Praneeth Bajjuri                  2 (0.9%)
    Andrew F. Davis                   2 (0.9%)
    Rob Clark                         2 (0.9%)
-   Masahiro Yamada                   1 (0.4%)
+   Mknixro Yamada                   1 (0.4%)
    Suman Anna                        1 (0.4%)
    Joe Hershberger                   1 (0.4%)
    Minkyu Kang                       1 (0.4%)

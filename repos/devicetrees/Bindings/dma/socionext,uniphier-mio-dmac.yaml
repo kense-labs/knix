@@ -11,7 +11,7 @@ description: |
   found in UniPhier LD4, Pro4, sLD8 SoCs.
 
 maintainers:
-  - Masahiro Yamada <yamada.masahiro@socionext.com>
+  - Mknixro Yamada <yamada.mknixro@socionext.com>
 
 allOf:
   - $ref: "dma-controller.yaml#"

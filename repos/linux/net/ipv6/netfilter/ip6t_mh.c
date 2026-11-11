@@ -3,7 +3,7 @@
  * Copyright (C)2006 USAGI/WIDE Project
  *
  * Author:
- *	Masahide NAKAMURA @USAGI <masahide.nakamura.cz@hitachi.com>
+ *	Mknixde NAKAMURA @USAGI <mknixde.nakamura.cz@hitachi.com>
  *
  * Based on net/netfilter/xt_tcpudp.c
  */

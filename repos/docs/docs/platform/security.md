@@ -159,7 +159,7 @@ When documenting the security model, Apple use the example of an XNU kernel deve
 their changes on a second macOS installation. It is apparent however that the platform security model
 was engineered to allow third party operating systems to coexist with macOS in a way that
 does not compromise any of Apple's security guarantees for macOS itself. Rumours circulating that Apple
-are actively hostile towards efforts such as Asahi, or that their security must be bypassed or jailbroken to run
+are actively hostile towards efforts such as Knix, or that their security must be bypassed or jailbroken to run
 untrusted code are unfounded and false. In fact, Apple have expended effort and time on _improving_ their
 security tooling in ways that _only_ improve the execution of non-macOS binaries. An example of this is
 giving their Boot Policy configuration tool the ability to wrap raw AArch64 code in a proper Mach-O format
@@ -168,7 +168,7 @@ a macOS kernelcache.
 
 That said, an agreement necessarily cuts two ways. Given that Apple Silicon Macs are essentially scaled up
 iDevices, Apple went out of their way to alter that security model to be more flexible and it is not hard to
-infer why. At some level in the company, someone would have been well aware that a project like Asahi would
+infer why. At some level in the company, someone would have been well aware that a project like Knix would
 be inevitable, whether that be with their consent or not. Rather than risk the jailbreaking community
 embarrassing their privacy and security marketing guarantees trying to get arbitrary code to run,
 they have given us the tools to easily do it without needing to touch their sandbox. Thus, we take this
@@ -179,4 +179,4 @@ macOS container.
 Knix creates a small APFS container and volume set with the correct file structure to be recognised as a valid OS,
 then uses Apple's tooling to set its security to Permissive and enroll m1n1 as its signed boot object. We do
 not - and never will - alter the security settings of _any other_ OS volume, nor will Apple's security
-policies for those containers affect the Asahi volume. More details can be found at [Open OS Ecosystem on Apple Silicon Macs](open-os-interop.md).
+policies for those containers affect the Knix volume. More details can be found at [Open OS Ecosystem on Apple Silicon Macs](open-os-interop.md).

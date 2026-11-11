@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 import sys, pathlib, argparse
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
-sys.path.append("/home/eileen/asahi/avd")  # git clone https://github.com/eiln/avd.git
+sys.path.append("/home/eileen/knix/avd")  # git clone https://github.com/eiln/avd.git
 # Decode via AVD Cortex-M3 firmware
 
 from m1n1.setup import *

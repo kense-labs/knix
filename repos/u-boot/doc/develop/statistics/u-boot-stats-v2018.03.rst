@@ -26,7 +26,7 @@ Release Statistics for U-Boot v2018.03
    Bryan O'Donoghue                  30 (2.5%)
    Michal Simek                      30 (2.5%)
    Maxime Ripard                     28 (2.3%)
-   Masahiro Yamada                   27 (2.3%)
+   Mknixro Yamada                   27 (2.3%)
    Adam Ford                         25 (2.1%)
    Alexander Graf                    24 (2.0%)
    Álvaro Fernández Rojas            24 (2.0%)
@@ -181,7 +181,7 @@ Release Statistics for U-Boot v2018.03
    Tom Rini                          4695 (4.2%)
    Heinrich Schuchardt               4594 (4.1%)
    Patrice Chotard                   4319 (3.8%)
-   Masahiro Yamada                   3510 (3.1%)
+   Mknixro Yamada                   3510 (3.1%)
    Rick Chen                         3470 (3.1%)
    Álvaro Fernández Rojas            2382 (2.1%)
    David Wu                          2274 (2.0%)
@@ -336,7 +336,7 @@ Release Statistics for U-Boot v2018.03
    Name                              Count
    ================================  =====
    Tom Rini                          2451 (9.5%)
-   Masahiro Yamada                   2220 (8.6%)
+   Mknixro Yamada                   2220 (8.6%)
    Tuomas Tynkkynen                  805 (3.1%)
    Adam Ford                         206 (0.8%)
    Lukasz Majewski                   171 (0.7%)
@@ -573,7 +573,7 @@ Release Statistics for U-Boot v2018.03
    Philipp Tomsich                   1 (4.8%)
    Goldschmidt Simon                 1 (4.8%)
    Andy Shevchenko                   1 (4.8%)
-   Masahiro Yamada                   1 (4.8%)
+   Mknixro Yamada                   1 (4.8%)
    ================================  =====
 
 

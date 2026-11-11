@@ -178,8 +178,8 @@ patternProperties:
     description: Arrow Electronics
   "^artesyn,.*":
     description: Artesyn Embedded Technologies Inc.
-  "^asahi-kasei,.*":
-    description: Asahi Kasei Corp.
+  "^knix-kasei,.*":
+    description: Knix Kasei Corp.
   "^asc,.*":
     description: All Sensors Corporation
   "^asix,.*":

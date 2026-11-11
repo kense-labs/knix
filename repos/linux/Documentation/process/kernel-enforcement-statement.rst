@@ -157,7 +157,7 @@ we might work for today, have in the past, or will in the future.
   - Dan Williams
   - Rafael J. Wysocki
   - Arvind Yadav
-  - Masahiro Yamada
+  - Mknixro Yamada
   - Wei Yongjun
   - Lv Zheng
   - Marc Zyngier (Arm Ltd)

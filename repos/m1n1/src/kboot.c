@@ -293,25 +293,25 @@ static int dt_set_chosen(void)
         bail("FDT: /chosen node not found in devtree\n");
 
     if (is_mac) {
-        if (fdt_setprop(dt, node, "asahi,iboot1-version", system_firmware.iboot,
+        if (fdt_setprop(dt, node, "knix,iboot1-version", system_firmware.iboot,
                         strlen(system_firmware.iboot) + 1))
-            bail("FDT: couldn't set asahi,iboot1-version\n");
+            bail("FDT: couldn't set knix,iboot1-version\n");
 
-        if (fdt_setprop(dt, node, "asahi,system-fw-version", system_firmware.string,
+        if (fdt_setprop(dt, node, "knix,system-fw-version", system_firmware.string,
                         strlen(system_firmware.string) + 1))
-            bail("FDT: couldn't set asahi,system-fw-version\n");
+            bail("FDT: couldn't set knix,system-fw-version\n");
     }
 
-    if (fdt_setprop(dt, node, "asahi,iboot2-version", os_firmware.iboot,
+    if (fdt_setprop(dt, node, "knix,iboot2-version", os_firmware.iboot,
                     strlen(os_firmware.iboot) + 1))
-        bail("FDT: couldn't set asahi,iboot2-version\n");
+        bail("FDT: couldn't set knix,iboot2-version\n");
 
-    if (fdt_setprop(dt, node, "asahi,os-fw-version", os_firmware.string,
+    if (fdt_setprop(dt, node, "knix,os-fw-version", os_firmware.string,
                     strlen(os_firmware.string) + 1))
-        bail("FDT: couldn't set asahi,os-fw-version\n");
+        bail("FDT: couldn't set knix,os-fw-version\n");
 
-    if (fdt_setprop(dt, node, "asahi,m1n1-stage2-version", m1n1_version, strlen(m1n1_version) + 1))
-        bail("FDT: couldn't set asahi,m1n1-stage2-version\n");
+    if (fdt_setprop(dt, node, "knix,m1n1-stage2-version", m1n1_version, strlen(m1n1_version) + 1))
+        bail("FDT: couldn't set knix,m1n1-stage2-version\n");
 
     if (dt_set_rng_seed_sep(node)) {
         if (dt_set_rng_seed_adt(node))
@@ -939,8 +939,8 @@ static int dt_set_ipd(void)
     }
     u8 code = kblang[1];
 
-    if (fdt_setprop_u32(dt, chosen, "asahi,kblang-code", code))
-        bail("FDT: couldn't set asahi,kblang-code\n");
+    if (fdt_setprop_u32(dt, chosen, "knix,kblang-code", code))
+        bail("FDT: couldn't set knix,kblang-code\n");
 
     const char *path = fdt_get_alias(dt, "keyboard");
     if (path == NULL)

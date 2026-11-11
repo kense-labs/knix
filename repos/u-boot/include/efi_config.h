@@ -2,7 +2,7 @@
 /*
  *  Menu-driven UEFI Variable maintenance
  *
- *  Copyright (c) 2022 Masahisa Kojima, Linaro Limited
+ *  Copyright (c) 2022 Mknixsa Kojima, Linaro Limited
  */
 
 #ifndef _EFI_CONFIG_H

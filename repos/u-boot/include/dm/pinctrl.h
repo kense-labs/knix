@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0+ */
 /*
- * Copyright (C) 2015  Masahiro Yamada <yamada.masahiro@com>
+ * Copyright (C) 2015  Mknixro Yamada <yamada.mknixro@com>
  */
 
 #ifndef __PINCTRL_H

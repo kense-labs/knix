@@ -1621,7 +1621,7 @@ drm_fourcc_canonicalize_nvidia_format_mod(__u64 modifier)
  * only generate more confusion, as software does not treat the image this way.
  *
  * For detailed information on the hardware image layouts, see
- * https://docs.mesa3d.org/drivers/asahi.html#image-layouts
+ * https://docs.mesa3d.org/drivers/knix.html#image-layouts
  */
 #define DRM_FORMAT_MOD_APPLE_GPU_TILED fourcc_mod_code(APPLE, 1)
 #define DRM_FORMAT_MOD_APPLE_GPU_TILED_COMPRESSED fourcc_mod_code(APPLE, 2)

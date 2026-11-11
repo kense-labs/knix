@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /*
- * Copyright (C) 2015 Masahiro Yamada <yamada.masahiro@socionext.com>
+ * Copyright (C) 2015 Mknixro Yamada <yamada.mknixro@socionext.com>
  */
 
 #include <linux/io.h>
@@ -246,6 +246,6 @@ static struct platform_driver uniphier_system_bus_driver = {
 };
 module_platform_driver(uniphier_system_bus_driver);
 
-MODULE_AUTHOR("Masahiro Yamada <yamada.masahiro@socionext.com>");
+MODULE_AUTHOR("Mknixro Yamada <yamada.mknixro@socionext.com>");
 MODULE_DESCRIPTION("UniPhier System Bus driver");
 MODULE_LICENSE("GPL");

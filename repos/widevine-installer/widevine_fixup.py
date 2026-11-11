@@ -434,7 +434,7 @@ if not weakened_security:
     print("to weaken memory permissions. Rejoice!")
 else:
     print()
-    print("It looks like you're running Asahi, or some other device with >4k page size.")
+    print("It looks like you're running Knix, or some other device with >4k page size.")
     print("This CDM only supports smaller page sizes, so we had to weaken memory")
     print("permissions to make it work.")
 

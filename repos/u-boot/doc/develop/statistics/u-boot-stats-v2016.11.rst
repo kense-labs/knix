@@ -16,7 +16,7 @@ Release Statistics for U-Boot v2016.11
    Name                              Count
    ================================  =====
    Simon Glass                       195 (18.9%)
-   Masahiro Yamada                   109 (10.6%)
+   Mknixro Yamada                   109 (10.6%)
    Stefan Brüns                      50 (4.8%)
    Stephen Warren                    48 (4.7%)
    Paul Burton                       38 (3.7%)
@@ -140,7 +140,7 @@ Release Statistics for U-Boot v2016.11
    ================================  =====
    Simon Glass                       20424 (25.5%)
    Stefan Roese                      7593 (9.5%)
-   Masahiro Yamada                   6220 (7.8%)
+   Mknixro Yamada                   6220 (7.8%)
    Stephen Warren                    5686 (7.1%)
    Jagan Teki                        5684 (7.1%)
    Peng Fan                          5567 (7.0%)
@@ -423,7 +423,7 @@ Release Statistics for U-Boot v2016.11
    ================================  =====
    Name                              Count
    ================================  =====
-   Masahiro Yamada                   2 (40.0%)
+   Mknixro Yamada                   2 (40.0%)
    Stephen Warren                    1 (20.0%)
    David Gibson                      1 (20.0%)
    Nishanth Menon                    1 (20.0%)

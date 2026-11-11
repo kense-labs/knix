@@ -145,7 +145,7 @@ Linux 内核执行声明
   - Dan Williams
   - Rafael J. Wysocki
   - Arvind Yadav
-  - Masahiro Yamada
+  - Mknixro Yamada
   - Wei Yongjun
   - Lv Zheng
   - Marc Zyngier (Arm Ltd)

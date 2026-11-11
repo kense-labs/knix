@@ -1,0 +1,15 @@
+knix-fedora-remix-logos - Knix Fedora Remix logos
+=========================================================
+
+The knix-fedora-remix-logos package contains various image files
+which can be used by the bootloader, anaconda, and other related
+tools.
+
+If you are unable to abide by the trademark restrictions for any
+reason with the knix-fedora-remix-logos package, you can use the
+generic-logos package instead.
+
+Homepage: https://pagure.io/fedora-knix/knix-fedora-remix-logos
+
+knix-fedora-remix-logos is licensed under CC-BY-SA, check LICENSE
+for more details.

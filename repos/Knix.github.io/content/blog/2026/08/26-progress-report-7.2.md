@@ -197,7 +197,7 @@ investigating the changes and implementing them in both m1n1 and Linux, so we no
 NVMe on M4 and M5! Yureka also managed to get PCIe working to a state where devices on the
 bus can be enumerated by Linux, and fixed an issue that caused Linux to crash shortly after
 boot when more than one CPU core is enabled. Not much else is working on M4 and M5 so we aren't quite ready
-to enable them in the Asahi Installer just yet, but as always we will have more to say in due course.
+to enable them in the Knix Installer just yet, but as always we will have more to say in due course.
 
 ## Desktop video is hard
 Last time, we announced preliminary support for the Apple Video Decoder, or AVD. This hardware
@@ -225,7 +225,7 @@ translation layer. Sadly this has been abandoned for quite some time and no long
 patches. A [more recent effort by megi](https://xff.cz/git/libva-v4l2_request/) however does, which
 sofus has forked and gotten into a working state for AVD. With this translation layer installed and an environment variable set
 for the login session, software implementing VA-API support is now able to use AVD to accelerate
-video decoding! This does not yet ship by default in Fedora Asahi Remix, and will not work with
+video decoding! This does not yet ship by default in Fedora Knix Remix, and will not work with
 Firefox's video decoding sandbox, however we hope to have something shippable soon.
 
 ## The road to direct scanout
@@ -289,7 +289,7 @@ well on the way to being able to replicate this in Knix!
 Thanks to groundwork laid by Alyssa and Lina, the AGX driver already had basic support for
 Apple's Interchange framebuffer format, it was simply not yet wired up. Oliver Bestmann and I
 volunteered to wire up and enable Interchange support in the DCP kernel driver, as well as
-both the Asahi and Honeykrisp Mesa drivers. Coupled with work already done bringing Y'CbCr
+both the Knix and Honeykrisp Mesa drivers. Coupled with work already done bringing Y'CbCr
 and overlay plane support to DCP, this has cleared the way for direct scanout of AGX-rendered
 framebuffers to DCP! AVD support is on the way, with sofus currently investigating its ability
 to output Interchange format buffers.

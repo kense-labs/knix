@@ -3,7 +3,7 @@
  * UniPhier SC (System Control) block registers for ARMv8 SoCs
  *
  * Copyright (C) 2016 Socionext Inc.
- *   Author: Masahiro Yamada <yamada.masahiro@socionext.com>
+ *   Author: Mknixro Yamada <yamada.mknixro@socionext.com>
  */
 
 #ifndef SC64_REGS_H

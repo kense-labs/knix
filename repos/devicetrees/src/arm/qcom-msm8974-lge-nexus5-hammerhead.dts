@@ -536,7 +536,7 @@
 				#address-cells = <1>;
 				#size-cells = <0>;
 				ak8963@f {
-					compatible = "asahi-kasei,ak8963";
+					compatible = "knix-kasei,ak8963";
 					reg = <0x0f>;
 					gpios = <&msmgpio 67 0>;
 					vid-supply = <&pm8941_lvs1>;

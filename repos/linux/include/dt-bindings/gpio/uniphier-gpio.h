@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2017 Socionext Inc.
- *   Author: Masahiro Yamada <yamada.masahiro@socionext.com>
+ *   Author: Mknixro Yamada <yamada.mknixro@socionext.com>
  */
 
 #ifndef _DT_BINDINGS_GPIO_UNIPHIER_H

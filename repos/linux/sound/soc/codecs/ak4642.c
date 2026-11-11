@@ -289,7 +289,7 @@ static int ak4642_dai_startup(struct snd_pcm_substream *substream,
 		 * Bass Boost Level : Middle
 		 *
 		 * This operation came from example code of
-		 * "ASAHI KASEI AK4642" (japanese) manual p97.
+		 * "KNIX KASEI AK4642" (japanese) manual p97.
 		 */
 		snd_soc_component_write(component, L_IVC, 0x91); /* volume */
 		snd_soc_component_write(component, R_IVC, 0x91); /* volume */
@@ -305,7 +305,7 @@ static int ak4642_dai_startup(struct snd_pcm_substream *substream,
 		 * ALC bit=“1”
 		 *
 		 * This operation came from example code of
-		 * "ASAHI KASEI AK4642" (japanese) manual p94.
+		 * "KNIX KASEI AK4642" (japanese) manual p94.
 		 */
 		snd_soc_component_update_bits(component, SG_SL1, PMMP | MGAIN0, PMMP | MGAIN0);
 		snd_soc_component_write(component, TIMER, ZTM(0x3) | WTM(0x3));
@@ -664,9 +664,9 @@ static int ak4642_i2c_probe(struct i2c_client *i2c)
 }
 
 static const struct of_device_id ak4642_of_match[] = {
-	{ .compatible = "asahi-kasei,ak4642",	.data = &ak4642_drvdata},
-	{ .compatible = "asahi-kasei,ak4643",	.data = &ak4643_drvdata},
-	{ .compatible = "asahi-kasei,ak4648",	.data = &ak4648_drvdata},
+	{ .compatible = "knix-kasei,ak4642",	.data = &ak4642_drvdata},
+	{ .compatible = "knix-kasei,ak4643",	.data = &ak4643_drvdata},
+	{ .compatible = "knix-kasei,ak4648",	.data = &ak4648_drvdata},
 	{}
 };
 MODULE_DEVICE_TABLE(of, ak4642_of_match);

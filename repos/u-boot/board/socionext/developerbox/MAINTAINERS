@@ -1,5 +1,5 @@
 DEVELOPER BOX
-M:	Masahisa Kojima <kojima.masahisa@socionext.com>
+M:	Mknixsa Kojima <kojima.mknixsa@socionext.com>
 S:	Maintained
 F:	arch/arm/dts/synquacer-*
 F:	board/socionext/developerbox/*

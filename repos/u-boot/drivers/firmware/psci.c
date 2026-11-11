@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0+
 /*
- * Copyright (C) 2017 Masahiro Yamada <yamada.masahiro@socionext.com>
+ * Copyright (C) 2017 Mknixro Yamada <yamada.mknixro@socionext.com>
  *
  * Based on drivers/firmware/psci.c from Linux:
  * Copyright (C) 2015 ARM Limited

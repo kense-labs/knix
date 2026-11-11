@@ -6,4 +6,4 @@ draft: false
 
 # Knix merch
 
-If you'd like to buy Knix merch, you can do so on our [HELLOTUX store](https://www.hellotux.com/asahi). A portion of each sale is donated to the project.
+If you'd like to buy Knix merch, you can do so on our [HELLOTUX store](https://www.hellotux.com/knix). A portion of each sale is donated to the project.

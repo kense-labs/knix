@@ -34,15 +34,9 @@ MARK_HASHES = {
     "mark-light.png": "28a962a6144b4f2c10b42238ae29d8f85a3d358c7fe10eadcc05f86aa436aacc",
 }
 
-# Built at runtime so this verifier never becomes a residual brand hit itself.
-def brand_pattern() -> re.Pattern:
-    A, L = "Asa" + "hi", "Linux"
-    a, l = A.lower(), L.lower()
-    return re.compile("|".join([
-        (A + L).upper(), A + L, A + " " + L, a + " " + l,
-        A + "-" + L, a + "-" + l, (A + "-" + L).upper(),
-        A + "_" + L, a + "_" + l, a + l, A + L.upper(),
-    ]))
+# Assembled at runtime so this verifier never becomes a residual hit itself.
+UPSTREAM_TOKEN = "asa" + "hi"
+TOKEN_RE = re.compile(UPSTREAM_TOKEN, re.I)
 
 
 def stats(path: pathlib.Path):
@@ -82,7 +76,7 @@ def main() -> int:
             "manifest/directory mismatch: count=%d entries=%d dirs=%d"
             % (m["count"], len(entries), len(dirs)))
 
-    # I2 -- SHA pin, local_path, no nested git metadata
+    # I2 / I3 -- SHA pin, local_path, no nested git metadata
     bad_sha, bad_path, nested_git = [], [], []
     for e in entries:
         lp = ROOT / e["local_path"]
@@ -96,7 +90,7 @@ def main() -> int:
     require(not bad_path, "43 local_path entries resolve", "missing: %s" % bad_path)
     require(not nested_git, "no nested .git in snapshots", "nested .git: %s" % nested_git)
 
-    # I3 -- single-file gate, and disk statistics match the machine truth
+    # I4 -- single-file gate
     big = []
     for dirpath, _dirnames, filenames in os.walk(REPOS):
         for name in filenames:
@@ -110,6 +104,7 @@ def main() -> int:
                 pass
     require(not big, "no file exceeds 95 MB", "oversized: %s" % big[:5])
 
+    # I5 -- disk statistics match the machine truth
     drift = []
     total_files = total_bytes = 0
     for e in entries:
@@ -127,37 +122,33 @@ def main() -> int:
             % (m["totals"]["snapshot_files"], m["totals"]["snapshot_bytes"],
                total_files, total_bytes))
 
-    # I4 -- README is a clean derived view: no upstream traces, no copied index
-    pat = brand_pattern()
-    readme = README.read_text(encoding="utf-8")
-    require("repos.json" in readme and "scripts/verify-knix.py" in readme,
-            "README points to the machine truth and the gate",
-            "README lost its pointer to repos.json / verify-knix.py")
-    upstream_token = "asa" + "hi"
-    require(not re.search(upstream_token, readme, re.I) and not pat.search(readme),
-            "README contains 0 upstream traces",
-            "README still contains upstream brand or identifier literals")
-
-    # I5 -- no upstream brand literals in content, path names or symlink targets
-    r = subprocess.run(["git", "grep", "--no-index", "-l", "-E", pat.pattern, "--", "."],
-                       cwd=ROOT, capture_output=True, text=True)
+    # I6 -- zero upstream tokens in content, path names and symlink targets
+    r = subprocess.run(
+        ["git", "grep", "--no-index", "-l", "-i", "-E", UPSTREAM_TOKEN, "--", "."],
+        cwd=ROOT, capture_output=True, text=True)
     content_hits = [l for l in r.stdout.splitlines() if not l.startswith(".workbuddy/")]
     path_hits, link_hits = [], []
     for dirpath, dirnames, filenames in os.walk(ROOT):
         dirnames[:] = [d for d in dirnames if d not in SKIP_DIRS]
-        rel = pathlib.Path(dirpath).relative_to(ROOT)
         for name in dirnames + filenames:
             p = pathlib.Path(dirpath) / name
-            if pat.search(name):
+            if TOKEN_RE.search(name):
                 path_hits.append(str(p.relative_to(ROOT)))
-            if p.is_symlink() and pat.search(os.readlink(p)):
+            if p.is_symlink() and TOKEN_RE.search(os.readlink(p)):
                 link_hits.append(str(p.relative_to(ROOT)))
     require(not (content_hits or path_hits or link_hits),
-            "0 upstream brand literals (content / paths / symlink targets)",
+            "0 upstream tokens (content / paths / symlink targets / PNG metadata)",
             "residual content=%s paths=%s links=%s"
             % (content_hits[:5], path_hits[:5], link_hits[:5]))
 
-    # I6 -- official Kense marks, both on disk and embedded in the SVG
+    # I7 -- identifiers unified under Knix naming
+    branches = {e["default_branch"] for e in entries}
+    require(all(not TOKEN_RE.search(b) for b in branches)
+            and all(not TOKEN_RE.search(n) for n in names),
+            "identifiers unified (%s)" % ", ".join(sorted(branches)),
+            "manifest still carries an old identifier")
+
+    # I8 -- official Kense marks, both on disk and embedded in the SVG
     ok_marks = True
     for n, h in MARK_HASHES.items():
         p = BRAND / n
@@ -179,16 +170,36 @@ def main() -> int:
                 re.findall(r'href="data:image/png;base64,([^"]+)"', svg)]
     embedded_hashes = {hashlib.sha256(d).hexdigest() for d in embedded}
     require(len(embedded) == 2 and embedded_hashes == set(MARK_HASHES.values())
-            and SVG.exists() and PNG.exists() and PNG.stat().st_size > 0,
-            "SVG embeds both marks; PNG preview present",
+            and PNG.exists() and PNG.stat().st_size > 0,
+            "SVG embeds both official marks; PNG preview present",
             "architecture diagram assets are incomplete")
     require("<title>" in svg and "<desc>" in svg
             and 'viewBox="0 0 680 470"' in svg
-            and len(re.findall(r"<marker ", svg)) >= 1,
-            "architecture SVG keeps the Kense style contract",
-            "architecture SVG lost its title/desc/viewBox/marker")
+            and len(re.findall(r"<marker ", svg)) >= 1
+            and not TOKEN_RE.search(svg),
+            "architecture SVG keeps the Kense style contract and is clean",
+            "architecture SVG lost its style contract or carries a residual")
 
-    # I7 -- the only collection mechanism still parses
+    # I9 -- single published branch, no tags
+    tags = subprocess.run(["git", "tag", "--list"], cwd=ROOT,
+                          capture_output=True, text=True).stdout.split()
+    local_branches = subprocess.run(
+        ["git", "branch", "--format=%(refname:short)"], cwd=ROOT,
+        capture_output=True, text=True).stdout.split()
+    require(not tags and local_branches == ["main"],
+            "single main branch, no tags",
+            "tags=%s branches=%s" % (tags, local_branches))
+
+    # I10 -- README is a clean derived view
+    readme = README.read_text(encoding="utf-8")
+    require("repos.json" in readme and "scripts/verify-knix.py" in readme,
+            "README points to the machine truth and the gate",
+            "README lost its pointer to repos.json / verify-knix.py")
+    require(not TOKEN_RE.search(readme),
+            "README contains 0 upstream traces",
+            "README still contains an upstream token")
+
+    # the only collection mechanism still parses
     try:
         ast.parse((ROOT / "scripts" / "collect-knix.py").read_text(encoding="utf-8"))
         ok_script = True

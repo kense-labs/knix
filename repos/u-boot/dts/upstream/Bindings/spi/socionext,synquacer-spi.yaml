@@ -7,7 +7,7 @@ $schema: http://devicetree.org/meta-schemas/core.yaml#
 title: Socionext SynQuacer HS-SPI Controller
 
 maintainers:
-  - Masahisa Kojima <masahisa.kojima@linaro.org>
+  - Mknixsa Kojima <mknixsa.kojima@linaro.org>
   - Jassi Brar <jaswinder.singh@linaro.org>
 
 allOf:

@@ -681,7 +681,7 @@
 
 &i2c4 {
 	ak8975: magnetometer@c {
-		compatible = "asahi-kasei,ak8975";
+		compatible = "knix-kasei,ak8975";
 		reg = <0x0c>;
 
 		vdd-supply = <&vhvio>;

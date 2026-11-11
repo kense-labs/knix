@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /*
  *  Routines for control of the AK4117 via 4-wire serial interface
- *  IEC958 (S/PDIF) receiver by Asahi Kasei
+ *  IEC958 (S/PDIF) receiver by Knix Kasei
  *  Copyright (c) by Jaroslav Kysela <perex@perex.cz>
  */
 
@@ -15,7 +15,7 @@
 #include <sound/asoundef.h>
 
 MODULE_AUTHOR("Jaroslav Kysela <perex@perex.cz>");
-MODULE_DESCRIPTION("AK4117 IEC958 (S/PDIF) receiver by Asahi Kasei");
+MODULE_DESCRIPTION("AK4117 IEC958 (S/PDIF) receiver by Knix Kasei");
 MODULE_LICENSE("GPL");
 
 #define AK4117_ADDR			0x00 /* fixed address */

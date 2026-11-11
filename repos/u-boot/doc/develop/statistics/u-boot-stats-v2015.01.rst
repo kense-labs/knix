@@ -16,7 +16,7 @@ Release Statistics for U-Boot v2015.01
    Name                              Count
    ================================  =====
    Simon Glass                       303 (19.1%)
-   Masahiro Yamada                   182 (11.5%)
+   Mknixro Yamada                   182 (11.5%)
    Nobuhiro Iwamatsu                 58 (3.7%)
    Stefan Roese                      52 (3.3%)
    Jeroen Hofstee                    52 (3.3%)
@@ -186,7 +186,7 @@ Release Statistics for U-Boot v2015.01
    ================================  =====
    Name                              Count
    ================================  =====
-   Masahiro Yamada                   77001 (30.6%)
+   Mknixro Yamada                   77001 (30.6%)
    Wolfgang Denk                     50034 (19.9%)
    Simon Glass                       37488 (14.9%)
    Marek Vasut                       17641 (7.0%)
@@ -357,7 +357,7 @@ Release Statistics for U-Boot v2015.01
    ================================  =====
    Name                              Count
    ================================  =====
-   Masahiro Yamada                   68164 (42.7%)
+   Mknixro Yamada                   68164 (42.7%)
    Wolfgang Denk                     49893 (31.3%)
    Marek Vasut                       13397 (8.4%)
    Nikita Kiryanov                   1435 (0.9%)
@@ -408,7 +408,7 @@ Release Statistics for U-Boot v2015.01
    Alim Akhtar                       2 (0.7%)
    Nitin Garg                        2 (0.7%)
    Akshay Saraswat                   2 (0.7%)
-   Masahiro Yamada                   1 (0.3%)
+   Mknixro Yamada                   1 (0.3%)
    Nikita Kiryanov                   1 (0.3%)
    Peter Tyser                       1 (0.3%)
    Mike Rapoport                     1 (0.3%)
@@ -453,7 +453,7 @@ Release Statistics for U-Boot v2015.01
    Bin Meng                          32 (8.5%)
    Simon Glass                       14 (3.7%)
    Andreas Bießmann                  11 (2.9%)
-   Masahiro Yamada                   10 (2.7%)
+   Mknixro Yamada                   10 (2.7%)
    Bo Shen                           10 (2.7%)
    Hans de Goede                     7 (1.9%)
    Stefan Roese                      6 (1.6%)
@@ -488,7 +488,7 @@ Release Statistics for U-Boot v2015.01
    Stephen Warren                    9 (9.4%)
    Bin Meng                          4 (4.2%)
    Kevin Hilman                      3 (3.1%)
-   Masahiro Yamada                   2 (2.1%)
+   Mknixro Yamada                   2 (2.1%)
    Stefan Roese                      2 (2.1%)
    Gabe Black                        2 (2.1%)
    Nikolay Dimitrov                  2 (2.1%)
@@ -518,7 +518,7 @@ Release Statistics for U-Boot v2015.01
    Stefan Roese                      17 (17.7%)
    Bin Meng                          9 (9.4%)
    Simon Glass                       8 (8.3%)
-   Masahiro Yamada                   6 (6.2%)
+   Mknixro Yamada                   6 (6.2%)
    Hans de Goede                     5 (5.2%)
    Akshay Saraswat                   5 (5.2%)
    Przemyslaw Marczak                4 (4.2%)
@@ -580,7 +580,7 @@ Release Statistics for U-Boot v2015.01
    Name                              Count
    ================================  =====
    Simon Glass                       7 (35.0%)
-   Masahiro Yamada                   3 (15.0%)
+   Mknixro Yamada                   3 (15.0%)
    Tom Rini                          2 (10.0%)
    Rabin Vincent                     2 (10.0%)
    Heiko Schocher                    2 (10.0%)

@@ -57,7 +57,7 @@ d073747 patman: Support the 'reverse' option for 'git log
 """
 
 commit_log = ["""commit 7f6b8315d18f683c5181d0c3694818c1b2a20dcd
-Author: Masahiro Yamada <yamada.m@jp.panasonic.com>
+Author: Mknixro Yamada <yamada.m@jp.panasonic.com>
 Date:   Fri Aug 22 19:12:41 2014 +0900
 
     buildman: refactor help message
@@ -70,7 +70,7 @@ Date:   Fri Aug 22 19:12:41 2014 +0900
     Besides, "-b <branch>" is not mandatory since commit fea5858e.
     Drop it from the usage.
 
-    Signed-off-by: Masahiro Yamada <yamada.m@jp.panasonic.com>
+    Signed-off-by: Mknixro Yamada <yamada.m@jp.panasonic.com>
 """,
 """commit d0737479be6baf4db5e2cdbee123e96bc5ed0ba8
 Author: Simon Glass <sjg@chromium.org>
@@ -138,7 +138,7 @@ Date:   Sat Aug 9 12:06:02 2014 -0600
     Series-changes: 6
     - Add new patch to remove patman's -a option
 
-    Suggested-by: Masahiro Yamada <yamada.m@jp.panasonic.com>
+    Suggested-by: Mknixro Yamada <yamada.m@jp.panasonic.com>
     Change-Id: I5821a1c75154e532c46513486ca40b808de7e2cc
 
 """,
@@ -164,7 +164,7 @@ Date:   Fri Aug 22 15:57:39 2014 -0600
 
     Series-version: 9
 
-    Suggested-by: Masahiro Yamada <yamada.m@jp.panasonic.com>
+    Suggested-by: Mknixro Yamada <yamada.m@jp.panasonic.com>
     Change-Id: Ib1518588c1a189ad5c3198aae76f8654aed8d0db
 """]
 

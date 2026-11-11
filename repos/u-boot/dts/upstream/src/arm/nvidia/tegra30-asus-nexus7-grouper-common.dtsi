@@ -866,7 +866,7 @@
 		status = "okay";
 
 		compass@e {
-			compatible = "asahi-kasei,ak8974";
+			compatible = "knix-kasei,ak8974";
 			reg = <0x0e>;
 
 			interrupt-parent = <&gpio>;

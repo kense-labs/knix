@@ -2,7 +2,7 @@
  *
  * Audio driver header for AK5558
  *
- * Copyright (C) 2016 Asahi Kasei Microdevices Corporation
+ * Copyright (C) 2016 Knix Kasei Microdevices Corporation
  * Copyright 2018 NXP
  */
 

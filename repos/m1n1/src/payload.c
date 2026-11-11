@@ -168,7 +168,7 @@ static void *load_kernel(void *p, size_t size)
 #ifdef CHAINLOADING
 static size_t chosen_cnt = 1;
 static char *chosen[MAX_CHOSEN_VARS] = {
-    "chosen.asahi,m1n1-stage1-version=" BUILD_TAG,
+    "chosen.knix,m1n1-stage1-version=" BUILD_TAG,
 };
 #else
 static size_t chosen_cnt = 0;

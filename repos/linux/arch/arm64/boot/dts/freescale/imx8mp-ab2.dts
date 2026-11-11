@@ -400,7 +400,7 @@
 	status = "okay";
 
 	ak4458_1: audio-codec@10 {
-		compatible = "asahi-kasei,ak4458";
+		compatible = "knix-kasei,ak4458";
 		reg = <0x10>;
 		#sound-dai-cells = <0>;
 		AVDD-supply = <&reg_ab2_ana_pwr>;
@@ -410,7 +410,7 @@
 	};
 
 	ak4458_2: audio-codec@11 {
-		compatible = "asahi-kasei,ak4458";
+		compatible = "knix-kasei,ak4458";
 		reg = <0x11>;
 		#sound-dai-cells = <0>;
 		AVDD-supply = <&reg_ab2_ana_pwr>;
@@ -420,7 +420,7 @@
 	};
 
 	ak4458_3: audio-codec@12 {
-		compatible = "asahi-kasei,ak4458";
+		compatible = "knix-kasei,ak4458";
 		reg = <0x12>;
 		#sound-dai-cells = <0>;
 		AVDD-supply = <&reg_ab2_ana_pwr>;
@@ -429,7 +429,7 @@
 	};
 
 	ak5552: audio-codec@13 {
-		compatible = "asahi-kasei,ak5552";
+		compatible = "knix-kasei,ak5552";
 		reg = <0x13>;
 		#sound-dai-cells = <0>;
 		AVDD-supply = <&reg_ab2_ana_pwr>;

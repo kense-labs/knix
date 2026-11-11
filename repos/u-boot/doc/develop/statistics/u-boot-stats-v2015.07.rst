@@ -19,7 +19,7 @@ Release Statistics for U-Boot v2015.07
    Joe Hershberger                   111 (7.1%)
    Hans de Goede                     106 (6.8%)
    Tim Harvey                        77 (4.9%)
-   Masahiro Yamada                   68 (4.4%)
+   Mknixro Yamada                   68 (4.4%)
    Bin Meng                          56 (3.6%)
    Jagannadh Teki                    44 (2.8%)
    Przemyslaw Marczak                43 (2.8%)
@@ -180,7 +180,7 @@ Release Statistics for U-Boot v2015.07
    ================================  =====
    Name                              Count
    ================================  =====
-   Masahiro Yamada                   56181 (28.7%)
+   Mknixro Yamada                   56181 (28.7%)
    Simon Glass                       22872 (11.7%)
    Hans de Goede                     19807 (10.1%)
    Kishon Vijay Abraham I            15720 (8.0%)

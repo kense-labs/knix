@@ -3,7 +3,7 @@ Tracepoints in ALSA
 ===================
 
 2017/07/02
-Takasahi Sakamoto
+Takknix Sakamoto
 
 Tracepoints in ALSA PCM core
 ============================

@@ -313,7 +313,7 @@ static int ak4104_spi_probe(struct spi_device *spi)
 }
 
 static const struct of_device_id ak4104_of_match[] = {
-	{ .compatible = "asahi-kasei,ak4104", },
+	{ .compatible = "knix-kasei,ak4104", },
 	{ }
 };
 MODULE_DEVICE_TABLE(of, ak4104_of_match);
@@ -336,6 +336,6 @@ static struct spi_driver ak4104_spi_driver = {
 module_spi_driver(ak4104_spi_driver);
 
 MODULE_AUTHOR("Daniel Mack <daniel@caiaq.de>");
-MODULE_DESCRIPTION("Asahi Kasei AK4104 ALSA SoC driver");
+MODULE_DESCRIPTION("Knix Kasei AK4104 ALSA SoC driver");
 MODULE_LICENSE("GPL");
 

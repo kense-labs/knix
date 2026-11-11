@@ -36,7 +36,7 @@ alias lukma          Lukasz Majewski <lukma@denx.de>
 alias macpaul        Macpaul Lin <macpaul@andestech.com>
 alias marex          Marek Vasut <marex@denx.de>
 alias mariosix       Mario Six <mario.six@gdsys.cc>
-alias masahiro       Masahiro Yamada <yamada.masahiro@socionext.com>
+alias mknixro       Mknixro Yamada <yamada.mknixro@socionext.com>
 alias mateusz        Mateusz Kulikowski <mateusz.kulikowski@gmail.com>
 alias mbrugger       Matthias Brugger <mbrugger@suse.com>
 alias monstr         Michal Simek <monstr@monstr.eu>
@@ -77,7 +77,7 @@ alias sunxi          uboot, jagan, apritzel
 alias tegra          uboot, sjg, Tom Warren <twarren@nvidia.com>
 alias tegra2         tegra
 alias ti             uboot, trini
-alias uniphier       uboot, masahiro
+alias uniphier       uboot, mknixro
 alias zynq           uboot, monstr
 alias rockchip       uboot, sjg, kevery, ptomsich
 
@@ -117,7 +117,7 @@ alias eth            uboot, jhersh
 alias kerneldoc      uboot, marex
 alias fdt            uboot, sjg
 alias i2c            uboot, hs
-alias kconfig        uboot, masahiro
+alias kconfig        uboot, mknixro
 alias mmc            uboot, freenix, jaehoon
 alias nand           uboot
 alias net            uboot, jhersh

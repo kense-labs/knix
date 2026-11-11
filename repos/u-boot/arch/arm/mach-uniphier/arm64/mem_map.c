@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0+
 /*
- * Copyright (C) 2016 Masahiro Yamada <yamada.masahiro@socionext.com>
+ * Copyright (C) 2016 Mknixro Yamada <yamada.mknixro@socionext.com>
  */
 
 #include <linux/types.h>

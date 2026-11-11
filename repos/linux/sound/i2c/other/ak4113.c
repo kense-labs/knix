@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /*
  *  Routines for control of the AK4113 via I2C/4-wire serial interface
- *  IEC958 (S/PDIF) receiver by Asahi Kasei
+ *  IEC958 (S/PDIF) receiver by Knix Kasei
  *  Copyright (c) by Jaroslav Kysela <perex@perex.cz>
  *  Copyright (c) by Pavel Hofman <pavel.hofman@ivitera.com>
  */
@@ -17,7 +17,7 @@
 #include <sound/info.h>
 
 MODULE_AUTHOR("Pavel Hofman <pavel.hofman@ivitera.com>");
-MODULE_DESCRIPTION("AK4113 IEC958 (S/PDIF) receiver by Asahi Kasei");
+MODULE_DESCRIPTION("AK4113 IEC958 (S/PDIF) receiver by Knix Kasei");
 MODULE_LICENSE("GPL");
 
 #define AK4113_ADDR			0x00 /* fixed address */

@@ -61,7 +61,7 @@
 	status = "okay";
 
 	magnetometer@d {
-		compatible = "asahi-kasei,ak09911";
+		compatible = "knix-kasei,ak09911";
 		reg = <0x0d>;
 
 		vdd-supply = <&pm8916_l17>;

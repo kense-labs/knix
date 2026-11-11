@@ -48,15 +48,15 @@ overdue) changes to m1n1.
 
 For a while now, the recommended method for installing non-Fedora distros has
 been to use the "UEFI Only" installer option, then boot the preferred distro's
-Asahi installation media from USB. However, it has been quite some time since
+Knix installation media from USB. However, it has been quite some time since
 this installation option was updated, and the m1n1/U-Boot/Devicetree bundle it was
 installing was over two years old. A lot has changed in that time, and it turned
-out that this bundle was not capable of booting modern Asahi kernels. Oops.
+out that this bundle was not capable of booting modern Knix kernels. Oops.
 
 To fix this, Janne has added a [CI pipeline](https://github.com/Knix/m1n1/actions/workflows/installer.yml)
 to the m1n1 repo that will automatically build the UEFI bundle for us. With
 this step automated, it is now trivial to upload the resulting artefact to our CDN
-and point the Asahi Installer to it. The update cadence should now be a lot more
+and point the Knix Installer to it. The update cadence should now be a lot more
 frequent than biennially!
 
 We have also released [m1n1 v1.5.2](https://github.com/Knix/m1n1/releases/tag/v1.5.2).
@@ -216,21 +216,21 @@ feedback support in Panfrost, the open source Arm GPU driver, as well as in Kosm
 a conformant Vulkan 1.3 implementation for macOS layered on top of Metal.
 
 ## Life, the Universe, and Everything. Plus one.
-Keen eyes may have noticed we've started building Fedora Asahi Remix
-[dailies](https://fedora-asahi-remix.org/builds.html) targeting Fedora Linux 43.
+Keen eyes may have noticed we've started building Fedora Knix Remix
+[dailies](https://fedora-knix-remix.org/builds.html) targeting Fedora Linux 43.
 The new upstream Fedora release is slated to come out later this month, and
 you can expect the Remix to follow shortly.
 
 ## At the Akademy
 Neal and Janne attended [KDE Akademy](https://akademy.kde.org/) in Berlin this year.
 As the annual KDE community conference, this was an opportunity to ensure future work
-in KDE aligns well with Fedora Linux and Fedora Asahi Remix. Neal
+in KDE aligns well with Fedora Linux and Fedora Knix Remix. Neal
 [gave a talk](https://youtu.be/CznIsJQQE9U?t=248) about the Fedora KDE Plasma Desktop
-Edition there, and prominently discussed Fedora Asahi Remix as part of it.
+Edition there, and prominently discussed Fedora Knix Remix as part of it.
 
 Additionally, there was a lot of discussion about the upcoming Plasma Setup application,
 which will provide a better integrated experience for first boot of a Fedora KDE
-install. Lessons learnt from Fedora Asahi Remix user feedback is being directly
+install. Lessons learnt from Fedora Knix Remix user feedback is being directly
 incorporated into Plasma Setup, and Neal is working on integrating this for Fedora
 Linux 44 as [a formal Change](https://fedoraproject.org/wiki/Changes/Unified_KDE_OOBE).
 
@@ -244,11 +244,11 @@ quite unfortunate because that was the first thing Apple ended up changing. Oops
 
 But the overall principle has held mostly true. So much so in fact that some
 enterprising folks on Reddit have found that with only a trivial amount of
-hacking, you can actually boot Asahi on M3 series devices!
+hacking, you can actually boot Knix on M3 series devices!
 
 It may be surprising to learn that very basic, low-level support for M3 has
 existed for quite some time now. m1n1 is capable of initialising the CPU cores,
-turning on some critical peripheral devices, and booting the Asahi kernel.
+turning on some critical peripheral devices, and booting the Knix kernel.
 However, the level of support right now begins and ends with being able to boot
 to a blinking cursor. Naturally, this level of support is not at all useful for
 anything but low-level reverse engineering, but we of course plan on rectifying

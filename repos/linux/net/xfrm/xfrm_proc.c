@@ -4,7 +4,7 @@
  *
  * Copyright (C)2006-2007 USAGI/WIDE Project
  *
- * Authors:	Masahide NAKAMURA <nakam@linux-ipv6.org>
+ * Authors:	Mknixde NAKAMURA <nakam@linux-ipv6.org>
  */
 #include <linux/proc_fs.h>
 #include <linux/seq_file.h>

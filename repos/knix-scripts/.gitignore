@@ -1,0 +1,6 @@
+build
+/knix-scripts-*\.src\.rpm
+/knix-scripts-*\.tar\.gz
+/knix-scripts\.spec
+/15-update-m1n1\.install
+/update-m1n1\.sysconfig

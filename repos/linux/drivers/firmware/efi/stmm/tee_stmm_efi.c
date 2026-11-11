@@ -593,5 +593,5 @@ module_tee_client_driver(tee_stmm_efi_driver);
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Ilias Apalodimas <ilias.apalodimas@linaro.org>");
-MODULE_AUTHOR("Masahisa Kojima <masahisa.kojima@linaro.org>");
+MODULE_AUTHOR("Mknixsa Kojima <mknixsa.kojima@linaro.org>");
 MODULE_DESCRIPTION("TEE based EFI runtime variable service driver");

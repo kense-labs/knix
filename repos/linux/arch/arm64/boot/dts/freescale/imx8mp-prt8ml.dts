@@ -154,7 +154,7 @@
 	status = "okay";
 
 	ak5558: codec@10 {
-		compatible = "asahi-kasei,ak5558";
+		compatible = "knix-kasei,ak5558";
 		reg = <0x10>;
 		reset-gpios = <&gpio_exp_1 2 GPIO_ACTIVE_LOW>;
 	};
@@ -223,7 +223,7 @@
 	status = "okay";
 
 	ak4458: codec@11 {
-		compatible = "asahi-kasei,ak4458";
+		compatible = "knix-kasei,ak4458";
 		reg = <0x11>;
 		#sound-dai-cells = <0>;
 		reset-gpios = <&gpio_exp_2 5 GPIO_ACTIVE_LOW>;

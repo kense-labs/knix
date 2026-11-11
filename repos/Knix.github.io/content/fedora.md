@@ -1,5 +1,5 @@
 ---
-title: Fedora Asahi Remix
+title: Fedora Knix Remix
 date:  "2026-11-03T10:00:00-04:00"
 draft: false
 body_class: "landing fedora"
@@ -9,28 +9,28 @@ layout: landing
     <div>
         <div>
             <p>Introducing</p>
-            <h1>Fedora Asahi Remix</h1>
+            <h1>Fedora Knix Remix</h1>
             <p>The most polished Linux® for Apple Silicon Macs.</p>
             <h2>Install from macOS</h2>
             <pre><code id="curl">curl https://alx.sh | sh</code> <a id="copy-button" href="#"><i class="fa fa-clipboard"></i></code></a></pre>
         </div>
         <div>
-            <img src="/img/far_landing/far_laptop.svg" alt="Fedora Asahi Remix on a laptop">
+            <img src="/img/far_landing/far_laptop.svg" alt="Fedora Knix Remix on a laptop">
         </div>
     </div>
 </section>
 <section class="topic">
 
-## <div>Fedora Linux 45 + Apple Silicon = Fedora Asahi Remix</div>
+## <div>Fedora Linux 45 + Apple Silicon = Fedora Knix Remix</div>
 
-<img width="200" class="w-200" src="/img/far_landing/fedora_remix.png">Fedora Asahi Remix is the result of a close multi-year collaboration between the Knix project and the [Fedora Project](https://fedoraproject.org/). We've worked hard in order to bring you a fully integrated distro, cooperating closely to get improvements and bug fixes to users as quickly as possible. All of our Asahi platform-specific packages are in upstream Fedora and fully supported in Fedora Linux 45.
+<img width="200" class="w-200" src="/img/far_landing/fedora_remix.png">Fedora Knix Remix is the result of a close multi-year collaboration between the Knix project and the [Fedora Project](https://fedoraproject.org/). We've worked hard in order to bring you a fully integrated distro, cooperating closely to get improvements and bug fixes to users as quickly as possible. All of our Knix platform-specific packages are in upstream Fedora and fully supported in Fedora Linux 45.
 
-With Fedora's excellent 64-bit ARM support and mature development process, you can expect a solid and high-quality experience without any unwanted surprises. Fedora Asahi Remix is based on Fedora Linux 45, the latest Fedora Linux release with the newest software versions across the board. All M1 and M2 series MacBook, Mac Mini, Mac Pro, Mac Studio, and iMac devices are supported. Initial support is also available for M3, M3 Pro and M3 Max systems.
+With Fedora's excellent 64-bit ARM support and mature development process, you can expect a solid and high-quality experience without any unwanted surprises. Fedora Knix Remix is based on Fedora Linux 45, the latest Fedora Linux release with the newest software versions across the board. All M1 and M2 series MacBook, Mac Mini, Mac Pro, Mac Studio, and iMac devices are supported. Initial support is also available for M3, M3 Pro and M3 Max systems.
 
 </section>
 <section class="topic">
 
-## <div>Fedora Asahi Remix ❤️ KDE Plasma</div>
+## <div>Fedora Knix Remix ❤️ KDE Plasma</div>
 
 <img width="150" class="w-150" src="/img/far_landing/kde-logo-white-blue-rounded-source.svg">We are proud to offer [KDE Plasma](https://kde.org/plasma-desktop/) as our flagship desktop environment. With leading edge Wayland support and a highly customizable experience plus wide support for Apple hardware features, KDE Plasma is a joy to use on Apple Silicon.
 
@@ -45,7 +45,7 @@ Rather use [GNOME](https://www.gnome.org/)? No worries, we've got you covered wi
 
 ## <div>100% Wayland Experience</div>
 
-<img width="150" class="w-150" src="/img/far_landing/Wayland_Logo.svg">Whether you're a KDE enthusiast or a GNOME lover, Fedora Asahi Remix comes right out of the box with a 100% [Wayland](https://wayland.freedesktop.org/) environment, bringing you the newest desktop and display server technologies, which are a perfect match for Apple hardware. You'll get a buttery smooth desktop, with absolutely no tearing or glitching, just like on macOS. Experience seamless HiDPI support in our KDE Plasma builds, even across multiple displays with different display scales.
+<img width="150" class="w-150" src="/img/far_landing/Wayland_Logo.svg">Whether you're a KDE enthusiast or a GNOME lover, Fedora Knix Remix comes right out of the box with a 100% [Wayland](https://wayland.freedesktop.org/) environment, bringing you the newest desktop and display server technologies, which are a perfect match for Apple hardware. You'll get a buttery smooth desktop, with absolutely no tearing or glitching, just like on macOS. Experience seamless HiDPI support in our KDE Plasma builds, even across multiple displays with different display scales.
 
 And with upcoming improvements in the Wayland ecosystem, we'll be able to support new technologies such as HDR and display notches, as well as proper display calibration. Have some X11 apps to run? No worries, XWayland is available and fully supported as a bridge for legacy applications.
 
@@ -61,17 +61,17 @@ And with upcoming improvements in the Wayland ecosystem, we'll be able to suppor
 <img width="200" style="float:unset" src="/img/far_landing/Vulkan_logo.svg"/>
 </p>
 
-Fedora Asahi Remix ships the world's first and only certified conformant [OpenGL 4.6](https://www.khronos.org/conformance/adopters/conformant-products/opengl#submission_347), [OpenGL ES 3.2](https://www.khronos.org/conformance/adopters/conformant-products/opengles#submission_1045), [OpenCL 3.0](https://www.khronos.org/conformance/adopters/conformant-products/opencl#submission_433), and
+Fedora Knix Remix ships the world's first and only certified conformant [OpenGL 4.6](https://www.khronos.org/conformance/adopters/conformant-products/opengl#submission_347), [OpenGL ES 3.2](https://www.khronos.org/conformance/adopters/conformant-products/opengles#submission_1045), [OpenCL 3.0](https://www.khronos.org/conformance/adopters/conformant-products/opencl#submission_433), and
 [Vulkan 1.4](https://www.khronos.org/conformance/adopters/conformant-products/vulkan#submission_812) for Apple Silicon.
 
-We support open graphics standards and test against official and industry-standard test suites, which means you can be confident that your apps and games will run correctly and render as they're intended to. Fedora Asahi Remix unlocks the full potential of Apple Silicon graphics, well beyond what is possible by layering on top of vendor-proprietary APIs like Metal.
+We support open graphics standards and test against official and industry-standard test suites, which means you can be confident that your apps and games will run correctly and render as they're intended to. Fedora Knix Remix unlocks the full potential of Apple Silicon graphics, well beyond what is possible by layering on top of vendor-proprietary APIs like Metal.
 
 </section>
 <section class="topic">
 
 ## <div>The best Linux laptop audio you've ever heard</div>
 
-<img width="200" class="w-200" src="/img/far_landing/curves.svg">We've worked hard to pioneer the world's first fully integrated DSP solution for the desktop Linux ecosystem. Just install Fedora Asahi Remix and enjoy high-quality audio right out of the box, no setup needed. We've worked together with the [PipeWire](https://pipewire.org/) and [WirePlumber](https://gitlab.freedesktop.org/pipewire/wireplumber) projects to add support for fully automatic and transparent DSP configuration, and then individually measured and calibrated 8+ different machine models, designing a customized DSP filter configuration for each one.
+<img width="200" class="w-200" src="/img/far_landing/curves.svg">We've worked hard to pioneer the world's first fully integrated DSP solution for the desktop Linux ecosystem. Just install Fedora Knix Remix and enjoy high-quality audio right out of the box, no setup needed. We've worked together with the [PipeWire](https://pipewire.org/) and [WirePlumber](https://gitlab.freedesktop.org/pipewire/wireplumber) projects to add support for fully automatic and transparent DSP configuration, and then individually measured and calibrated 8+ different machine models, designing a customized DSP filter configuration for each one.
 
 With our in-house [Bankstown](https://github.com/chadmed/bankstown) bass boost technology and our own pioneering open source [Smart Amp](https://github.com/Knix/speakersafetyd) implementation to safely provide full loudness and dynamic range, the result is the best audio you've ever heard on a Linux laptop. And we've even optimized the scheduling and power consumption of the DSP processing, so you'll get excellent battery life while playing back audio.
 

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 //
-// ak4613.c  --  Asahi Kasei ALSA Soc Audio driver
+// ak4613.c  --  Knix Kasei ALSA Soc Audio driver
 //
 // Copyright (C) 2015 Renesas Electronics Corporation
 // Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
@@ -297,7 +297,7 @@ static const struct regmap_config ak4613_regmap_cfg = {
 };
 
 static const struct of_device_id ak4613_of_match[] = {
-	{ .compatible = "asahi-kasei,ak4613",	.data = &ak4613_regmap_cfg },
+	{ .compatible = "knix-kasei,ak4613",	.data = &ak4613_regmap_cfg },
 	{},
 };
 MODULE_DEVICE_TABLE(of, ak4613_of_match);
@@ -834,14 +834,14 @@ static void ak4613_parse_of(struct ak4613_priv *priv,
 
 	/* Input 1 - 2 */
 	for (i = 0; i < 2; i++) {
-		snprintf(prop, sizeof(prop), "asahi-kasei,in%d-single-end", i + 1);
+		snprintf(prop, sizeof(prop), "knix-kasei,in%d-single-end", i + 1);
 		if (!of_property_read_bool(np, prop))
 			priv->ic |= 1 << i;
 	}
 
 	/* Output 1 - 6 */
 	for (i = 0; i < 6; i++) {
-		snprintf(prop, sizeof(prop), "asahi-kasei,out%d-single-end", i + 1);
+		snprintf(prop, sizeof(prop), "knix-kasei,out%d-single-end", i + 1);
 		if (!of_property_read_bool(np, prop))
 			priv->oc |= 1 << i;
 	}

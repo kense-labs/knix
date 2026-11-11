@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /*
  * Copyright (C) 2016 Socionext Inc.
- *   Author: Masahiro Yamada <yamada.masahiro@socionext.com>
+ *   Author: Mknixro Yamada <yamada.mknixro@socionext.com>
  */
 
 #include <linux/clk-provider.h>

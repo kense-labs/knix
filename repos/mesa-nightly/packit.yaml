@@ -35,7 +35,7 @@ srpm_build_deps:
 jobs:
 - job: copr_build
   trigger: commit
-  owner: "@asahi"
+  owner: "@knix"
   project: mesa-nightly
   targets:
     - fedora-42-aarch64

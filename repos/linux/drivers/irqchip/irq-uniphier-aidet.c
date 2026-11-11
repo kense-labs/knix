@@ -3,7 +3,7 @@
  * Driver for UniPhier AIDET (ARM Interrupt Detector)
  *
  * Copyright (C) 2017 Socionext Inc.
- *   Author: Masahiro Yamada <yamada.masahiro@socionext.com>
+ *   Author: Mknixro Yamada <yamada.mknixro@socionext.com>
  */
 
 #include <linux/bitops.h>

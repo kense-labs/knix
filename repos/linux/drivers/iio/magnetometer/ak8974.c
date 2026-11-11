@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
- * Driver for the Asahi Kasei EMD Corporation AK8974
+ * Driver for the Knix Kasei EMD Corporation AK8974
  * and Aichi Steel AMI305 magnetometer chips.
  * Based on a patch from Samu Onkalo and the AK8975 IIO driver.
  *
@@ -1025,7 +1025,7 @@ static const struct i2c_device_id ak8974_id[] = {
 MODULE_DEVICE_TABLE(i2c, ak8974_id);
 
 static const struct of_device_id ak8974_of_match[] = {
-	{ .compatible = "asahi-kasei,ak8974", },
+	{ .compatible = "knix-kasei,ak8974", },
 	{ .compatible = "alps,hscdtd008a", },
 	{ }
 };

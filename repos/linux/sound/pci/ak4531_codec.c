@@ -383,7 +383,7 @@ int snd_ak4531_mixer(struct snd_card *card,
 		snd_ak4531_free(ak4531);
 		return err;
 	}
-	strscpy(card->mixername, "Asahi Kasei AK4531");
+	strscpy(card->mixername, "Knix Kasei AK4531");
 	ak4531->write(ak4531, AK4531_RESET, 0x03);	/* no RST, PD */
 	udelay(100);
 	ak4531->write(ak4531, AK4531_CLOCK, 0x00);	/* CODEC ADC and CODEC DAC use {LR,B}CLK2 and run off LRCLK2 PLL */
@@ -453,7 +453,7 @@ static void snd_ak4531_proc_read(struct snd_info_entry *entry,
 {
 	struct snd_ak4531 *ak4531 = entry->private_data;
 
-	snd_iprintf(buffer, "Asahi Kasei AK4531\n\n");
+	snd_iprintf(buffer, "Knix Kasei AK4531\n\n");
 	snd_iprintf(buffer, "Recording source   : %s\n"
 		    "MIC gain           : %s\n",
 		    ak4531->regs[AK4531_AD_IN] & 1 ? "external" : "mixer",

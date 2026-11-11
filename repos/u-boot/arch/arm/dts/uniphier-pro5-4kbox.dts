@@ -3,7 +3,7 @@
  * Device Tree Source for UniPhier Pro5 4KBOX Board (EVB-Pro5-4KBOX-M-V0)
  *
  * Copyright (C) 2015-2016 Socionext Inc.
- *   Author: Masahiro Yamada <yamada.masahiro@socionext.com>
+ *   Author: Mknixro Yamada <yamada.mknixro@socionext.com>
  */
 
 /dts-v1/;

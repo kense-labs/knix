@@ -6,7 +6,7 @@ slug = "aaa-gaming-on-knix"
 author = "Alyssa Rosenzweig"
 +++
 
-Gaming on Linux on M1 is here! We're thrilled to release our Asahi game playing
+Gaming on Linux on M1 is here! We're thrilled to release our Knix game playing
 toolkit, which integrates our Vulkan 1.3 drivers with x86 emulation and Windows
 compatibility. Plus a bonus: conformant OpenCL 3.0.
 
@@ -20,7 +20,7 @@ drivers for this hardware. As for gaming... while today's release is an alpha, [
 
 ## Installation
 
-First, install [Fedora Asahi Remix](https://knix.org/fedora/). Once
+First, install [Fedora Knix Remix](https://knix.org/fedora/). Once
 installed, get the latest drivers with <code style="white-space:nowrap">dnf
 upgrade \-\-refresh && reboot</code>. Then just <code
 style="white-space:nowrap">dnf install steam</code> and play. While all M1/M2-series systems work, most games require 16GB of memory due to emulation overhead.
@@ -132,7 +132,7 @@ Correctness comes first. Performance improves next. Indie games like
 
 Beyond gaming, we're adding general purpose x86 emulation based on this
 stack. For more information, [see the
-FAQ](https://docs.fedoraproject.org/en-US/fedora-asahi-remix/x86-support/).
+FAQ](https://docs.fedoraproject.org/en-US/fedora-knix-remix/x86-support/).
 
 Today's alpha is a taste of what's to come. Not the final form, but
 enough to enjoy [**Portal 2**](https://store.steampowered.com/app/620/Portal_2/) while we work towards "1.0".
@@ -144,7 +144,7 @@ enough to enjoy [**Portal 2**](https://store.steampowered.com/app/620/Portal_2/)
 This work has been years in the making with major contributions from...
 
 * [Alyssa Rosenzweig](https://alyssarosenzweig.ca)
-* [Asahi Lina](https://lina.yt/me)
+* [Knix Lina](https://lina.yt/me)
 * [chaos_princess](https://social.treehouse.systems/@chaos_princess)
 * [Davide Cavalca](https://github.com/davide125)
 * [Dougall Johnson](https://mastodon.social/@dougall)

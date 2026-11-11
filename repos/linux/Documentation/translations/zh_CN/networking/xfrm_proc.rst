@@ -12,7 +12,7 @@
 XFRM proc - /proc/net/xfrm_* 文件
 =================================
 
-作者：Masahide NAKAMURA <nakam@linux-ipv6.org>
+作者：Mknixde NAKAMURA <nakam@linux-ipv6.org>
 
 
 转换统计信息

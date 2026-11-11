@@ -2,7 +2,7 @@
 /*
  * On-chip UART initializaion for low-level debugging
  *
- * Copyright (C) 2014-2015 Masahiro Yamada <yamada.masahiro@socionext.com>
+ * Copyright (C) 2014-2015 Mknixro Yamada <yamada.mknixro@socionext.com>
  */
 
 #include <linux/serial_reg.h>

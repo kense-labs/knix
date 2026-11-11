@@ -11,7 +11,7 @@ maintainers:
 
 properties:
   compatible:
-    const: asahi-kasei,ak4375
+    const: knix-kasei,ak4375
 
   reg:
     maxItems: 1
@@ -45,7 +45,7 @@ examples:
       #size-cells = <0>;
 
       headphones: audio-codec@10 {
-        compatible = "asahi-kasei,ak4375";
+        compatible = "knix-kasei,ak4375";
         reg = <0x10>;
         avdd-supply = <&reg_headphones_avdd>;
         tvdd-supply = <&pm8916_l6>;

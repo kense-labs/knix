@@ -179,7 +179,7 @@
 			#size-cells = <0>;
 
 			magnetometer@c {
-				compatible = "asahi-kasei,ak8963";
+				compatible = "knix-kasei,ak8963";
 				reg = <0x0c>;
 
 				pinctrl-0 = <&msense_reset>;

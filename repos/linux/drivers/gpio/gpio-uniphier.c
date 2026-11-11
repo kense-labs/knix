@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 //
 // Copyright (C) 2017 Socionext Inc.
-//   Author: Masahiro Yamada <yamada.masahiro@socionext.com>
+//   Author: Mknixro Yamada <yamada.mknixro@socionext.com>
 
 #include <linux/bits.h>
 #include <linux/gpio/driver.h>
@@ -493,6 +493,6 @@ static struct platform_driver uniphier_gpio_driver = {
 };
 module_platform_driver(uniphier_gpio_driver);
 
-MODULE_AUTHOR("Masahiro Yamada <yamada.masahiro@socionext.com>");
+MODULE_AUTHOR("Mknixro Yamada <yamada.mknixro@socionext.com>");
 MODULE_DESCRIPTION("UniPhier GPIO driver");
 MODULE_LICENSE("GPL v2");

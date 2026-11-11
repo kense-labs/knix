@@ -87,7 +87,7 @@ Android programs) may result in a binary whose sections are only aligned to 4K.
 
 ## Are there any available workarounds?
 
-Fedora Linux Asahi Remix's `muvm` package is, by default, configured to virtualize a 4K
+Fedora Linux Knix Remix's `muvm` package is, by default, configured to virtualize a 4K
 kernel (along with setting FEX as the x86_64 binfmt handler so x86_64 programs may be
 run). You may have varying levels of success by attempting to run your software in `muvm`.
 
@@ -135,7 +135,7 @@ run). You may have varying levels of success by attempting to run your software 
 
 ## Bugs
 
-Issues (other than page size and architectural support issues) in third-party software, reported and/or tracked by Asahi core team members:
+Issues (other than page size and architectural support issues) in third-party software, reported and/or tracked by Knix core team members:
 
 ### Open Bugs
 
@@ -174,6 +174,6 @@ Issues (other than page size and architectural support issues) in third-party so
 | kwin             | [Software cursor repaints are glitchy with fractional scaling sometimes](https://bugs.kde.org/show_bug.cgi?id=477455) | Fixed in Plasma 6.0 |
 | lsp-common-lib   | [Fix atomic operations for AArch64](https://github.com/lsp-plugins/lsp-plugins/issues/463) | Fixed in lsp-common-lib 1.0.40 |
 | lib-dsp-lib      | [Fix aarch64 msmatrix code](https://github.com/lsp-plugins/lsp-dsp-lib/pull/20) | Fixed in lsp-dsp-lib 1.0.20 |
-| pipewire         | [pipewiresrc: Hangs on Asahi](https://gitlab.freedesktop.org/pipewire/pipewire/-/issues/4957) | Fixed in pipewire 1.4.10 |
+| pipewire         | [pipewiresrc: Hangs on Knix](https://gitlab.freedesktop.org/pipewire/pipewire/-/issues/4957) | Fixed in pipewire 1.4.10 |
 | qqc2-desktop-style | [Some text glyphs in QML software are vertically mis-aligned or squished when using a fractional scale factor](https://bugs.kde.org/show_bug.cgi?id=479891) | Fixed in KDE Frameworks 6.9.0 |
 | wireplumber      | [Wireplumber ignores default playback volume](https://gitlab.freedesktop.org/pipewire/wireplumber/-/issues/655#) | Fixed in wireplumber 0.5.3 |

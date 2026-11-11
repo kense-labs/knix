@@ -111,7 +111,7 @@ Each OS has its own recovery OS. You must go to the recovery for Knix to run thi
 
 If you're not in the correct recovery OS, you can go to the correct one by:
 ```shell
-/Volumes/Asahi\ Linux/Finish\ Installation.app/Contents/Resources/step2.sh
+/Volumes/Knix\ Linux/Finish\ Installation.app/Contents/Resources/step2.sh
 ```
 
 ### Stage 2 (in the ESP)
@@ -141,7 +141,7 @@ m1n1 stage 1 is configured by the Knix Installer by appending variables like thi
 
 ```
 cp build/m1n1.bin m1n1-stage1.bin
-echo 'chosen.asahi,efi-system-partition=EFI-PARTITION-PARTUUID' >> m1n1-stage1.bin
+echo 'chosen.knix,efi-system-partition=EFI-PARTITION-PARTUUID' >> m1n1-stage1.bin
 echo 'chainload=EFI-PARTITION-PARTUUID;m1n1/boot.bin' >> m1n1-stage1.bin
 ```
 
@@ -149,7 +149,7 @@ echo 'chainload=EFI-PARTITION-PARTUUID;m1n1/boot.bin' >> m1n1-stage1.bin
 
 ### Configuring for stage 2
 
-m1n1 stage 2 will normally boot payloads directly, plus receive the `chosen.asahi,efi-system-partition` config from stage 1 automatically. Using device trees shipped with U-Boot:
+m1n1 stage 2 will normally boot payloads directly, plus receive the `chosen.knix,efi-system-partition` config from stage 1 automatically. Using device trees shipped with U-Boot:
 
 ```
 cat build/m1n1.bin \

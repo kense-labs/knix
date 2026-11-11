@@ -14,7 +14,7 @@
 #include <sound/control.h>
 
 /*
- *  ASAHI KASEI - AK4531 codec
+ *  KNIX KASEI - AK4531 codec
  *  - not really AC'97 codec, but it uses very similar interface as AC'97
  */
 

@@ -18,7 +18,7 @@ description: |
   be optimized for faster bus access.
 
 maintainers:
-  - Masahiro Yamada <yamada.masahiro@socionext.com>
+  - Mknixro Yamada <yamada.mknixro@socionext.com>
 
 properties:
   compatible:

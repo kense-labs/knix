@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0+
 /*
- * Copyright (C) 2015 Masahiro Yamada <yamada.masahiro@socionext.com>
+ * Copyright (C) 2015 Mknixro Yamada <yamada.mknixro@socionext.com>
  */
 
 #include <linux/clk.h>
@@ -291,6 +291,6 @@ static struct platform_driver uniphier_uart_platform_driver = {
 };
 module_platform_driver(uniphier_uart_platform_driver);
 
-MODULE_AUTHOR("Masahiro Yamada <yamada.masahiro@socionext.com>");
+MODULE_AUTHOR("Mknixro Yamada <yamada.mknixro@socionext.com>");
 MODULE_DESCRIPTION("UniPhier UART driver");
 MODULE_LICENSE("GPL");

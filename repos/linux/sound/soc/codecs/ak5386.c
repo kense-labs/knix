@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
  * ALSA SoC driver for
- *    Asahi Kasei AK5386 Single-ended 24-Bit 192kHz delta-sigma ADC
+ *    Knix Kasei AK5386 Single-ended 24-Bit 192kHz delta-sigma ADC
  *
  * (c) 2013 Daniel Mack <zonque@gmail.com>
  */
@@ -151,7 +151,7 @@ static struct snd_soc_dai_driver ak5386_dai = {
 
 #ifdef CONFIG_OF
 static const struct of_device_id ak5386_dt_ids[] = {
-	{ .compatible = "asahi-kasei,ak5386", },
+	{ .compatible = "knix-kasei,ak5386", },
 	{ }
 };
 MODULE_DEVICE_TABLE(of, ak5386_dt_ids);

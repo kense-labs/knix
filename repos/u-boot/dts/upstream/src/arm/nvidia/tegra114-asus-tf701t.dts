@@ -1247,7 +1247,7 @@
 		clock-frequency = <100000>;
 
 		magnetometer@c {
-			compatible = "asahi-kasei,ak09911";
+			compatible = "knix-kasei,ak09911";
 			reg = <0xc>;
 
 			/* no DRDY (polling) */

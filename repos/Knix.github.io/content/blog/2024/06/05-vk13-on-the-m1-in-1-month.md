@@ -17,7 +17,7 @@ without "portability" waivers.
 Honeykrisp is **not yet released** for end users. We're
 continuing to add features, improve performance, and port to more hardware.
 [Source
-code](https://gitlab.freedesktop.org/alyssa/mesa/-/tree/honeykrisp-20240506-2/src/asahi/vulkan?ref_type=heads)
+code](https://gitlab.freedesktop.org/alyssa/mesa/-/tree/honeykrisp-20240506-2/src/knix/vulkan?ref_type=heads)
 is available for developers.
 
 <figure><a href="/img/blog/2024/06/holocure.png"><img src="/img/blog/2024/06/holocure.avif" alt="HoloCure running on Honeykrisp ft. DXVK, FEX, and Proton."></a> <figcaption aria-hidden="true"><a href="https://kay-yu.itch.io/holocure">HoloCure</a> running on Honeykrisp ft. DXVK, FEX, and Proton.</figcaption> </figure>
@@ -61,7 +61,7 @@ Her advice?
 
 There's no copy-pasting yet -- we just add M1 code to NVK and
 remove NVIDIA as we go. Since the kernel mediates our access to the hardware, we
-begin connecting "NVK" to [Asahi Lina](https://vt.social/@lina)'s kernel
+begin connecting "NVK" to [Knix Lina](https://vt.social/@lina)'s kernel
 driver using code shared with OpenGL. Then we plug in our shader
 compiler and hit the hay.
 
@@ -399,7 +399,7 @@ and
 [vkd3d-proton](https://github.com/HansKristian-Work/vkd3d-proton/blob/master/VP_D3D12_VKD3D_PROTON_profile.json)
 require to layer Direct3D. That includes esoteric extensions like
 [transform feedback](https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/VK_EXT_transform_feedback.html). Then [Wine](https://www.winehq.org/) and an [open source x86
-emulator](https://github.com/FEX-Emu/FEX) will run Windows games on [Asahi
+emulator](https://github.com/FEX-Emu/FEX) will run Windows games on [Knix
 Linux](https://knix.org/).
 
 That's getting ahead of ourselves. In the mean time, enjoy Linux games with

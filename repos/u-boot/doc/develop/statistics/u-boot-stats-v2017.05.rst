@@ -27,7 +27,7 @@ Release Statistics for U-Boot v2017.05
    Peng Fan                          21 (2.3%)
    Heinrich Schuchardt               20 (2.2%)
    Kever Yang                        20 (2.2%)
-   Masahiro Yamada                   19 (2.1%)
+   Mknixro Yamada                   19 (2.1%)
    Andrew F. Davis                   17 (1.9%)
    Tim Harvey                        17 (1.9%)
    Andre Przywara                    16 (1.7%)
@@ -170,7 +170,7 @@ Release Statistics for U-Boot v2017.05
    Heiko Stuebner                    5956 (3.1%)
    Patrice Chotard                   5445 (2.8%)
    Dirk Eibach                       5152 (2.7%)
-   Masahiro Yamada                   5117 (2.6%)
+   Mknixro Yamada                   5117 (2.6%)
    Simon Glass                       3435 (1.8%)
    Philipp Tomsich                   3289 (1.7%)
    Marcel Ziswiler                   3125 (1.6%)
@@ -312,7 +312,7 @@ Release Statistics for U-Boot v2017.05
    Name                              Count
    ================================  =====
    Tom Rini                          100727 (86.2%)
-   Masahiro Yamada                   2626 (2.2%)
+   Mknixro Yamada                   2626 (2.2%)
    Jaehoon Chung                     220 (0.2%)
    Alexandru Gagniuc                 110 (0.1%)
    Stefan Herbrechtsmeier            65 (0.1%)
@@ -450,7 +450,7 @@ Release Statistics for U-Boot v2017.05
    Andreas Färber                    2 (4.9%)
    Bin Meng                          1 (2.4%)
    Philipp Tomsich                   1 (2.4%)
-   Masahiro Yamada                   1 (2.4%)
+   Mknixro Yamada                   1 (2.4%)
    Jakob Unterwurzacher              1 (2.4%)
    Nickey Yang                       1 (2.4%)
    Suji Velupillai                   1 (2.4%)
@@ -470,7 +470,7 @@ Release Statistics for U-Boot v2017.05
    Sumit Garg                        3 (7.3%)
    Heinrich Schuchardt               3 (7.3%)
    Kever Yang                        1 (2.4%)
-   Masahiro Yamada                   1 (2.4%)
+   Mknixro Yamada                   1 (2.4%)
    Jakob Unterwurzacher              1 (2.4%)
    Suji Velupillai                   1 (2.4%)
    Maxime Ripard                     1 (2.4%)
@@ -502,7 +502,7 @@ Release Statistics for U-Boot v2017.05
    ================================  =====
    Name                              Count
    ================================  =====
-   Masahiro Yamada                   2 (28.6%)
+   Mknixro Yamada                   2 (28.6%)
    Lokesh Vutla                      1 (14.3%)
    Maxime Ripard                     1 (14.3%)
    Tom Rini                          1 (14.3%)

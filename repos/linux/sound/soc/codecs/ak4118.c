@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
- * ak4118.c  --  Asahi Kasei ALSA Soc Audio driver
+ * ak4118.c  --  Knix Kasei ALSA Soc Audio driver
  *
  * Copyright 2018 DEVIALET
  */
@@ -388,7 +388,7 @@ static int ak4118_i2c_probe(struct i2c_client *i2c)
 
 #ifdef CONFIG_OF
 static const struct of_device_id ak4118_of_match[] = {
-	{ .compatible = "asahi-kasei,ak4118", },
+	{ .compatible = "knix-kasei,ak4118", },
 	{}
 };
 MODULE_DEVICE_TABLE(of, ak4118_of_match);
@@ -411,6 +411,6 @@ static struct i2c_driver ak4118_i2c_driver = {
 
 module_i2c_driver(ak4118_i2c_driver);
 
-MODULE_DESCRIPTION("Asahi Kasei AK4118 ALSA SoC driver");
+MODULE_DESCRIPTION("Knix Kasei AK4118 ALSA SoC driver");
 MODULE_AUTHOR("Adrien Charruel <adrien.charruel@devialet.com>");
 MODULE_LICENSE("GPL");

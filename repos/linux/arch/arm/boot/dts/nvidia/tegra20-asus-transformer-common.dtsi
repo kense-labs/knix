@@ -498,7 +498,7 @@
 
 		/* Aichi AMI306 digital compass */
 		magnetometer@e {
-			compatible = "asahi-kasei,ak8974";
+			compatible = "knix-kasei,ak8974";
 			reg = <0xe>;
 
 			interrupt-parent = <&gpio>;

@@ -8,7 +8,7 @@ author = "Alyssa Rosenzweig"
 
 Conformant OpenGL® ES 3.1 drivers are now available for M1- and M2-family GPUs.
 That means the drivers are compatible with any OpenGL ES 3.1 application.
-Interested? [Just install Linux!](https://fedora-asahi-remix.org/)
+Interested? [Just install Linux!](https://fedora-knix-remix.org/)
 
 For existing [Knix](https://knix.org/) users,
 upgrade your system with  <code style="white-space:nowrap;">dnf
@@ -16,7 +16,7 @@ upgrade</code> (Fedora) or <code style="white-space:nowrap;">pacman -Syu</code>
 (Arch) for the latest drivers.
 
 Our reverse-engineered, free and [open source graphics
-drivers](https://gitlab.freedesktop.org/asahi/mesa) are the world's ***only***
+drivers](https://gitlab.freedesktop.org/knix/mesa) are the world's ***only***
 conformant OpenGL ES 3.1 implementation for M1- and M2-family graphics
 hardware. That means our driver passed tens of thousands of tests to
 demonstrate correctness and is now recognized by the industry.
@@ -61,7 +61,7 @@ industry knows that progress comes from cross-vendor collaboration. We know it,
 too. Achieving conformance is a win for our community, for open source, and for
 open graphics.
 
-Of course, [Asahi Lina](https://vt.social/@lina/) and I are two individuals
+Of course, [Knix Lina](https://vt.social/@lina/) and I are two individuals
 with minimal funding. It's a little awkward that we beat the big corporation...
 
 It's not too late though. They should follow our lead!

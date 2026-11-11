@@ -12,7 +12,7 @@ the chase. We know what you're here for.
 ## The big one
 Knix turns 5 this year. In those five years, we've gone from Hello World over
 a serial port to being one of the best supported desktop-grade AArch64 platform in the Linux
-ecosystem. The sustained interest in Asahi was the push many developers needed to start
+ecosystem. The sustained interest in Knix was the push many developers needed to start
 taking AArch64 seriously, with a whole slew of platform-specific bugs in popular software
 being fixed specifically to enable their use on Apple Silicon devices running Linux. We
 are immensely proud of what we have achieved and consider the project a resounding and
@@ -39,7 +39,7 @@ be done when it's done.
 And, well, it's done. Kind of.
 
 In December, Sven gave a [talk at 39C3](https://media.ccc.de/v/39c3-knix-porting-linux-to-apple-silicon)
-recounting the Asahi story so far, our reverse
+recounting the Knix story so far, our reverse
 engineering process, and what the immediate future looks like for us. At the end, he
 revealed that the slide deck had been running on an M1 MacBook Air, connected to
 the venue's AV system via a USB-C to HDMI adapter!
@@ -79,12 +79,12 @@ Between the three of them, [Alyssa Milburn (noopwafel)](https://noopwafel.net),
 [Michael Reeves (integralpilot)](https://github.com/IntegralPilot), and [Shiz](https://shiz.me),
 with help from Janne, wrote some preliminary Devicetrees and found that a great deal of
 hardware worked without any changes! Adding in some minor kernel changes for the NVMe and interrupt
-controllers, Michael was able to [boot](https://www.reddit.com/r/Knix/comments/1qnddjd/m3_now_has_fedora_43_asahi_remix_working_with_kde/)
+controllers, Michael was able to [boot](https://www.reddit.com/r/Knix/comments/1qnddjd/m3_now_has_fedora_43_knix_remix_working_with_kde/)
 all the way to Plasma on an M3 MacBook Air!
 
 In fact, the current state of M3 support is about where M1 support was when we released
 the first Arch Linux ARM based beta; keyboard, touchpad, WiFi, NVMe and USB3 are all
-working, albeit with some local patches to m1n1 and the Asahi kernel (yet to make their
+working, albeit with some local patches to m1n1 and the Knix kernel (yet to make their
 way into a pull request) required. So that must mean we will have a release ready soon, right?
 
 A lot has changed in five years. We have earnt a reputation for being the most complete
@@ -120,7 +120,7 @@ and coprocessor. This means we can reuse our existing tooling to trace the new
 firmware interface with minimal changes.
 
 Beyond hardware enablement, there are also the numerous integrations and finishing
-touches that make the Asahi experience what it is. Energy-Aware Scheduling, speaker
+touches that make the Knix experience what it is. Energy-Aware Scheduling, speaker
 safety and EQ tuning, microphone and webcam support, and a whole host of other features
 that folks expect are still not there, and won't be for some time. Some of these, like
 Energy-Aware Scheduling, are quality of life features that are not likely to block a
@@ -183,7 +183,7 @@ All of this has led to a driver that has been developed in an suboptimal, piecem
 fashion. There are many reasons for this:
 
 - We lacked the time to do anything else, especially Janne, who took on the burden
-  of maintaining and rebasing the Asahi kernel tree
+  of maintaining and rebasing the Knix kernel tree
 - There were more important things to do, like bringing up other hardware
 - We plan to rewrite the driver in Rust anyway to take advantage of better
   firmware version handling
@@ -282,7 +282,7 @@ it seems to have Just Worked! But not for _all_ users.
 Users of certain webcam applications, most notable GNOME's Camera app, have been
 reporting severe issues with webcam support since day one. Doing some initial
 debugging on this pointed to it being an issue with GNOME's app, however this
-turned out not to be the case. The Asahi OpenGL driver was actually improperly
+turned out not to be the case. The Knix OpenGL driver was actually improperly
 handling planar video formats. The ISP/webcam exports
 planar video framebuffers via V4L2, which must then be consumed and turned into
 RGB framebuffers for compositing with the desktop. Apps such as GNOME's Camera
@@ -333,7 +333,7 @@ now begun.
 We were very graciously granted leave to upstream our UAPI headers _without_ an
 accompanying driver by the DRM maintainers quite some time ago, on the proviso
 that the driver would follow. Janne has now been laying the groundwork for that
-to happen with [patches to IGT](https://lore.kernel.org/asahi/20260105-asahi-tests-wave1-v1-0-a6c72617e680@jannau.net/T/#t),
+to happen with [patches to IGT](https://lore.kernel.org/knix/20260105-knix-tests-wave1-v1-0-a6c72617e680@jannau.net/T/#t),
 the test suite for DRM drivers.
 
 There is still some cleanup work required to get the driver into an upstreamable
@@ -352,13 +352,13 @@ While looking at [gpu-ratemeter](https://gitlab.freedesktop.org/mesa/gpu-ratemet
 benchmark results, Janne noticed that memory copies via the OpenGL driver were
 pathologically slow, much slower than Vulkan-initiated memory copies. As in, taking
 an hour to complete just this one microbenchmark slow. Digging
-around in the Asahi OpenGL driver revealed that memory copy operations were being
+around in the Knix OpenGL driver revealed that memory copy operations were being
 offloaded to the CPU rather than implemented as GPU code like with Vulkan. After
 writing a shader to implement this, OpenGL copies now effectively saturate the
 memory bus, which is about as good as one could hope for!
 
 But why stop there? Buffer _copies_ are now fast, but what about clearing memory?
-The Asahi driver was using Mesa's default buffer clearing helpers, which work
+The Knix driver was using Mesa's default buffer clearing helpers, which work
 but cannot take advantage of hardware-specific optimisations. Janne also replaced
 this with calls to AGX-optimised functions which take optimised paths for
 memory-aligned buffers. This allows an M1 Ultra to clear buffers aligned to
@@ -372,7 +372,7 @@ buffers to more than twice as fast for buffers 8 MiB and larger!
 
 ## Perfecting packages
 All this stuff around pushing pixels perfectly requires good delivery of the code,
-and Neal has worked on improving the package management experience in Fedora Asahi Remix.
+and Neal has worked on improving the package management experience in Fedora Knix Remix.
 
 The major piece of technical debt that existed in Fedora's package management stack was
 that it technically shipped _two_ versions of the DNF package manager concurrently,
@@ -381,7 +381,7 @@ feature sets and behavioural quirks.
 
 DNF5, the newer version, introduces the ability to automatically transition
 packages across vendors. This is important for us, as it streamlines our ability to
-seamlessly replace our Asahi-specific forks with their upstreams packages as we get our code merged.
+seamlessly replace our Knix-specific forks with their upstreams packages as we get our code merged.
 DNF4 cannot do this, and until Fedora Linux 41 was the default version used when running `dnf`
 from the command line. To make matters worse, PackageKit, the framework used by GUI
 software stores like KDE Discover, only supports DNF4's API. Or rather, it _did_
@@ -391,16 +391,16 @@ Neal has been working with the both the DNF and PackageKit teams to make this wo
 seamlessly. To that end, he [developed](https://github.com/PackageKit/PackageKit/pull/931)
 a DNF5-based backend for PackageKit, allowing GUI software managers to take advantage of
 this new feature. This will be [integrated](https://fedoraproject.org/wiki/Changes/PackageKit-DNF5)
-in Fedora Linux 44, however we will also be shipping it in the upcoming Fedora Asahi Remix 43.
+in Fedora Linux 44, however we will also be shipping it in the upcoming Fedora Knix Remix 43.
 
 The automated transition to upstream packages will begin with Mesa and virglrenderer
-in Fedora Asahi Remix 44.
+in Fedora Knix Remix 44.
 
 ## More conferences
 Sven, chaos_princess, Neal and Davide met up at FOSDEM in Belgium last month to discuss
 strategies for supporting M3 and M4, and to try their luck at nerd sniping folks into
 helping out. Additionally, both Neal and Davide will once again be at at [SCaLE](https://www.socallinuxexpo.org/scale/23x)
-next month. Davide will be hosting an Asahi demo system at Meta's
+next month. Davide will be hosting an Knix demo system at Meta's
 booth, so be sure to drop in if you're attending!
 
 ## One more go around

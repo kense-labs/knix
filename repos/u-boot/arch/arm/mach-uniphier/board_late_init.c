@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2014      Panasonic Corporation
  * Copyright (C) 2015-2016 Socionext Inc.
- *   Author: Masahiro Yamada <yamada.masahiro@socionext.com>
+ *   Author: Mknixro Yamada <yamada.mknixro@socionext.com>
  */
 
 #include <env.h>

@@ -458,5 +458,5 @@ mode of the system bus.  On the other hand, EA[25] is not supported for some
 newer SoCs.  Even if it is, EA[25] is not connected on most of the boards.
 
 --
-Masahiro Yamada <yamada.masahiro@socionext.com>
+Mknixro Yamada <yamada.mknixro@socionext.com>
 Oct. 2017

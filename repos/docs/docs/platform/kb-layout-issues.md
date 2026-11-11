@@ -58,7 +58,7 @@ iso_layout:-1
 swap_ctrl_cmd:0
 swap_fn_leftctrl:0
 swap_opt_cmd:0
-6.14.2-401.asahi.fc42.aarch64+16k
+6.14.2-401.knix.fc42.aarch64+16k
 Apple MacBook Air (M1, 2020)
 00
 0d
@@ -87,8 +87,8 @@ iso_layout:-1
 swap_ctrl_cmd:0
 swap_fn_leftctrl:0
 swap_opt_cmd:0
-xkeyboard-config-asahi 2.35.1_3-1
-6.2.0-asahi-6-1-edge-ARCH
+xkeyboard-config-knix 2.35.1_3-1
+6.2.0-knix-6-1-edge-ARCH
 Apple MacBook Pro (14-inch, M1 Pro, 2021)
 0f
 00
@@ -104,8 +104,8 @@ iso_layout:-1
 swap_ctrl_cmd:0
 swap_fn_leftctrl:0
 swap_opt_cmd:0
-xkeyboard-config-asahi 2.35.1_3-1
-6.2.0-asahi-11-1-edge-ARCH
+xkeyboard-config-knix 2.35.1_3-1
+6.2.0-knix-11-1-edge-ARCH
 Apple MacBook Air (13-inch, M2, 2022)
 21
 00
@@ -125,8 +125,8 @@ iso_layout:-1
 swap_ctrl_cmd:0
 swap_fn_leftctrl:0
 swap_opt_cmd:0
-xkeyboard-config-asahi 2.35.1_3-1
-6.2.0-rc3-asahi-7-1-edge-ARCH
+xkeyboard-config-knix 2.35.1_3-1
+6.2.0-rc3-knix-7-1-edge-ARCH
 Apple MacBook Pro (14-inch, M1 Pro, 2021)
 00
 00
@@ -146,8 +146,8 @@ iso_layout:-1
 swap_ctrl_cmd:0
 swap_fn_leftctrl:1
 swap_opt_cmd:1
-xkeyboard-config-asahi 2.35.1_3-1
-6.5.0-asahi-15-1-edge-ARCH
+xkeyboard-config-knix 2.35.1_3-1
+6.5.0-knix-15-1-edge-ARCH
 Apple MacBook Air (M1, 2020)
 00
 0d
@@ -165,8 +165,8 @@ iso_layout:-1
 swap_ctrl_cmd:0
 swap_fn_leftctrl:0
 swap_opt_cmd:0
-xkeyboard-config-asahi 2.35.1_3-1
-6.2.0-asahi-11-1-edge-ARCH
+xkeyboard-config-knix 2.35.1_3-1
+6.2.0-knix-11-1-edge-ARCH
 Apple MacBook Pro (16-inch, M1 Pro, 2021)
 0d
 00
@@ -189,7 +189,7 @@ swap_opt_cmd:0
 
 Selecting a variant will give a wrong mapping.
 
-This test was done using KDE, Wayland, xkeyboard-config-asahi, on Apple MacBook Pro (14-inch, M1 Pro, 2021)
+This test was done using KDE, Wayland, xkeyboard-config-knix, on Apple MacBook Pro (14-inch, M1 Pro, 2021)
 
 ## ISO - Greek - M1 Max MBP
 * Best XKB keyboard layout/variant: **US** and **Greek**
@@ -202,8 +202,8 @@ The `~ key functions as «» (in both layouts)
 fmode:3
 iso_layout:-1
 swap_fn_leftctrl:0
-xkeyboard-config-asahi 2.35.1_3-1
-6.1.0-asahi-2-2-edge-ARCH
+xkeyboard-config-knix 2.35.1_3-1
+6.1.0-knix-2-2-edge-ARCH
 Apple Macbook Pro (14-inch, M1 Max, 2021)
 0d
 00
@@ -221,8 +221,8 @@ iso_layout:-1
 swap_ctrl_cmd:0
 swap_fn_leftctrl:0
 swap_opt_cmd:0
-xkeyboard-config-asahi 2.35.1_3-1
-6.2.0-asahi-11-1-edge-ARCH
+xkeyboard-config-knix 2.35.1_3-1
+6.2.0-knix-11-1-edge-ARCH
 Apple MacBook Pro (13-inch, M2, 2022)
 00
 00
@@ -245,8 +245,8 @@ fnmode:3
 iso_layout:-1
 swap_fn_leftctrl:0
 swap_opt_cmd:0
-xkeyboard-config-asahi 2.35.1_3-1
-6.1.0-rc6-asahi-4-1-ARCH
+xkeyboard-config-knix 2.35.1_3-1
+6.1.0-rc6-knix-4-1-ARCH
 Apple MacBook Pro (16-inch, M1 Max, 2021)
 21
 00
@@ -273,8 +273,8 @@ iso_layout:-1
 swap_ctrl_cmd:0
 swap_fn_leftctrl:0
 swap_opt_cmd:0
-xkeyboard-config-asahi 2.35.1_3-1
-6.2.0-asahi-11-1-edge-ARCH
+xkeyboard-config-knix 2.35.1_3-1
+6.2.0-knix-11-1-edge-ARCH
 Apple MacBook Pro (14-inch, M1 Pro, 2021)
 00
 21
@@ -298,7 +298,7 @@ iso_layout:-1
 swap_ctrl_cmd:0
 swap_fn_leftctrl:0
 swap_opt_cmd:0
-6.10.6-401.asahi.fc40.aarch64+16k
+6.10.6-401.knix.fc40.aarch64+16k
 Apple MacBook Air (M1, 2020)
 00
 0d

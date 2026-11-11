@@ -113,7 +113,7 @@
 	status = "okay";
 
 	magnetometer@c {
-		compatible = "asahi-kasei,ak8963";
+		compatible = "knix-kasei,ak8963";
 		reg = <0xc>;
 		interrupts-extended = <&tlmm 66 IRQ_TYPE_EDGE_FALLING>;
 		reset-gpios = <&tlmm 62 GPIO_ACTIVE_LOW>;

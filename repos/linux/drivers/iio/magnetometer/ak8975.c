@@ -202,8 +202,8 @@ static long ak09912_raw_to_gauss(u16 data)
 	return (((long)data + 128) * 1500) / 256;
 }
 
-/* Compatible Asahi Kasei Compass parts */
-enum asahi_compass_chipset {
+/* Compatible Knix Kasei Compass parts */
+enum knix_compass_chipset {
 	AK8975,
 	AK8963,
 	AK09911,
@@ -238,7 +238,7 @@ enum ak_ctrl_mode {
 };
 
 struct ak_def {
-	enum asahi_compass_chipset type;
+	enum knix_compass_chipset type;
 	long (*raw_to_gauss)(u16 data);
 	u16 range;
 	u8 ctrl_regs[REGS_END];
@@ -474,7 +474,7 @@ static void ak8975_power_off(const struct ak8975_data *data)
  * return a negative error number otherwise
  */
 static int ak8975_who_i_am(const struct ak8975_data *data,
-			   enum asahi_compass_chipset type)
+			   enum knix_compass_chipset type)
 {
 	struct i2c_client *client = data->client;
 	u8 wia_val[2];
@@ -1009,7 +1009,7 @@ static int ak8975_probe(struct i2c_client *client)
 		dev_err(&client->dev, "Unexpected device\n");
 		goto power_off;
 	}
-	dev_dbg(&client->dev, "Asahi compass chip %s\n", name);
+	dev_dbg(&client->dev, "Knix compass chip %s\n", name);
 
 	/* Perform some basic start-of-day setup of the device. */
 	ret = ak8975_setup(data);
@@ -1143,16 +1143,16 @@ static const struct i2c_device_id ak8975_id[] = {
 MODULE_DEVICE_TABLE(i2c, ak8975_id);
 
 static const struct of_device_id ak8975_of_match[] = {
-	{ .compatible = "asahi-kasei,ak8975", .data = &ak_def_array[AK8975] },
+	{ .compatible = "knix-kasei,ak8975", .data = &ak_def_array[AK8975] },
 	{ .compatible = "ak8975", .data = &ak_def_array[AK8975] },
-	{ .compatible = "asahi-kasei,ak8963", .data = &ak_def_array[AK8963] },
+	{ .compatible = "knix-kasei,ak8963", .data = &ak_def_array[AK8963] },
 	{ .compatible = "ak8963", .data = &ak_def_array[AK8963] },
-	{ .compatible = "asahi-kasei,ak09911", .data = &ak_def_array[AK09911] },
+	{ .compatible = "knix-kasei,ak09911", .data = &ak_def_array[AK09911] },
 	{ .compatible = "ak09911", .data = &ak_def_array[AK09911] },
-	{ .compatible = "asahi-kasei,ak09912", .data = &ak_def_array[AK09912] },
+	{ .compatible = "knix-kasei,ak09912", .data = &ak_def_array[AK09912] },
 	{ .compatible = "ak09912", .data = &ak_def_array[AK09912] },
-	{ .compatible = "asahi-kasei,ak09916", .data = &ak_def_array[AK09916] },
-	{ .compatible = "asahi-kasei,ak09918", .data = &ak_def_array[AK09918] },
+	{ .compatible = "knix-kasei,ak09916", .data = &ak_def_array[AK09916] },
+	{ .compatible = "knix-kasei,ak09918", .data = &ak_def_array[AK09918] },
 	{ }
 };
 MODULE_DEVICE_TABLE(of, ak8975_of_match);

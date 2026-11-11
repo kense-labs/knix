@@ -3,12 +3,12 @@ date = "2024-12-12T00:00:00-00:00"
 draft = false
 title = "Beyond Gaming: X11 bridging in muvm"
 slug = "muvm-x11-bridging"
-author = "Asahi Lina"
+author = "Knix Lina"
 +++
 
 Hi everyone! We've just shipped a really cool update to our x86/x86-64 emulation stack on Knix, and I wanted to share what we've been working on. As of today, non-game apps are now usable!
 
-{{< captioned caption="Cisco Packet Tracer running on Fedora Asahi Remix">}}
+{{< captioned caption="Cisco Packet Tracer running on Fedora Knix Remix">}}
 <img src="/img/blog/2024/12/cisco-pt.png" alt="" class="center" width="85%">
 {{< /captioned >}}
 
@@ -30,7 +30,7 @@ This gives us the best of both worlds: Since the GPU userspace drivers run in th
 4. The userspace Mesa driver prepares the overall render information, the same way it would if running natively on the host.
 5. Mesa then wraps the command in a virtio-gpu *execution buffer*, which has the information needed to pass through the command to the host.
 6. The command, which is only a kilobyte or two of data at most, travels via the guest kernel virtio-gpu driver into the host virtual machine monitor.
-7. The VMM receives the command and passes it on to [virglrenderer](https://gitlab.freedesktop.org/asahi/virglrenderer), which unwraps the native UAPI GPU command structure.
+7. The VMM receives the command and passes it on to [virglrenderer](https://gitlab.freedesktop.org/knix/virglrenderer), which unwraps the native UAPI GPU command structure.
 8. virglrenderer issues the `ioctl()` to pass through the command to the host GPU kernel driver.
 9. The host GPU kernel driver sends the command to the GPU.
 
@@ -52,7 +52,7 @@ While DRM native context by itself lets the guest render on the GPU, we haven't 
 
 Crosvm, the ChromeOS VMM that muvm and libkrun's graphics support shares code with, does this using a feature called *cross-domain contexts*. virtio-gpu lets the guest open a communications channel, which the host VMM can then forward to a host compositor. Crosvm uses this to implement [Wayland forwarding](https://crosvm.dev/book/devices/wayland.html) using a guest Wayland compositor called *sommelier*. sommelier listens on the Wayland socket on the guest, and forwards the requests to the host Wayland compositor. Forwarding just the protocol isn't enough (otherwise you could do this using virtio vsock or TCP or anything else): sommelier needs to also extract buffer file descriptors that are passed through as part of the Wayland command stream, and use virtio-gpu mechanisms to *directly* share them between the host and the guest. This allows window framebuffers to be shared, so they can be composited on the host without any extra copying cost. On the host VMM side, this is handled by the cross-domain component of [rutabaga_gfx](https://github.com/containers/libkrun/tree/v1.9.5/src/rutabaga_gfx/src/cross_domain), which implements the commands to forward the Wayland protocol and convert shared buffers back to fds that the host Wayland compositor can understand.
 
-There was one extra catch: Synchronization. When a GPU app on the guest renders to a buffer, it passes it directly to the host before waiting for the rendering to finish. A mechanism called *implicit sync* is supposed to let the kernel handle synchronization directly: The kernel knows what GPU operations are pending on the buffer and makes the GPU wait until they complete before reading from it in another context. Implicit sync is considered a legacy feature, so our GPU kernel driver does not implement it, but instead we implement it in Mesa for compatibility (Nvidia refused to do this, and this is why Wayland was broken on Nvidia GPUs for so long...). Our Mesa driver inserts implicit sync information (*GPU fences*) into shared buffers automatically when they are a render target, and extracts the fences on the other end before reading from the buffer. This worked great on both the host and guest, but did not work on buffers shared between the host and the guest: When guest Mesa inserted a fence in the guest buffer, that fence was only registered in the guest kernel, so the host kernel had no idea about the ongoing render and couldn't hand back the fence to the host Mesa when needed. This caused tearing, visual glitches, and "frame lag". To fix this, I ended up just going back to implicit sync for now: The Asahi virtgpu protocol now includes a buffer list with submissions just like "classic" implicit sync drivers, and those buffers have fences registered for them in the host VMM, in virglrenderer code. The implicit sync compatibility code runs twice, once in the guest Mesa and once in the host VMM, to cover all the bases. In the future, we do plan to implement explicit sync properly, integrate it with the cross-domain stuff, and remove this hack, but that will have to wait a bit, since it needs non-upstreamed guest kernel patches... but I digress.
+There was one extra catch: Synchronization. When a GPU app on the guest renders to a buffer, it passes it directly to the host before waiting for the rendering to finish. A mechanism called *implicit sync* is supposed to let the kernel handle synchronization directly: The kernel knows what GPU operations are pending on the buffer and makes the GPU wait until they complete before reading from it in another context. Implicit sync is considered a legacy feature, so our GPU kernel driver does not implement it, but instead we implement it in Mesa for compatibility (Nvidia refused to do this, and this is why Wayland was broken on Nvidia GPUs for so long...). Our Mesa driver inserts implicit sync information (*GPU fences*) into shared buffers automatically when they are a render target, and extracts the fences on the other end before reading from the buffer. This worked great on both the host and guest, but did not work on buffers shared between the host and the guest: When guest Mesa inserted a fence in the guest buffer, that fence was only registered in the guest kernel, so the host kernel had no idea about the ongoing render and couldn't hand back the fence to the host Mesa when needed. This caused tearing, visual glitches, and "frame lag". To fix this, I ended up just going back to implicit sync for now: The Knix virtgpu protocol now includes a buffer list with submissions just like "classic" implicit sync drivers, and those buffers have fences registered for them in the host VMM, in virglrenderer code. The implicit sync compatibility code runs twice, once in the guest Mesa and once in the host VMM, to cover all the bases. In the future, we do plan to implement explicit sync properly, integrate it with the cross-domain stuff, and remove this hack, but that will have to wait a bit, since it needs non-upstreamed guest kernel patches... but I digress.
 
 What about X11? Most games need X11 to run, so sommelier can run its own *XWayland* instance in the guest to provide X11 support. Easy, right?
 
@@ -146,7 +146,7 @@ In the future, we'd also like to support native Wayland passthrough. To do this,
 
 ## Muvm, reloaded
 
-If you update your Fedora Asahi Remix system today with `sudo dnf update --refresh`, you'll get all these improvements to our x86 emulation stack over the October release:
+If you update your Fedora Knix Remix system today with `sudo dnf update --refresh`, you'll get all these improvements to our x86 emulation stack over the October release:
 
 ### muvm changes
 - `muvm-x11bridge` for direct X11 passthrough (you can use `--sommelier` to revert back to sommelier, but why would you?).

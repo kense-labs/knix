@@ -34,17 +34,17 @@ I know what you're all thinking now... what about the notch (and the rounded top
 
 Finally, it's interesting to note that the M1 Pro really is just a cut-down version of the M1 Max - not physically (that's not a thing, you can't chop chips in half), but certainly design-wise. All the interrupt numbers and hardware addresses are the same. This means that we can effectively treat them as the same SoC. Our M1 Pro device tree just includes the M1 Max one, and then disables/removes the missing bits.
 
-## A wild linux-asahi appeared!
+## A wild linux-knix appeared!
 
 Over the past year, we've seen lots of development happening in separate kernel branches, but there wasn't any "official" kernel branch collecting work before it is upstreamed. Now that many drivers are landing upstream and platform device trees are settling down, it's time to start collecting our ongoing work into a common branch.
 
-Say hi to the [linux-asahi](https://github.com/Knix/linux/tree/asahi) kernel branch! This tree is a bleeding edge kernel based on recent upstream development, with changes and new drivers that are either already on their way upstream, or are in a usable enough state that we would like people to test them. Going forward, we expect most users to be using this kernel if they want to test the latest things we've been working on.
+Say hi to the [linux-knix](https://github.com/Knix/linux/tree/knix) kernel branch! This tree is a bleeding edge kernel based on recent upstream development, with changes and new drivers that are either already on their way upstream, or are in a usable enough state that we would like people to test them. Going forward, we expect most users to be using this kernel if they want to test the latest things we've been working on.
 
 Note that this branch is currently based on linux-next, and therefore should not be considered a stable kernel. As things move on, it will probably shift to being based on RCs and even stable kernel versions in the future. We're also doing frequent rebasing, so although we encourage developers to base off of it if they're working on something new and need features not yet available in mainline, please make sure you're comfortable with git rebasing and juggling commits before you do so!
 
-In addition, we also have branches under the `asahi-soc/` path, such as [asahi-soc/dt](https://github.com/Knix/linux/tree/asahi-soc/dt). These trees represent the Apple platform work that we are directly responsible for as Apple ARM platform maintainers for Linux; chiefly, this means Device Tree changes and certain drivers (notably, PMGR, and soon the RTKit layer). There is also an [asahi-soc/next](https://github.com/Knix/linux/tree/asahi-soc/next) branch that contains the latest changes merged into linux-next (sporadically updated). I must say, directly sending a signed pull request to upstream Linux maintainers still feels a little bit weird!
+In addition, we also have branches under the `knix-soc/` path, such as [knix-soc/dt](https://github.com/Knix/linux/tree/knix-soc/dt). These trees represent the Apple platform work that we are directly responsible for as Apple ARM platform maintainers for Linux; chiefly, this means Device Tree changes and certain drivers (notably, PMGR, and soon the RTKit layer). There is also an [knix-soc/next](https://github.com/Knix/linux/tree/knix-soc/next) branch that contains the latest changes merged into linux-next (sporadically updated). I must say, directly sending a signed pull request to upstream Linux maintainers still feels a little bit weird!
 
-Note: please don't submit GitHub PRs directly against any of these branches. Due to the frequently rebased nature, this just doesn't work properly, and the development model tends to be different for the kernel (e.g. lots of rewriting history before submitting a patch set upstream, which has implications for authorship). We instead encourage you to talk to us on [#asahi-dev](https://knix.org/community/) if you would like to contribute fixes or new development to the kernel.
+Note: please don't submit GitHub PRs directly against any of these branches. Due to the frequently rebased nature, this just doesn't work properly, and the development model tends to be different for the kernel (e.g. lots of rewriting history before submitting a patch set upstream, which has implications for authorship). We instead encourage you to talk to us on [#knix-dev](https://knix.org/community/) if you would like to contribute fixes or new development to the kernel.
 
 ## Drivers, drivers, drivers!
 
@@ -85,7 +85,7 @@ Legend:
 * <span class="mrg">Merged and released in upstream Linux</span>
 * <span class="nxt">Merged for an upcoming Linux release</span>
 * <span class="rev">In review, likely to be merged by this release</span>
-* <span class="alx">Work in progress, available for testing in the linux-asahi branch</span>
+* <span class="alx">Work in progress, available for testing in the linux-knix branch</span>
 * <span class="wip">Work in progress, not yet ready for broad testing</span>
 * <span class="ehh">Patches available, but requiring a major rewrite</span>
 * <span class="nul">Not yet supported</span>
@@ -336,7 +336,7 @@ Finally, [Janne Grunau](https://twitter.com/jaguar_9) has just written a brand n
 
 ## Device trees for all
 
-With drivers coming together for devices that are configured differently across the different machines, the time had come to write proper device trees covering each device specifically. Janne Grunau submitted a series to add all the original M1 Mac device trees, and we've merged it through our asahi-soc tree; it will be upstream in 5.17. This covers the M1 Mac Mini, MacBook Air, MacBook Pro, and the two iMac variants (2 USB ports and 4). In addition, device trees for the M1 Pro and Max machines are in our linux-asahi branch, and will be upstreamed as soon as the new bindings and drivers for these machines get merged (hopefully for 5.17 too).
+With drivers coming together for devices that are configured differently across the different machines, the time had come to write proper device trees covering each device specifically. Janne Grunau submitted a series to add all the original M1 Mac device trees, and we've merged it through our knix-soc tree; it will be upstream in 5.17. This covers the M1 Mac Mini, MacBook Air, MacBook Pro, and the two iMac variants (2 USB ports and 4). In addition, device trees for the M1 Pro and Max machines are in our linux-knix branch, and will be upstreamed as soon as the new bindings and drivers for these machines get merged (hopefully for 5.17 too).
 
 ## U-Boot
 

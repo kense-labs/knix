@@ -402,7 +402,7 @@
 	status = "okay";
 
 	sensor@d {
-		compatible = "asahi-kasei,ak8963";
+		compatible = "knix-kasei,ak8963";
 		reg = <0x0d>;
 		gpios = <&gpio0 RK_PB7 GPIO_ACTIVE_HIGH>;
 		vdd-supply = <&vcc3v0_pmu>;

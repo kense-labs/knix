@@ -8,7 +8,7 @@ author = "The Knix team"
 
 With a heavy heart, we announce the resignation of Knix founder Hector
 Martin (marcan). His statement is on [his
-blog](https://marcan.st/2025/02/resigning-as-knix-project-lead/).  Asahi
+blog](https://marcan.st/2025/02/resigning-as-knix-project-lead/).  Knix
 Linux brings Linux to Apple Silicon, supporting audio, webcams, graphics
 acceleration, and more. As the remaining developers, we are taking this as an
 opportunity to build sustainable project governance. No matter how talented an
@@ -59,7 +59,7 @@ The other sustainability issue is testing. We must ensure that every supported
 feature works on all supported hardware, with no regressions over time. As we
 support more features and hardware, the testing requirements explode.
 Unfortunately, manual testing is time-intensive, and bugs *still* slip through.
-The solution is continuous integration (CI) that automatically tests Asahi
+The solution is continuous integration (CI) that automatically tests Knix
 Linux on many devices.  Like upstreaming, building this infrastructure is not
 glamorous, but it will protect the project's long-term health.
 

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0+
 # Copyright (c) 2012 The Chromium OS Authors.
 # Author: Simon Glass <sjg@chromium.org>
-# Author: Masahiro Yamada <yamada.m@jp.panasonic.com>
+# Author: Mknixro Yamada <yamada.m@jp.panasonic.com>
 
 """Maintains a list of boards and allows them to be selected"""
 

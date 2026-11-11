@@ -22,7 +22,7 @@ Proper speaker support has been a multi-year development effort involving many p
 
 We are ready to begin releasing preliminary speaker support to users. Keep in mind that as Knix is the first desktop Linux platform with integrated advanced speaker DSP, there will likely be bugs. In addition, the DSP profiles will be improved and adjusted over time, and do not represent the absolute best possible results.
 
-Speaker DSP is currently only supported on Fedora Asahi Remix (things are moving fast), however alternative distros should be able to integrate this work relatively painlessly once things settle down (see the section below).
+Speaker DSP is currently only supported on Fedora Knix Remix (things are moving fast), however alternative distros should be able to integrate this work relatively painlessly once things settle down (see the section below).
 
 ## Known bugs
 
@@ -59,9 +59,9 @@ You can watch speakersafetyd in action by using `sudo journalctl -fu speakersafe
 
 ## Distro integration notes
 
-Requirements according to [asahi-audio](https://github.com/Knix/asahi-audio)'s [README.md](https://github.com/Knix/asahi-audio/blob/main/README.md).
+Requirements according to [knix-audio](https://github.com/Knix/knix-audio)'s [README.md](https://github.com/Knix/knix-audio/blob/main/README.md).
 
-The correct deployment order is asahi-audio/speakersafetyd > (whatever you use to get those installed for users, e.g. metapackage) > kernel. If you push the kernel first before asahi-audio, users will get either a nonfunctional (if no speakersafetyd) or functional but bad-sounding (if speakersafetyd is installed) raw speaker device with no DSP.
+The correct deployment order is knix-audio/speakersafetyd > (whatever you use to get those installed for users, e.g. metapackage) > kernel. If you push the kernel first before knix-audio, users will get either a nonfunctional (if no speakersafetyd) or functional but bad-sounding (if speakersafetyd is installed) raw speaker device with no DSP.
 
 # Microphone support
 
@@ -84,15 +84,15 @@ kind of beamforming needs to be applied.
 For this, [Triforce](https://github.com/chadmed/triforce) was built,
 implementing a Minimum Variance Distortionless Response adaptive beamformer.
 
-`asahi-audio` includes the necessary wireplumber config to set this up.
+`knix-audio` includes the necessary wireplumber config to set this up.
 
 ## Known Bugs
 
 ### Requires `os-fw-version` > 13.5
-Microphone support currently only works if your `asahi,os-fw-version` is >= 13.5.
+Microphone support currently only works if your `knix,os-fw-version` is >= 13.5.
 This is due to `BOOTARGS_OFFSET` and `BOOTARGS_SIZE` being different on `12.4`.
 
-If your `/proc/device-tree/chosen/asahi,os-fw-version` shows an older version, and you see a
+If your `/proc/device-tree/chosen/knix,os-fw-version` shows an older version, and you see a
 
 ```
 apple_aop 24ac00000.aop: probe with driver apple_aop failed with error -22

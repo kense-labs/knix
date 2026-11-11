@@ -5,7 +5,7 @@
 
 See doc/develop/qconfig.rst for documentation.
 
-Author: Masahiro Yamada <yamada.masahiro@socionext.com>
+Author: Mknixro Yamada <yamada.mknixro@socionext.com>
 Author: Simon Glass <sjg@chromium.org>
 """
 

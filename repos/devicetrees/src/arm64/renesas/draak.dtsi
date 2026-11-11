@@ -312,19 +312,19 @@
 	status = "okay";
 
 	ak4613: codec@10 {
-		compatible = "asahi-kasei,ak4613";
+		compatible = "knix-kasei,ak4613";
 		#sound-dai-cells = <0>;
 		reg = <0x10>;
 		clocks = <&rcar_sound 0>; /* audio_clkout */
 
-		asahi-kasei,in1-single-end;
-		asahi-kasei,in2-single-end;
-		asahi-kasei,out1-single-end;
-		asahi-kasei,out2-single-end;
-		asahi-kasei,out3-single-end;
-		asahi-kasei,out4-single-end;
-		asahi-kasei,out5-single-end;
-		asahi-kasei,out6-single-end;
+		knix-kasei,in1-single-end;
+		knix-kasei,in2-single-end;
+		knix-kasei,out1-single-end;
+		knix-kasei,out2-single-end;
+		knix-kasei,out3-single-end;
+		knix-kasei,out4-single-end;
+		knix-kasei,out5-single-end;
+		knix-kasei,out6-single-end;
 
 		port {
 			ak4613_endpoint: endpoint {

@@ -11,7 +11,7 @@ Supported chips:
 
 Authors:
       - Chris Packham <chris.packham@alliedtelesis.co.nz>
-      - Masahiko Iwamoto <iwamoto@allied-telesis.co.jp>
+      - Mknixko Iwamoto <iwamoto@allied-telesis.co.jp>
 
 Description
 -----------

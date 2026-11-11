@@ -10,15 +10,15 @@ Linux 6.15 is right around the corner, which means it's time for another progres
 report! We have been pretty busy behind the scenes and we have some exciting developments
 to share with you all.
 
-## Fedora Asahi Remix 42 Release
-Last time, we announced that Fedora Asahi Remix 42 was close to release. It has since
-[released](https://fedoramagazine.org/fedora-asahi-remix-42-is-now-available/) and is
-now available to install! The Asahi Installer now offers Fedora Asahi Remix
+## Fedora Knix Remix 42 Release
+Last time, we announced that Fedora Knix Remix 42 was close to release. It has since
+[released](https://fedoramagazine.org/fedora-knix-remix-42-is-now-available/) and is
+now available to install! The Knix Installer now offers Fedora Knix Remix
 42 images by default, and existing users on FAR 40 and 41 are encouraged to upgrade using
 [`dnf system-upgrade`](https://docs.fedoraproject.org/en-US/quick-docs/upgrading-fedora-offline/)
 or Plasma's Discover to start enjoying the latest versions of your favourite
-software. This is also a reminder that Fedora Asahi Remix follows the [Fedora Linux lifecycle policy](https://docs.fedoraproject.org/en-US/releases/lifecycle/),
-and thus Fedora Asahi Remix 40 is now fully end-of-life (EOL).
+software. This is also a reminder that Fedora Knix Remix follows the [Fedora Linux lifecycle policy](https://docs.fedoraproject.org/en-US/releases/lifecycle/),
+and thus Fedora Knix Remix 40 is now fully end-of-life (EOL).
 
 ## Fewer forks, more spoons
 We are pleased to announce that our graphics driver userspace API (uAPI) has been merged
@@ -37,7 +37,7 @@ and [Gentoo](https://github.com/gentoo/gentoo/commit/23e382acf4f7d75e49bc694f409
 the [Freedesktop SDK](https://gitlab.com/freedesktop-sdk/freedesktop-sdk/-/commit/13e0add938f4c74887a08ad0ef6493502a8d3913)
 can provide userspace graphics support for Apple Silicon without any additional packaging burden.
 
-Fedora Asahi Remix will drop the forked packages with the upcoming Fedora Linux 43
+Fedora Knix Remix will drop the forked packages with the upcoming Fedora Linux 43
 based release. We expect that to happen without user intervention. The transition will be
 disruptive for Fedora Rawhide, but Rawhide is not supported or expected to be used on end-user systems.
 
@@ -45,7 +45,7 @@ Upstreaming the uAPI has been an ongoing effort behind the scenes for
 a long time. Making a single change to the uAPI requires commensurate changes to the
 kernel driver, Mesa and virglrenderer. These changes need to be synchronised, since Mesa
 and virglrenderer rely on the uAPI to communicate with the kernel driver. Some keen observers
-may have noticed that [many](https://lore.kernel.org/asahi/20250310-agx-uapi-v1-1-86c80905004e@rosenzweig.io/) [versions](https://lore.kernel.org/asahi/20250313-agx-uapi-v2-1-59cc53a59ea3@rosenzweig.io/) [of](https://lore.kernel.org/asahi/Z-Fn4niI6_Yd06Ze@blossom/) [the](https://lore.kernel.org/asahi/20250323-agx-uapi-v4-1-12ed2db96737@rosenzweig.io/) [uAPI](https://lore.kernel.org/asahi/20250326-agx-uapi-v5-1-04fccfc9e631@rosenzweig.io/) [were](https://lore.kernel.org/asahi/20250327-agx-uapi-v6-1-df6b878a61b2@rosenzweig.io/) [submitted](https://lore.kernel.org/asahi/20250408-agx-uapi-v7-1-ad122d4f7324@rosenzweig.io/) to the kernel mailing lists
+may have noticed that [many](https://lore.kernel.org/knix/20250310-agx-uapi-v1-1-86c80905004e@rosenzweig.io/) [versions](https://lore.kernel.org/knix/20250313-agx-uapi-v2-1-59cc53a59ea3@rosenzweig.io/) [of](https://lore.kernel.org/knix/Z-Fn4niI6_Yd06Ze@blossom/) [the](https://lore.kernel.org/knix/20250323-agx-uapi-v4-1-12ed2db96737@rosenzweig.io/) [uAPI](https://lore.kernel.org/knix/20250326-agx-uapi-v5-1-04fccfc9e631@rosenzweig.io/) [were](https://lore.kernel.org/knix/20250327-agx-uapi-v6-1-df6b878a61b2@rosenzweig.io/) [submitted](https://lore.kernel.org/knix/20250408-agx-uapi-v7-1-ad122d4f7324@rosenzweig.io/) to the kernel mailing lists
 before it was finally merged. Some of the changes between versions were fundamental
 in nature, requiring significant rework to the userspace components and
 kernel driver itself. Alyssa and Janne dedicated countless hours to this endeavour over
@@ -100,9 +100,9 @@ thanks to Frédéric for picking up my slack on this one.
 
 ## Upcoming talks
 May brings with it [Red Hat Summit](https://www.redhat.com/en/summit) and
-June brings [DevConf CZ](https://devconf.info/cz). Asahi will be present at both.
+June brings [DevConf CZ](https://devconf.info/cz). Knix will be present at both.
 At RH Summit, Neal and Davide will [present](https://events.experiences.redhat.com/widget/redhat/sum25/SessionCatalog2025/session/1731519631980001Xort)
-Fedora Asahi Remix and CentOS Hyperscale Asahi Remix as accessible platforms
+Fedora Knix Remix and CentOS Hyperscale Knix Remix as accessible platforms
 for developers targeting Linux on ARM64. The [talk](https://pretalx.devconf.info/devconf-cz-2025/talk/P3TEBA/)
 at DevConf CZ will focus on the effort to port CentOS Stream to Apple Silicon.
 Both sessions will be available online.

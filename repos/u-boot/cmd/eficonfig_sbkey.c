@@ -2,7 +2,7 @@
 /*
  *  Menu-driven UEFI Secure Boot Key Maintenance
  *
- *  Copyright (c) 2022 Masahisa Kojima, Linaro Limited
+ *  Copyright (c) 2022 Mknixsa Kojima, Linaro Limited
  */
 
 #include <ansi.h>

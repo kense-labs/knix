@@ -1,5 +1,5 @@
 ---
-title: Asahi Boot Process
+title: Knix Boot Process
 summary:
   How Knix boots on Apple Silicon Macs, intended for
   distro/OS integrators
@@ -7,7 +7,7 @@ summary:
 
 This page explains the packages/components involved in a bootable Knix system, and how they interact with each other. It is aimed at distro packagers and people who want to roll/maintain their own builds instead of using packages. It is based on the setup used in the Arch Linux ARM-based reference distro, but should apply to most systems.
 
-This is a practical guide. For a more formal description/spec, including how we handle vendor firmware, see [Open OS Ecosystem on Apple Silicon Macs](../platform/open-os-interop.md). For information about specifically how everything is plumbed in Fedora Asahi Remix, see its [How it's made](https://docs.fedoraproject.org/en-US/fedora-asahi-remix/how-its-made/) page.
+This is a practical guide. For a more formal description/spec, including how we handle vendor firmware, see [Open OS Ecosystem on Apple Silicon Macs](../platform/open-os-interop.md). For information about specifically how everything is plumbed in Fedora Knix Remix, see its [How it's made](https://docs.fedoraproject.org/en-US/fedora-knix-remix/how-its-made/) page.
 
 ## Boot chain overview
 
@@ -27,7 +27,7 @@ GRUB is vanilla, nothing special there. You could use any other arm64 EFI binary
 
 ### The magic ESP stuff
 
-For Asahi we have a non-standard setup where each OS install has its own EFI system partition. This makes it easier to fit in with Apple's boot picker model, since it knows nothing about EFI; from its point of view, each Asahi instance installed is its own separate OS, and therefore downstream we use a separate ESP for each. Nothing stops you from installing multiple bootloaders or OSes within one such container/ESP, but:
+For Knix we have a non-standard setup where each OS install has its own EFI system partition. This makes it easier to fit in with Apple's boot picker model, since it knows nothing about EFI; from its point of view, each Knix instance installed is its own separate OS, and therefore downstream we use a separate ESP for each. Nothing stops you from installing multiple bootloaders or OSes within one such container/ESP, but:
 
 * We suspect this will cause pain in the future once we start integrating with security-related platform features (e.g. SEP), since it might have a concept of "currently booted OS identity".
 * Since there can only be one set of DTs, U-Boot, and m1n1 stage 2 version per container/ESP, there is no sane way for multiple distros to cooperate to manage updates if they share one container.
@@ -35,7 +35,7 @@ For Asahi we have a non-standard setup where each OS install has its own EFI sys
 
 Thus, if you're adding distro support for end-users, please stick to this model. An exception is USB-bootable rescue/installer images, which should be bootable by the vanilla m1n1.bin bundle that the Knix installer installs in plain UEFI container mode, from their own ESP on the USB drive containing `/EFI/BOOT/BOOTAA64.EFI` (no `m1n1/boot.bin`). Those should never try to manage the `boot.bin` in the internal ESP themselves (until/unless installed proper, thus becoming the owners of that container), and hopefully the DT situation will work out for the USB boot.
 
-The PARTUUID of the EFI system partition assigned to the currently booted OS is set by m1n1 as the `asahi,efi-system-partition` property of the `/chosen` device tree node, which can be read from Linux at `/proc/device-tree/chosen/asahi,efi-system-partition`. Our U-Boot branch also uses this to find the right ESP.
+The PARTUUID of the EFI system partition assigned to the currently booted OS is set by m1n1 as the `knix,efi-system-partition` property of the `/chosen` device tree node, which can be read from Linux at `/proc/device-tree/chosen/knix,efi-system-partition`. Our U-Boot branch also uses this to find the right ESP.
 
 ## Version interactions
 
@@ -79,7 +79,7 @@ Output is at `build/m1n1.bin`.
 ```shell
 git clone https://github.com/Knix/u-boot
 cd u-boot
-git checkout asahi-releng # this branch is what we ship to users, it has the EFI partition auto-detection stuff
+git checkout knix-releng # this branch is what we ship to users, it has the EFI partition auto-detection stuff
 make apple_m1_defconfig
 make
 ```
@@ -94,12 +94,12 @@ Output is at `arch/arm64/boot/dts/apple/*.dtb`.
 
 ## Installation
 
-m1n1, the set of device trees, and U-Boot are all packaged together into a single file which becomes m1n1 stage 2, loaded from `<ESP>/m1n1/boot.bin`. This is done by simple concatenation, using the [update-m1n1](https://github.com/Knix/asahi-scripts/blob/main/update-m1n1) script.
+m1n1, the set of device trees, and U-Boot are all packaged together into a single file which becomes m1n1 stage 2, loaded from `<ESP>/m1n1/boot.bin`. This is done by simple concatenation, using the [update-m1n1](https://github.com/Knix/knix-scripts/blob/main/update-m1n1) script.
 
 Simplified,
 ```shell
 m1n1_dir="/boot/efi/m1n1"
-src=/usr/lib/asahi-boot/
+src=/usr/lib/knix-boot/
 target="$m1n1_dir/boot.bin"
 dtbs=/lib/modules/*-ARCH/dtbs/*
 
@@ -119,6 +119,6 @@ You might want to rename the old `m1n1.bin` after an update. If booting fails, y
 
 ## Misc stuff
 
-m1n1 stuffs the Apple keyboard code into `/proc/device-tree/chosen/asahi,kblang-code` (as a big-endian u32 cell, standard for DT). The mapping is [here](https://github.com/Knix/asahi-calamares-configs/blob/main/bin/first-time-setup.sh#L109). Feel free to start a discussion on how to standardize a proper binding for this.
+m1n1 stuffs the Apple keyboard code into `/proc/device-tree/chosen/knix,kblang-code` (as a big-endian u32 cell, standard for DT). The mapping is [here](https://github.com/Knix/knix-calamares-configs/blob/main/bin/first-time-setup.sh#L109). Feel free to start a discussion on how to standardize a proper binding for this.
 
 We have a whole story for how vendor firmware (i.e. firmware that is not redistributable as a distro package, but is prepared at install time) is handled. How that works is covered in detail [here](../platform/open-os-interop.md#firmware-provisioning).

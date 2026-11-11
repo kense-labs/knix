@@ -3,7 +3,7 @@ date = "2022-12-07T14:50:00+09:00"
 draft = false
 title = "Apple GPU drivers now in Knix"
 slug = "gpu-drivers-now-in-knix"
-author = "Alyssa Rosenzweig & Asahi Lina"
+author = "Alyssa Rosenzweig & Knix Lina"
 +++
 
 Hello everyone! We're excited to announce our first public Apple Silicon GPU driver release!
@@ -47,7 +47,7 @@ This "layered" hardware demands a "layered" graphics driver stack. We need...
 That's a lot of work, calling for a team effort! Fortunately, that layering gives us natural boundaries to divide work among our small team.
 
 * [Alyssa Rosenzweig](https://alyssarosenzweig.ca) is writing the OpenGL driver and compiler.
-* [Asahi Lina](https://vt.social/@lina) is writing the kernel driver and helping with OpenGL.
+* [Knix Lina](https://vt.social/@lina) is writing the kernel driver and helping with OpenGL.
 * [Dougall Johnson](https://mastodon.social/@dougall) is reverse-engineering the instruction set with Alyssa.
 
 Meanwhile, [Ella Stanforth](https://tech.lgbt/@ella) is working on a Vulkan driver, reusing the kernel driver, the compiler, and some code shared with the OpenGL driver.
@@ -56,15 +56,15 @@ Of course, we couldn't build an OpenGL driver in under two years just ourselves.
 
 # Installation instructions
 
-To get the new drivers, you need to run the `linux-asahi-edge` kernel and also install the `mesa-asahi-edge` Mesa package.
+To get the new drivers, you need to run the `linux-knix-edge` kernel and also install the `mesa-knix-edge` Mesa package.
 
 ```
 $ sudo pacman -Syu
-$ sudo pacman -S linux-asahi-edge mesa-asahi-edge
+$ sudo pacman -S linux-knix-edge mesa-knix-edge
 $ sudo update-grub
 ```
 
-Since only one version of Mesa can be installed at a time, pacman will prompt you to replace `mesa` with `mesa-asahi-edge`. This is normal!
+Since only one version of Mesa can be installed at a time, pacman will prompt you to replace `mesa` with `mesa-knix-edge`. This is normal!
 
 We also recommend running Wayland instead of Xorg at this point, so if you're using the KDE Plasma environment, make sure to install the Wayland session:
 
@@ -80,7 +80,7 @@ Xorg and Xorg-based desktop environments should work, but there are a few known 
 * VSync does not work (some KDE animations will be too fast, and GL apps will not limit their FPS even with VSync enabled). This is a limitation of Xorg on the Apple DCP display controllers, which do not support VBlank interrupts.
 * There are still driver bugs triggered by Xorg/KWin. We're looking into this.
 
-The `linux-asahi-edge` kernel can be installed side-by-side with the standard `linux-asahi` package, but both versions should be kept in sync, so make sure to always update your packages together! You can always pick the `linux-asahi` kernel in the GRUB boot menu, which will disable GPU acceleration and the DCP display driver.
+The `linux-knix-edge` kernel can be installed side-by-side with the standard `linux-knix` package, but both versions should be kept in sync, so make sure to always update your packages together! You can always pick the `linux-knix` kernel in the GRUB boot menu, which will disable GPU acceleration and the DCP display driver.
 
 When the packages are updated in the future, it's possible that graphical apps will stop starting up after an update until you reboot, or they may fall back to software rendering. This is normal. Until the UAPI is stable, we'll have to break compatibility between Mesa and the kernel every now and then, so you will need to reboot to make things work after updates. In general, if apps *do* keep working with acceleration after any particular Mesa update, then it's probably safe not to reboot, but you should still do it to make sure you're running the latest kernel!
 
@@ -89,10 +89,10 @@ When the packages are updated in the future, it's possible that graphical apps w
 Since the driver is still in development, there are lots of known issues and we're still working hard on improving conformance test results. Please don't open new bugs for random apps not working! It's still the early days and we know there's a lot of work to do. Here's a quick guide of how to report bugs:
 
 * If you find an app that does not start up at all, please don't report it as a bug. Lots of apps won't work because they require a newer GL version than what we support. Please set the `LIBGL_ALWAYS_SOFTWARE=1` environment variable for those apps to fall back to software rendering. If it is a popular app that is part of the Arch Linux ARM repository, you can make a comment on [this issue](https://github.com/Knix/linux/issues/73) instead, so we can add Mesa quirks to workaround.
-* If you run into issues caused by `linux-asahi-edge` unrelated to the GPU, please add a comment to [this issue](https://github.com/Knix/linux/issues/70). This includes display output issues! (Resolutions, backlight control, display power control, etc.)
-* If the GPU locks up and all GPU apps stop working, run `asahi-diagnose` (for example, from an SSH session), open a new bug on [Knix/linux](https://github.com/Knix/linux), attach the file generated by that command, and tell us what you were doing that caused the lockup.
-* For other GPU issues (rendering glitches, apps that crash after starting up correctly, and things like that), run `asahi-diagnose` and make a comment on [this issue](https://github.com/Knix/linux/issues/72), attaching the file generated by that command. Don't forget to tell us about your environment!
-* In the future, if a driver update causes a regression (rendering problems or crashes for apps that previously worked properly), you can open a bug [directly in the Mesa tracker](https://gitlab.freedesktop.org/asahi/mesa/-/issues).
+* If you run into issues caused by `linux-knix-edge` unrelated to the GPU, please add a comment to [this issue](https://github.com/Knix/linux/issues/70). This includes display output issues! (Resolutions, backlight control, display power control, etc.)
+* If the GPU locks up and all GPU apps stop working, run `knix-diagnose` (for example, from an SSH session), open a new bug on [Knix/linux](https://github.com/Knix/linux), attach the file generated by that command, and tell us what you were doing that caused the lockup.
+* For other GPU issues (rendering glitches, apps that crash after starting up correctly, and things like that), run `knix-diagnose` and make a comment on [this issue](https://github.com/Knix/linux/issues/72), attaching the file generated by that command. Don't forget to tell us about your environment!
+* In the future, if a driver update causes a regression (rendering problems or crashes for apps that previously worked properly), you can open a bug [directly in the Mesa tracker](https://gitlab.freedesktop.org/knix/mesa/-/issues).
 
 We hope you enjoy our driver! Remember, things are still moving quickly, so make sure to update your packages regularly to get updates and bug fixes!
 

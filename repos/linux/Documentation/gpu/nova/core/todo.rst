@@ -75,7 +75,7 @@ There is active onging work from Abdiel Janulgue [1] and Lina [2].
 
 | Complexity: Advanced
 | Link: https://lore.kernel.org/linux-mm/20241119112408.779243-1-abdiel.janulgue@gmail.com/ [1]
-| Link: https://lore.kernel.org/rust-for-linux/20250202-rust-page-v1-0-e3170d7fe55e@asahilina.net/ [2]
+| Link: https://lore.kernel.org/rust-for-linux/20250202-rust-page-v1-0-e3170d7fe55e@knixlina.net/ [2]
 
 PCI MISC APIs
 -------------

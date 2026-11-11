@@ -13,7 +13,7 @@ description: |
   level and falling edge interrupts.
 
 maintainers:
-  - Masahiro Yamada <yamada.masahiro@socionext.com>
+  - Mknixro Yamada <yamada.mknixro@socionext.com>
 
 allOf:
   - $ref: /schemas/interrupt-controller.yaml#

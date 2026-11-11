@@ -53,7 +53,7 @@ Each macOS install has within it *its own copy of recoveryOS*. Then there is a g
 
 For Knix, we do not install alongside macOS in the same container, because that would require using APFS for Linux (which isn't stable yet nor mainlined). We just create normal GPT partitions for Linux. Knix also needs to install itself the same way macOS would, into an APFS container as a volume group, to be actually bootable. This is what we call the "stub macOS" and is what links the Apple world to the Linux world. Think of it as a bootloader partition. We *could* share a container with macOS for this, but we *choose* not to because it makes it less error-prone and easier to delete, and we're already partitioning the disk anyway.
 
-So the installer will (for a normal Fedora Asahi Remix install) create three partitions:
+So the installer will (for a normal Fedora Knix Remix install) create three partitions:
 
 * A 2.5GB APFS container, containing the bits of iBoot/macOS we need to boot the machine including a copy of recoveryOS
     * m1n1 stage 1 is installed here
@@ -119,7 +119,7 @@ Use `diskutil list`. The same set-up above looks like this:
    1:             Apple_APFS_ISC ⁨⁩                        524.3 MB   disk0s1
    2:                 Apple_APFS ⁨Container disk3⁩         380.0 GB   disk0s2
    3:                 Apple_APFS ⁨Container disk4⁩         2.5 GB     disk0s5
-   4:                        EFI ⁨EFI - ASAHI⁩             500.2 MB   disk0s4
+   4:                        EFI ⁨EFI - KNIX⁩             500.2 MB   disk0s4
    5:           Linux Filesystem ⁨⁩                        54.2 GB    disk0s7
                     (free space)                         57.2 GB    -
    6:        Apple_APFS_Recovery ⁨⁩                        5.4 GB     disk0s3
@@ -156,7 +156,7 @@ This shows the physical partitions in the order they are present on disk0 first:
 * `disk0s5` is the Knix bootloader stub
     * The partition index is out of order! This is logically after `disk0s2` and also in that position in the GPT. These partition numbers don't mean anything, it's whatever macOS feels like assigning that day.
     * This is virtual disk `disk4`.
-* `disk0s4` is the FAT32 EFI System Partition (displayed as type `EFI`, and with name `EFI - ASAHI` because it gets truncated for these)
+* `disk0s4` is the FAT32 EFI System Partition (displayed as type `EFI`, and with name `EFI - KNIX` because it gets truncated for these)
 * `disk0s7` is the Linux root partition (displayed as type `Linux filesystem`)
 * Then there's some free space
 * `disk0s3` is the System Recovery partition (type `Apple_APFS_Recovery`)

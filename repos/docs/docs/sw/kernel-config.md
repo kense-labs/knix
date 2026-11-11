@@ -2,7 +2,7 @@
 title: Apple Silicon Kernel Config Options
 ---
 
-Your kernel configuration will need to include the Asahi-specific drivers.  As of linux-asahi-6.12.4-1, this list is:
+Your kernel configuration will need to include the Knix-specific drivers.  As of linux-knix-6.12.4-1, this list is:
 
 ```
 CONFIG_ARCH_APPLE=y
@@ -39,7 +39,7 @@ CONFIG_POWER_RESET_MACSMC=y
 CONFIG_CHARGER_MACSMC=y
 CONFIG_MFD_APPLE_SPMI_PMU=y
 CONFIG_VIDEO_APPLE_ISP=m
-CONFIG_DRM_ASAHI=y
+CONFIG_DRM_KNIX=y
 CONFIG_DRM_ADP=m
 CONFIG_DRM_APPLE=m
 CONFIG_DRM_APPLE_AUDIO=y
@@ -66,7 +66,7 @@ CONFIG_IIO_AOP_SENSOR_ALS=m
 
 (Distros intending to support other platforms with their 16k arm64 kernel besides Apple Silicon will be inclined to build as many of these drivers as modules as they can.  This is fine, though from a reliability standpoint building NVME_APPLE and SPI_HID_APPLE_OF in-kernel has worked much better for me.)
 
-~~(Also note that the configuration options above do not match the standard dracut configuration provided by asahi-scripts.)~~ It looks like a recent change to asahi-scripts makes your choices of modules much less important: <https://github.com/Knix/asahi-scripts/commit/4acd310cd8c394f9ec2e7e7506d89b7bb3c3ca39>
+~~(Also note that the configuration options above do not match the standard dracut configuration provided by knix-scripts.)~~ It looks like a recent change to knix-scripts makes your choices of modules much less important: <https://github.com/Knix/knix-scripts/commit/4acd310cd8c394f9ec2e7e7506d89b7bb3c3ca39>
 
 You should also double-check that you have the following configuration options set:
 
@@ -87,7 +87,7 @@ CONFIG_SERIAL_SAMSUNG=y
 CONFIG_SERIAL_SAMSUNG_CONSOLE=y
 CONFIG_REGULATOR_FIXED_VOLTAGE=y
 CONFIG_WATCHDOG_HANDLE_BOOT_ENABLED=y
-# CONFIG_DRM_ASAHI_DEBUG_ALLOCATOR is not set
+# CONFIG_DRM_KNIX_DEBUG_ALLOCATOR is not set
 CONFIG_DRM_FBDEV_EMULATION=y
 CONFIG_DRM_SCHED=y
 # CONFIG_DRM_VGEM is not set

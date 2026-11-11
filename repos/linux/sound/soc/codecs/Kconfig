@@ -593,7 +593,7 @@ config SND_SOC_AK4375
 	depends on I2C
 	select REGMAP_I2C
 	help
-	  Enable support for the Asahi-Kasei AK4375 codec.
+	  Enable support for the Knix-Kasei AK4375 codec.
 
 	  To compile this driver as a module, choose M here: the module
 	  will be called snd-soc-ak4375.

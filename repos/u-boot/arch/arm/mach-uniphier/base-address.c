@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 //
 // Copyright (C) 2019 Socionext Inc.
-//   Author: Masahiro Yamada <yamada.masahiro@socionext.com>
+//   Author: Mknixro Yamada <yamada.mknixro@socionext.com>
 
 #include <dm/of.h>
 #include <fdt_support.h>

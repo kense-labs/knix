@@ -4,7 +4,7 @@ This device supports I2C mode.
 
 Required properties:
 
-- compatible : "asahi-kasei,ak4458" or "asahi-kasei,ak4497"
+- compatible : "knix-kasei,ak4458" or "knix-kasei,ak4497"
 - reg : The I2C address of the device for I2C
 
 Optional properties:
@@ -20,7 +20,7 @@ Example:
 
 &i2c {
 	ak4458: dac@10 {
-		compatible = "asahi-kasei,ak4458";
+		compatible = "knix-kasei,ak4458";
 		reg = <0x10>;
 		reset-gpios = <&gpio1 10 GPIO_ACTIVE_LOW>
 		mute-gpios = <&gpio1 11 GPIO_ACTIVE_HIGH>

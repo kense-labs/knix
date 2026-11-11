@@ -315,7 +315,7 @@
 	status = "okay";
 
 	ak4619: codec@10 {
-		compatible = "asahi-kasei,ak4619";
+		compatible = "knix-kasei,ak4619";
 		reg = <0x10>;
 		clocks = <&rcar_sound 3>;
 		clock-names = "mclk";

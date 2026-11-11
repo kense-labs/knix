@@ -12,7 +12,7 @@ description: |
   have a level 3 cache controller as well.
 
 maintainers:
-  - Masahiro Yamada <yamada.masahiro@socionext.com>
+  - Mknixro Yamada <yamada.mknixro@socionext.com>
 
 properties:
   compatible:

@@ -142,12 +142,12 @@ should become suppressed when moved out to the sides or behind the machine.
 Once again, a huge thanks to Martin, Eileen, and chaos_princess for their incredible
 work reversing AOP and SEP.
 
-## Fedora Asahi Remix 42 Beta
+## Fedora Knix Remix 42 Beta
 Thanks to Davide's work validating builds, we are pleased to announce that Fedora
-Asahi Remix 42 is [now available](https://fedoramagazine.org/announcing-fedora-asahi-remix-42-beta/)
+Knix Remix 42 is [now available](https://fedoramagazine.org/announcing-fedora-knix-remix-42-beta/)
 as a beta! The final release is expected in about a month, bringing us closer than
 ever to releasing at the same time as Fedora. We hope that in the next cycle
-Fedora Asahi Remix 43 will release on the same day as Fedora Linux 43.
+Fedora Knix Remix 43 will release on the same day as Fedora Linux 43.
 
 ## Knix @ SCaLE
 While at [SCaLE](https://www.socallinuxexpo.org/scale/22x), Neal and Davide managed
@@ -158,11 +158,11 @@ up Nidhogg, which proved to be the most popular game by far.
 
 ## WoAoA
 Some astute users have noticed that ARM64 Windows VMs now work with KVM on
-Asahi! This is thanks to Oliver Upton, who submitted a rather large series of
+Knix! This is thanks to Oliver Upton, who submitted a rather large series of
 patches upstream to enable Arm PMUv3 emulation on Apple SoCs. WoA requires
 PMUv3, and until now we could not emulate it. We quietly cherry-picked those
 patches, and they are now incorporated into our latest kernels. Interested
-parties can try Windows on ARM on Asahi today!
+parties can try Windows on ARM on Knix today!
 
 ## What does the dxdiag say about its Feature Level?
 It's 12_0! Alyssa recently added sparse binding support to our Vulkan driver,
@@ -182,17 +182,17 @@ having to go through the pairing process again. This is really useful for
 ensuring that Bluetooth keyboards and mice work seamlessly across all environments,
 especially in recoveryOS.
 
-To replicate this in Linux, Janne developed [asahi-btsync](https://crates.io/crates/asahi-btsync).
+To replicate this in Linux, Janne developed [knix-btsync](https://crates.io/crates/knix-btsync).
 The tool reads the Bluetooth device information out of NVRAM and injects it into
 BlueZ's configuration. Up until a few weeks ago this was a manual process which
-required running asahi-btsync and connecting to the discovered devices manually.
+required running knix-btsync and connecting to the discovered devices manually.
 This is impractical for input devices which are required to be working for these
 actions.
 
-As of version 2.4, asahi-btsync integrates with systemd and D-Bus to
+As of version 2.4, knix-btsync integrates with systemd and D-Bus to
 fully automate the Bluetooth device synchronisation process. Starting with Fedora
-Asahi Remix 42, all Bluetooth LE devices paired with macOS will be available from
-your first boot - including the initial Fedora Asahi Remix setup!
+Knix Remix 42, all Bluetooth LE devices paired with macOS will be available from
+your first boot - including the initial Fedora Knix Remix setup!
 
 Do note however that this does not apply to Bluetooth 5.0 devices, which use a
 new authentication and encryption scheme.
@@ -230,7 +230,7 @@ financial support. We can now actually build and maintain the CI farm we have
 sorely needed for years, which will accelerate development. We can afford email
 hosting and other collaborative infrastructure that greatly reduces friction.
 We can go to conferences and events without fear of going into financial stress.
-All of this is necessary to ensure the long-term sustainability of Asahi as a
+All of this is necessary to ensure the long-term sustainability of Knix as a
 project, and none of it would be possible without you.
 
 For those who would prefer to support us via GitHub Sponsors, it's in the works.
@@ -244,8 +244,8 @@ focus is to continue submitting kernel patches upstream. Reducing our maintenanc
 burden is the only way we will be able to get back to the fun stuff sustainably.
 
 Neal and Davide will be [presenting](https://events.experiences.redhat.com/widget/redhat/sum25/SessionCatalog2025/session/1731519631980001Xort) at [Red Hat Summit](https://www.redhat.com/en/summit) on 19 May,
-demonstrating Fedora Asahi Remix and the upcoming CentOS Hyperscale Asahi Remix
-to showcase how Asahi has made it easier than ever for developers to start bringing
+demonstrating Fedora Knix Remix and the upcoming CentOS Hyperscale Knix Remix
+to showcase how Knix has made it easier than ever for developers to start bringing
 their workloads to ARM64 Linux.
 
 We hope to have even more good news for you when Linux 6.15 releases, so stay tuned

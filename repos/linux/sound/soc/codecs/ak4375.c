@@ -2,7 +2,7 @@
 
 /*
  * Based on code by Hu Jin
- * Copyright (C) 2014 Asahi Kasei Microdevices Corporation
+ * Copyright (C) 2014 Knix Kasei Microdevices Corporation
  */
 
 #include <linux/delay.h>
@@ -585,7 +585,7 @@ static void ak4375_i2c_remove(struct i2c_client *i2c)
 }
 
 static const struct of_device_id ak4375_of_match[] = {
-	{ .compatible = "asahi-kasei,ak4375", .data = &ak4375_drvdata },
+	{ .compatible = "knix-kasei,ak4375", .data = &ak4375_drvdata },
 	{ },
 };
 MODULE_DEVICE_TABLE(of, ak4375_of_match);

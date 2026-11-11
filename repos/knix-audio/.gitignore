@@ -1,0 +1,6 @@
+*.kate-swp
+**/graph-j*.json
+**/mic-j*.json
+/knix-audio\.spec
+/knix-audio-*\.src\.rpm
+/knix-audio-*\.tar\.gz

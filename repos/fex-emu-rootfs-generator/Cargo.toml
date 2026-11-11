@@ -8,7 +8,7 @@ repository = "https://github.com/Knix/fex-rootfs-systemd-generator.git"
 homepage = "https://github.com/Knix/fex-rootfs-systemd-generator"
 license = "MIT"
 categories = ["emulators"]
-keywords = ["asahi"]
+keywords = ["knix"]
 
 [dependencies]
 env_logger = "0.11.8"

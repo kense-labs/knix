@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /*
- * Copyright (C) 2015 Masahiro Yamada <yamada.masahiro@socionext.com>
+ * Copyright (C) 2015 Mknixro Yamada <yamada.mknixro@socionext.com>
  */
 
 #include <linux/clk.h>
@@ -410,6 +410,6 @@ static struct platform_driver uniphier_i2c_drv = {
 };
 module_platform_driver(uniphier_i2c_drv);
 
-MODULE_AUTHOR("Masahiro Yamada <yamada.masahiro@socionext.com>");
+MODULE_AUTHOR("Mknixro Yamada <yamada.mknixro@socionext.com>");
 MODULE_DESCRIPTION("UniPhier I2C bus driver");
 MODULE_LICENSE("GPL");

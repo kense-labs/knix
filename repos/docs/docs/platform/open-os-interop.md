@@ -8,7 +8,7 @@ This document presents our vision for how open OSes should interoperate on Apple
 
 The ideas in this document are not intended to set hard requirements or rules; anyone is of course free (and encouraged) to go their own way if they so choose. Rather, we would like to agree on a set of standards that make it easier for different OSes to co-exist and be installed by end users, aiming to make the process as simple, seamless, and future-proof as possible.
 
-This document is a draft, and we welcome all commentary and discussion in order to help shape the future of how to build an open OS ecosystem on these platforms. Please drop by #asahi on OFTC if you have general questions or feedback, or ping us on #asahi-dev if you are a developer and would like to discuss technical aspects ([further info](https://knix.org/community/)).
+This document is a draft, and we welcome all commentary and discussion in order to help shape the future of how to build an open OS ecosystem on these platforms. Please drop by #knix on OFTC if you have general questions or feedback, or ping us on #knix-dev if you are a developer and would like to discuss technical aspects ([further info](https://knix.org/community/)).
 
 ## OS layout & boot
 
@@ -33,7 +33,7 @@ This design, unconventionally, provides an EFI system partition for each install
 
 In the future, once open APFS drivers are deemed stable enough to use as a root filesystem, we would like to support full space-sharing coexistence with macOS; at that point only the EFI system partition would be required on top of an existing APFS macOS container.
 
-Due to the presence of multiple ESPs, OSes will need a way to figure out which is theirs. For typical mounts and boot purposes, that can be done with partition/FS IDs; this should mostly be a concern for OS installers which need to determine what ESP to install their bootloader into at installation time. For this purpose, m1n1 stage 1 is normally configured at installation time to provide (and forward) a Device Tree `/chosen` property named `asahi,efi-system-partition`, which contains the EFI system partition PARTUUID value.
+Due to the presence of multiple ESPs, OSes will need a way to figure out which is theirs. For typical mounts and boot purposes, that can be done with partition/FS IDs; this should mostly be a concern for OS installers which need to determine what ESP to install their bootloader into at installation time. For this purpose, m1n1 stage 1 is normally configured at installation time to provide (and forward) a Device Tree `/chosen` property named `knix,efi-system-partition`, which contains the EFI system partition PARTUUID value.
 
 ### Boot overview
 
@@ -110,7 +110,7 @@ For OSes that use the typical m1n1+U-Boot approach, it is recommended that they 
 
 On these machines, there is a mismatch between the point where a third-party kernel boots (after iBoot2), and the required per-OS boot components (including iBoot2 itself, firmware, and other files, as well as the recoveryOS image and XNU kernel for it). In addition, Apple's tooling requires these files to be laid out in a certain way in the Preboot partition in order to work properly in the OS selection menus, beyond the requirements imposed by iBoot1/2 themselves. In effect, creating a new OS container requires, essentially, installing macOS minus the root filesystem.
 
-Thankfully, all the required components can be fetched from the restore images (IPSW files) which are publicly available at [well-known](https://ipsw.me/), stable URLs. We have implemented this process in [asahi-installer](https://github.com/Knix/asahi-installer), a Python-based installation framework that is intended to run from 1TR. It streams the required bits of the IPSW file, avoiding a complete download, and sets up the partitions and contents as required to boot recoveryOS and subsequently a custom kernel.
+Thankfully, all the required components can be fetched from the restore images (IPSW files) which are publicly available at [well-known](https://ipsw.me/), stable URLs. We have implemented this process in [knix-installer](https://github.com/Knix/knix-installer), a Python-based installation framework that is intended to run from 1TR. It streams the required bits of the IPSW file, avoiding a complete download, and sets up the partitions and contents as required to boot recoveryOS and subsequently a custom kernel.
 
 We don't expect OSes to want to reinvent this particular wheel (trust us, you don't want to), so we'd like to make the installer flexible enough to support bootstrapping different installation flows.
 
@@ -166,7 +166,7 @@ Ideally, the bootloader should load the `firmware.cpio` archive directly as an e
 
 OSes should check whether the initrd was loaded by the bootloader. If it wasn't, they should use the following algorithm to locate and load it:
 
-* Look for the `asahi,efi-system-partition` /chosen Device Tree property, to find the ESP UUID (see above). If not found, abort.
+* Look for the `knix,efi-system-partition` /chosen Device Tree property, to find the ESP UUID (see above). If not found, abort.
 * Load the internal NVMe drivers and wait for the device to be available.
 * Locate the ESP using the UUID obtained above.
 * Mount the ESP (read-only is fine)
@@ -186,7 +186,7 @@ Distros should then ship an initramfs with a `/lib/firmware/vendor -> /vendorfw`
 
 The initramfs must then forward this firmware into the final root filesystem. The recommended mechanism for this is to mount a tmpfs on `/lib/firmware/vendor` under the target root filesystem tree, and the copy the firmware there.
 
-An example implementation for Linux can be found in the [asahi-scripts](https://github.com/Knix/asahi-scripts/tree/main/dracut/modules.d/99asahi-firmware) repository.
+An example implementation for Linux can be found in the [knix-scripts](https://github.com/Knix/knix-scripts/tree/main/dracut/modules.d/99knix-firmware) repository.
 
 Direct CPIO load can be accomplished with stock GRUB if `/boot` is the ESP mountpoint (i.e. GRUB and the kernels are directly installed in the ESP), using `GRUB_EARLY_INITRD_LINUX_STOCK=vendorfw/firmware.cpio` in `/etc/default/grub`.
 

@@ -10,7 +10,7 @@ it to protect the speaker from damage. Apple instead implement this as machine-s
 plugins to the userspace half of CoreAudio. An increasing number of other
 vendors in both the desktop and embedded/Android worlds are choosing to go down a similar
 route, folding this functionality into proprietary driver/userspace blobs that usually
-also bundle niceties like EQ (we have a solution for this too, see [asahi-audio](https://github.com/Knix/asahi-audio)).
+also bundle niceties like EQ (we have a solution for this too, see [knix-audio](https://github.com/Knix/knix-audio)).
 This puts users at serious risk of permanently destroying their expensive devices if they choose
 to run custom software, such as Knix or an Open Source Android ROM.
 

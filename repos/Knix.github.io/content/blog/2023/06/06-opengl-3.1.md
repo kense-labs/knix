@@ -13,7 +13,7 @@ to OpenGL ES 3.0. That means more playable games and more functioning
 applications.
 
 Back in December, I teased an early screenshot of SuperTuxKart's deferred
-renderer working on Asahi, using OpenGL ES 3.0 features like multiple render
+renderer working on Knix, using OpenGL ES 3.0 features like multiple render
 targets and instancing. Now you too can enjoy SuperTuxKart with advanced
 lighting the way it's meant to be:
 
@@ -36,7 +36,7 @@ include:
 * Multiple render targets
 * Multisampling
 * [Transform feedback](https://cgit.freedesktop.org/mesa/mesa/commit/?id=d72e1418ce4f66c42f20779f50f40091d3d310b0)
-* [Texture buffer objects](https://alyssarosenzweig.ca/blog/texture-buffer-objects-on-asahi.html)
+* [Texture buffer objects](https://alyssarosenzweig.ca/blog/texture-buffer-objects-on-knix.html)
 * ..and more.
 
 For now, let's talk about...

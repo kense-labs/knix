@@ -29,14 +29,14 @@ const WELL_KNOWN_ENV_VARS: [&str; 20] = [
     "LC_TIME",
     "LD_LIBRARY_PATH",
     "LIBGL_DRIVERS_PATH",
-    "MESA_LOADER_DRIVER_OVERRIDE", // needed for asahi
+    "MESA_LOADER_DRIVER_OVERRIDE", // needed for knix
     "PATH",                        // needed by `muvm-guest` program
     "RUST_LOG",
     "XMODIFIERS",
 ];
 
 /// See https://github.com/Knix/docs/wiki/Devices
-const ASAHI_SOC_COMPAT_IDS: [&str; 1] = ["apple,arm-platform"];
+const KNIX_SOC_COMPAT_IDS: [&str; 1] = ["apple,arm-platform"];
 
 pub fn prepare_env_vars(env: Vec<(String, Option<String>)>) -> Result<HashMap<String, String>> {
     let mut env_map = HashMap::new();
@@ -49,10 +49,10 @@ pub fn prepare_env_vars(env: Vec<(String, Option<String>)>) -> Result<HashMap<St
                     match fs::read_to_string("/proc/device-tree/compatible") {
                         Ok(compatible) => {
                             for compat_id in compatible.split('\0') {
-                                if ASAHI_SOC_COMPAT_IDS.contains(&compat_id) {
+                                if KNIX_SOC_COMPAT_IDS.contains(&compat_id) {
                                     env_map.insert(
                                         "MESA_LOADER_DRIVER_OVERRIDE".to_owned(),
-                                        "asahi".to_owned(),
+                                        "knix".to_owned(),
                                     );
                                     break;
                                 }

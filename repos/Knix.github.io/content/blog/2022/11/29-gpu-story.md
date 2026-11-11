@@ -3,10 +3,10 @@ date = "2022-11-29T23:50:00+09:00"
 draft = false
 title = "Tales of the M1 GPU"
 slug = "tales-of-the-m1-gpu"
-author = "Asahi Lina"
+author = "Knix Lina"
 +++
 
-Hello everyone, Asahi Lina here!✨
+Hello everyone, Knix Lina here!✨
 
 marcan asked me to write an article about the M1 GPU, so here we are~! It's been a long road over the past few months and there's a lot to cover, so I hope you enjoy it!
 
@@ -31,11 +31,11 @@ That means that in order to make the M1 GPU work with Knix, we need two bits: a 
 
 ## Alyssa joins the project
 
-All the way back in 2021 when Knix started, Alyssa Rosenzweig joined the project to start working on reverse engineering the M1 GPU. Together with [Dougall Johnson](https://mastodon.social/@dougall) (who focused on documenting the GPU shader architecture), she started reverse engineering all the user space bits, including the shaders and all the command list structures needed to set up rendering. That's a ton of work, but less than one month in she was [already drawing her first triangle](https://alyssarosenzweig.ca/blog/asahi-gpu-part-2.html)! She's amazing! If you haven't checked out her series on dissecting the M1 GPU you should visit her [website](https://alyssarosenzweig.ca/) and take a look! ✨✨
+All the way back in 2021 when Knix started, Alyssa Rosenzweig joined the project to start working on reverse engineering the M1 GPU. Together with [Dougall Johnson](https://mastodon.social/@dougall) (who focused on documenting the GPU shader architecture), she started reverse engineering all the user space bits, including the shaders and all the command list structures needed to set up rendering. That's a ton of work, but less than one month in she was [already drawing her first triangle](https://alyssarosenzweig.ca/blog/knix-gpu-part-2.html)! She's amazing! If you haven't checked out her series on dissecting the M1 GPU you should visit her [website](https://alyssarosenzweig.ca/) and take a look! ✨✨
 
-But wait, how can she work on the user space driver without a kernel driver to go with it? Easy, she did it on macOS! Alyssa reverse engineered the macOS GPU driver UAPI enough to allocate memory and submit her own commands to the GPU, and this way she could work on the user space part without having to worry about the kernel bit. That's super cool! She started writing an M1 GPU OpenGL driver for [Mesa](https://www.mesa3d.org/), the Linux userspace graphics stack, and just a few months later she was already [passing 75% of the OpenGL ES 2 conformance tests](https://alyssarosenzweig.ca/blog/asahi-gpu-part-4.html), all on macOS!
+But wait, how can she work on the user space driver without a kernel driver to go with it? Easy, she did it on macOS! Alyssa reverse engineered the macOS GPU driver UAPI enough to allocate memory and submit her own commands to the GPU, and this way she could work on the user space part without having to worry about the kernel bit. That's super cool! She started writing an M1 GPU OpenGL driver for [Mesa](https://www.mesa3d.org/), the Linux userspace graphics stack, and just a few months later she was already [passing 75% of the OpenGL ES 2 conformance tests](https://alyssarosenzweig.ca/blog/knix-gpu-part-4.html), all on macOS!
 
-Earlier this year, her work was so far ahead that she was running [games](https://alyssarosenzweig.ca/blog/asahi-gpu-part-6.html) on a fully open source Mesa OpenGL stack, running on top of Apple's kernel driver on macOS! But there was still no Linux kernel driver... time to help out with that part! ✨
+Earlier this year, her work was so far ahead that she was running [games](https://alyssarosenzweig.ca/blog/knix-gpu-part-6.html) on a fully open source Mesa OpenGL stack, running on top of Apple's kernel driver on macOS! But there was still no Linux kernel driver... time to help out with that part! ✨
 
 ## The Mysterious GPU Firmware
 
@@ -51,7 +51,7 @@ Just like other parts of the M1 chip, the GPU has a coprocessor called an "ASC" 
 * **Event messages**, which the firmware sends back to the driver when something happens (like a command completing or failing).
 * **Statistics**, **firmware logs**, and **tracing messages** used for GPU status information and debugging.
 * **Command queues**, which represent a single app's list of pending GPU work
-* **Buffer information**, **statistics**, and **page list structures**, used to manage the [Tiled Vertex Buffers](https://alyssarosenzweig.ca/blog/asahi-gpu-part-5.html).
+* **Buffer information**, **statistics**, and **page list structures**, used to manage the [Tiled Vertex Buffers](https://alyssarosenzweig.ca/blog/knix-gpu-part-5.html).
 * **Context structures** and other bits that let the GPU firmware keep track of what is going on.
 * **Vertex rendering commands**, which tell the vertex processing and tiling part of the GPU how to process commands and shaders from userspace to run the vertex part of a whole render pass.
 * **Fragment rendering commands**, which tell the rasterization and fragment processing part of the GPU how to render the tiled vertex data from the vertex processing into an actual framebuffer.
@@ -68,7 +68,7 @@ Since getting all these structures right is critical for the GPU to work and the
 
 At first most of the driver was really just [a bunch of hardcoded structures](https://github.com/Knix/m1n1/blob/main/proxyclient/experiments/agx_1tri.py), but eventually I managed to get them right and render a triangle!
 
-<!-- {< tweet user="LinaAsahi" id="1532028228189458432" >} -->
+<!-- {< tweet user="LinaKnix" id="1532028228189458432" >} -->
 
 This was just a hacked up together demo, though... before starting on the Linux kernel driver, I wanted to make sure I really understood everything well enough to design the driver properly. Just rendering one frame is easy enough, but I wanted to be able to render multiple frames, and also test things like concurrency and preemption. So I really needed a true "kernel driver"... but that's impossible to do in Python, right?!
 
@@ -78,7 +78,7 @@ Could I run [Inochi2D](https://inochi2d.com/) on top of Mesa, with Alyssa's Mesa
 
 It's so ridiculous that it worked! ✨
 
-<!-- {< tweet user="LinaAsahi" id="1537828477352615936" >} -->
+<!-- {< tweet user="LinaKnix" id="1537828477352615936" >} -->
 
 ## A new language for the Linux kernel
 
@@ -92,7 +92,7 @@ But there was a new language on the horizon...
 
 At around the same time, rumours of Rust soon being adopted officially by the Linux kernel were beginning to come up. The [Rust for Linux](https://github.com/Rust-for-Linux) project had been working on officially adding support for several years, and it looked like their work might be merged soon. Could I... could I write the GPU driver in Rust?
 
-I didn't have much experience with Rust, but from what I'd read, it looked like a much better language to write the GPU driver in! There are two things that I was particularly interested in: whether it could help me model GPU firmware structure lifetimes (even though those structures are linked with GPU pointers, which aren't real pointers from the CPU's perspective), and whether Rust macros could take care of the multi-versioning problem. So before jumping straight into kernel development, I asked for help from Rust experts and made a [toy prototype](https://github.com/asahilina/gpu-rust-playground) of the GPU object model, in simple userspace Rust. The Rust community was super friendly and several people helped walk me through everything! I couldn't have done it without your help! ❤
+I didn't have much experience with Rust, but from what I'd read, it looked like a much better language to write the GPU driver in! There are two things that I was particularly interested in: whether it could help me model GPU firmware structure lifetimes (even though those structures are linked with GPU pointers, which aren't real pointers from the CPU's perspective), and whether Rust macros could take care of the multi-versioning problem. So before jumping straight into kernel development, I asked for help from Rust experts and made a [toy prototype](https://github.com/knixlina/gpu-rust-playground) of the GPU object model, in simple userspace Rust. The Rust community was super friendly and several people helped walk me through everything! I couldn't have done it without your help! ❤
 
 And it looked like it would work! But Rust still wasn't accepted into mainline Linux... and I'd be in uncharted territory since nobody had ever done anything like this. It would be a gamble... but the more I thought about it, the more my heart told me Rust was the way to go. I had a chat with the Linux DRM maintainers and other folks about this, and they seemed enthusiastic or at least receptive to the idea, so...
 
@@ -108,11 +108,11 @@ The more I worked with Rust, the more I fell in love with it! It feels like Rust
 
 The driver slowly came together, and on September 24th I finally got kmscube to render the first cube, with my brand new Rust driver!
 
-<!-- {< tweet user="LinaAsahi" id="1573488347250536449" >} -->
+<!-- {< tweet user="LinaKnix" id="1573488347250536449" >} -->
 
 And then, something magical happened.
 
-<!-- {< tweet user="LinaAsahi" id="1575345368018997248" >} -->
+<!-- {< tweet user="LinaKnix" id="1575345368018997248" >} -->
 
 Just a few days later, I could run a full GNOME desktop session!
 
@@ -126,7 +126,7 @@ Of course, there are always unsafe sections of code, but since Rust makes you th
 
 Oh, and there's also error and cleanup handling! All the error-prone `goto cleanup` style error handling to clean up resources in C just... vanishes with Rust. Even just that is worth it on its own. Plus you get real iterators and reference counting is automatic! ❤
 
-<!-- {< tweet user="LinaAsahi" id="1583498896847667216" >} -->
+<!-- {< tweet user="LinaKnix" id="1583498896847667216" >} -->
 
 ## Joining forces
 
@@ -154,6 +154,6 @@ But even with those limitations, the drivers can run stable desktops today and p
 
 So where do you get it? We're not quite there yet! Right now the driver stack is complicated to build and install (you need custom m1n1, kernel, and mesa builds), so please wait a little bit longer! We have a few loose ends to tie still... but we hope we can bring it to Knix as an opt-in testing build before the end of the year! ✨✨
 
-If you're interested in following my work on the GPU, you can follow me at [@lina@vt.social](https://vt.social/@lina) or subscribe to my [YouTube channel](https://youtube.com/AsahiLina)! Tomorrow I'm going to be working on figuring out the power consumption calculations for the M1 Pro/Max/Ultra and M2, and I hope to see you there! ✨
+If you're interested in following my work on the GPU, you can follow me at [@lina@vt.social](https://vt.social/@lina) or subscribe to my [YouTube channel](https://youtube.com/KnixLina)! Tomorrow I'm going to be working on figuring out the power consumption calculations for the M1 Pro/Max/Ultra and M2, and I hope to see you there! ✨
 
 If you want to support my work, you can donate to marcan's Knix support funds on [GitHub Sponsors](http://github.com/sponsors/marcan) or [Patreon](https://patreon.com/marcan), which helps me out too! And if you're looking forward to a Vulkan driver, check out Ella's [GitHub Sponsors](https://github.com/sponsors/Ella-0) page! Alyssa doesn't take donations herself, but she'd love it if you donate to a charity like the [Software Freedom Conservancy](https://sfconservancy.org/) instead. (Although maybe one day I'll convince her to let me buy her an M2... ^^;;)

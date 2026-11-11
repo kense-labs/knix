@@ -8,7 +8,7 @@ This document presents our vision for how open OSes should interoperate on Apple
 
 The ideas in this document are not intended to set hard requirements or rules; anyone is of course free (and encouraged) to go their own way if they so choose. Rather, we would like to agree on a set of standards that make it easier for different OSes to co-exist and be installed by end users, aiming to make the process as simple, seamless, and future-proof as possible.
 
-This document is a draft, and we welcome all commentary and discussion in order to help shape the future of how to build an open OS ecosystem on these platforms. Please drop by #asahi on OFTC if you have general questions or feedback, or ping us on #asahi-dev if you are a developer and would like to discuss technical aspects ([further info](https://knix.org/community/)).
+This document is a draft, and we welcome all commentary and discussion in order to help shape the future of how to build an open OS ecosystem on these platforms. Please drop by #knix on OFTC if you have general questions or feedback, or ping us on #knix-dev if you are a developer and would like to discuss technical aspects ([further info](https://knix.org/community/)).
 
 ## OS layout & boot
 
@@ -33,7 +33,7 @@ This design, unconventionally, provides an EFI system partition for each install
 
 In the future, once open APFS drivers are deemed stable enough to use as a root filesystem, we would like to support full space-sharing coexistence with macOS; at that point only the EFI system partition would be required on top of an existing APFS macOS container.
 
-Due to the presence of multiple ESPs, OSes will need a way to figure out which is theirs. For typical mounts and boot purposes, that can be done with partition/FS IDs; this should mostly be a concern for OS installers which need to determine what ESP to install their bootloader into at installation time. For this purpose, m1n1 stage 1 is normally configured at installation time to provide (and forward) a Device Tree `/chosen` property named `asahi,efi-system-partition`, which contains the EFI system partition PARTUUID value.
+Due to the presence of multiple ESPs, OSes will need a way to figure out which is theirs. For typical mounts and boot purposes, that can be done with partition/FS IDs; this should mostly be a concern for OS installers which need to determine what ESP to install their bootloader into at installation time. For this purpose, m1n1 stage 1 is normally configured at installation time to provide (and forward) a Device Tree `/chosen` property named `knix,efi-system-partition`, which contains the EFI system partition PARTUUID value.
 
 ### Boot overview
 
@@ -110,7 +110,7 @@ For OSes that use the typical m1n1+U-Boot approach, it is recommended that they 
 
 On these machines, there is a mismatch between the point where a third-party kernel boots (after iBoot2), and the required per-OS boot components (including iBoot2 itself, firmware, and other files, as well as the recoveryOS image and XNU kernel for it). In addition, Apple's tooling requires these files to be laid out in a certain way in the Preboot partition in order to work properly in the OS selection menus, beyond the requirements imposed by iBoot1/2 themselves. In effect, creating a new OS container requires, essentially, installing macOS minus the root filesystem.
 
-Thankfully, all the required components can be fetched from the restore images (IPSW files) which are publicly available at [well-known](https://ipsw.me/), stable URLs. We have implemented this process in [asahi-installer](https://github.com/Knix/asahi-installer), a Python-based installation framework that is intended to run from 1TR. It streams the required bits of the IPSW file, avoiding a complete download, and sets up the partitions and contents as required to boot recoveryOS and subsequently a custom kernel.
+Thankfully, all the required components can be fetched from the restore images (IPSW files) which are publicly available at [well-known](https://ipsw.me/), stable URLs. We have implemented this process in [knix-installer](https://github.com/Knix/knix-installer), a Python-based installation framework that is intended to run from 1TR. It streams the required bits of the IPSW file, avoiding a complete download, and sets up the partitions and contents as required to boot recoveryOS and subsequently a custom kernel.
 
 We don't expect OSes to want to reinvent this particular wheel (trust us, you don't want to), so we'd like to make the installer flexible enough to support bootstrapping different installation flows.
 
@@ -161,7 +161,7 @@ A booted OS shall mount the ESP and inspect the `manifest.txt` file. If it is fo
 
 Alternatively, an OS that supports a more complex dynamic firmware loading mechanism could read the `firmware.tar` file directly as firmware is requested.
 
-An example implementation of this process is available in the asahi-scripts repo [here](https://github.com/Knix/asahi-scripts/blob/main/update-vendor-firmware).
+An example implementation of this process is available in the knix-scripts repo [here](https://github.com/Knix/knix-scripts/blob/main/update-vendor-firmware).
 
 The firmware package should be checked on every boot, to pick up changes from users who upgrade their stub OS by re-running the installer. This will be rare, but it's worth supporting properly.
 

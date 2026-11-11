@@ -12,9 +12,9 @@ maintainers:
 properties:
   compatible:
     enum:
-      - asahi-kasei,ak4642
-      - asahi-kasei,ak4643
-      - asahi-kasei,ak4648
+      - knix-kasei,ak4642
+      - knix-kasei,ak4643
+      - knix-kasei,ak4648
 
   reg:
     maxItems: 1
@@ -45,7 +45,7 @@ examples:
         #address-cells = <1>;
         #size-cells = <0>;
         ak4643: codec@12 {
-            compatible = "asahi-kasei,ak4643";
+            compatible = "knix-kasei,ak4643";
             #sound-dai-cells = <0>;
             reg = <0x12>;
             #clock-cells = <0>;

@@ -18,7 +18,7 @@ This guide is meant for developers who want to hack on Knix. It is not represent
 
 It is extremely unlikely that you will damage your computer by following these steps, but we can make no guarantees at this time. Please proceed at your own risk.
 
-For a quick idea of the steps that might be involved see this very [succinct summary](https://tg.st/u/asahi.txt) of steps. Obviously things are moving quickly so details will have changed in practise
+For a quick idea of the steps that might be involved see this very [succinct summary](https://tg.st/u/knix.txt) of steps. Obviously things are moving quickly so details will have changed in practise
 
 ## Introduction
 
@@ -277,7 +277,7 @@ You can build a DIY USB-PD interface with the following parts:
 
 Note that most FUSB302 breakout boards will not usefully break out the Type C pins you need, so it's best to use a separate full breakout board.
 
-Go to the [vdmtool](https://github.com/Knix/vdmtool) repository for more information and a wiring list. Documentation is a bit sparse at the moment. You can ask us on IRC (OFTC/#asahi) if you need help.
+Go to the [vdmtool](https://github.com/Knix/vdmtool) repository for more information and a wiring list. Documentation is a bit sparse at the moment. You can ask us on IRC (OFTC/#knix) if you need help.
 
 1.2V compatible UART interfaces are relatively rare. 1.8V ones will usually work for input (RX); you can use a resistor divider to step down the TX voltage (`TX -- 470Ω -+- 220Ω -- GND` will step down 1.8V TX to 1.22V at the `+` point).
 

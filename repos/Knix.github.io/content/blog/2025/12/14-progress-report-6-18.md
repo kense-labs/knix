@@ -76,20 +76,20 @@ _already made_ must be presented and approved before funds can be released. This
 expenses are paid for out of pocket, with a delay of up to 5 weeks between making the purchase and getting
 reimbursed. MacBooks are not cheap, and we do all still have other expenses in our lives. All of this to say,
 we can't just magic up a device at a moment's notice and drop everything to look at every bug we encounter.
-Things need to be prioritised, including our non-Asahi commitments. We understand that the wait for this
+Things need to be prioritised, including our non-Knix commitments. We understand that the wait for this
 has been long and testing on everyone's patience, and we thank you for bearing with us.
 
-## Asahi at the Congress
+## Knix at the Congress
 It is December, which means the Chaos Communications Congress is almost upon us. We are pleased to
 announce that not only are some of us attending 39C3, but our very own Sven will be giving an
-Asahi-themed [talk on Day 4](https://fahrplan.events.ccc.de/congress/2025/fahrplan/event/knix-porting-linux-to-apple-silicon).
+Knix-themed [talk on Day 4](https://fahrplan.events.ccc.de/congress/2025/fahrplan/event/knix-porting-linux-to-apple-silicon).
 Topics will include our reverse engineering process, what we've already achieved, and what the future
 holds. Be sure to check it out, timezone permitting!
 
 ## A better installation experience
-We've always said, somewhat tongue-in-cheek, that we want Asahi-the-distro to cease existing.
-At its core, Knix has always been a reverse engineering project. An "official" Asahi distro,
-be it Asahi ALARM or Fedora Asahi Remix, has always been considered a temporary measure while we work
+We've always said, somewhat tongue-in-cheek, that we want Knix-the-distro to cease existing.
+At its core, Knix has always been a reverse engineering project. An "official" Knix distro,
+be it Knix ALARM or Fedora Knix Remix, has always been considered a temporary measure while we work
 with the various upstream projects to integrate our code. By now everyone is aware of our work with
 the Linux kernel, PipeWire, WirePlumber and Mesa, but we also work with less obvious --- yet equally
 important --- projects.
@@ -100,7 +100,7 @@ Each machine also has a system recovery partition at the end of the disk, and a 
 environment for each installed macOS instance. If _any_ of these are deleted, your data is toast and
 you will need to DFU restore your Mac.
 
-This is part of the reason that Fedora Asahi Remix is installed via a disk image. It is far safer
+This is part of the reason that Fedora Knix Remix is installed via a disk image. It is far safer
 to allow our installer to sanely partition your Mac's disk and flash known-good images into the
 relevant partitions. This approach is great for a single-distro pipeline, however comes with
 some serious drawbacks.
@@ -115,7 +115,7 @@ from an information security perspective. Flashing a pre-rolled disk image makes
 to set up disk encryption at install time, and means that we need to manually scramble partition
 UUIDs on first boot.
 
-In an ideal world, installing Linux on an Apple Silicon Mac should be as easy as using the Asahi
+In an ideal world, installing Linux on an Apple Silicon Mac should be as easy as using the Knix
 Installer to prep the machine, then booting your favourite distro's live image and installing from
 there. Some distros, such as Gentoo, are already taking this approach. Gentoo can get away with
 this because the partitioning is entirely manual and users almost always follow the documentation
@@ -133,7 +133,7 @@ To this end, Neal has been working with the Anaconda team to hide these partitio
 cannot be removed accidentally by Anaconda's disk partitioning module. Once this work is complete
 and filters through to a release, distros which utilise Anaconda will be safely installable from
 live media! The goal is for Anaconda to present _only_ the free space created
-by the Asahi Installer, enabling fearless automatic partitioning. This also enables users to easily
+by the Knix Installer, enabling fearless automatic partitioning. This also enables users to easily
 specify custom disk setups, such as full disk encryption or nonstandard filesystems if so desired.
 
 In a similar vein, Neal has also been working with KDE on Plasma Setup, a new onboarding application

@@ -77,7 +77,7 @@ static int ak4554_soc_probe(struct platform_device *pdev)
 }
 
 static const struct of_device_id ak4554_of_match[] = {
-	{ .compatible = "asahi-kasei,ak4554" },
+	{ .compatible = "knix-kasei,ak4554" },
 	{},
 };
 MODULE_DEVICE_TABLE(of, ak4554_of_match);

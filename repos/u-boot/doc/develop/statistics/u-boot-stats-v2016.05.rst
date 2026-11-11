@@ -16,7 +16,7 @@ Release Statistics for U-Boot v2016.05
    Name                              Count
    ================================  =====
    Simon Glass                       163 (15.6%)
-   Masahiro Yamada                   63 (6.0%)
+   Mknixro Yamada                   63 (6.0%)
    Alexander Graf                    58 (5.6%)
    Michal Simek                      57 (5.5%)
    Stefan Roese                      47 (4.5%)
@@ -163,7 +163,7 @@ Release Statistics for U-Boot v2016.05
    Hans de Goede                     7278 (8.6%)
    Alexander Graf                    5292 (6.3%)
    Michal Simek                      3901 (4.6%)
-   Masahiro Yamada                   3395 (4.0%)
+   Mknixro Yamada                   3395 (4.0%)
    Mateusz Kulikowski                3238 (3.8%)
    Robert P. J. Day                  1867 (2.2%)
    Bin Meng                          1539 (1.8%)
@@ -359,7 +359,7 @@ Release Statistics for U-Boot v2016.05
    Roger Quadros                     1 (0.6%)
    Peng Fan                          1 (0.6%)
    Akshay Bhat                       1 (0.6%)
-   Masahiro Yamada                   1 (0.6%)
+   Mknixro Yamada                   1 (0.6%)
    Simon Glass                       1 (0.6%)
    ================================  =====
 
@@ -379,7 +379,7 @@ Release Statistics for U-Boot v2016.05
    Joe Hershberger                   7 (1.6%)
    Fabio Estevam                     5 (1.1%)
    Peng Fan                          4 (0.9%)
-   Masahiro Yamada                   4 (0.9%)
+   Mknixro Yamada                   4 (0.9%)
    Marek Vasut                       4 (0.9%)
    Andreas Faerber                   4 (0.9%)
    Stephen Warren                    4 (0.9%)
@@ -473,7 +473,7 @@ Release Statistics for U-Boot v2016.05
    Nishanth Menon                    3 (8.3%)
    John Linn                         3 (8.3%)
    Stephen Warren                    2 (5.6%)
-   Masahiro Yamada                   2 (5.6%)
+   Mknixro Yamada                   2 (5.6%)
    Richard Woodruff                  2 (5.6%)
    Denis Bakhvalov                   2 (5.6%)
    Hans de Goede                     1 (2.8%)

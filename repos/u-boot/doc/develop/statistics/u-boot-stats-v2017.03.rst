@@ -15,7 +15,7 @@ Release Statistics for U-Boot v2017.03
    ================================  =====
    Name                              Count
    ================================  =====
-   Masahiro Yamada                   102 (15.4%)
+   Mknixro Yamada                   102 (15.4%)
    Simon Glass                       82 (12.3%)
    Tom Rini                          42 (6.3%)
    Jaehoon Chung                     25 (3.8%)
@@ -151,7 +151,7 @@ Release Statistics for U-Boot v2017.03
    Name                              Count
    ================================  =====
    Tom Rini                          21331 (35.5%)
-   Masahiro Yamada                   8216 (13.7%)
+   Mknixro Yamada                   8216 (13.7%)
    Peng Fan                          3658 (6.1%)
    Simon Glass                       3338 (5.6%)
    Michael Kurz                      2570 (4.3%)
@@ -316,7 +316,7 @@ Release Statistics for U-Boot v2017.03
    Romain Perier                     6 (5.4%)
    Andre Przywara                    5 (4.5%)
    Andy Shevchenko                   4 (3.6%)
-   Masahiro Yamada                   3 (2.7%)
+   Mknixro Yamada                   3 (2.7%)
    Olliver Schinagl                  2 (1.8%)
    Abhimanyu Saini                   2 (1.8%)
    Sumit Garg                        2 (1.8%)
@@ -387,7 +387,7 @@ Release Statistics for U-Boot v2017.03
    Adam Ford                         2 (9.5%)
    Bin Meng                          1 (4.8%)
    Michal Simek                      1 (4.8%)
-   Masahiro Yamada                   1 (4.8%)
+   Mknixro Yamada                   1 (4.8%)
    Ladislav Michl                    1 (4.8%)
    Breno Lima                        1 (4.8%)
    Priit Laes                        1 (4.8%)
@@ -405,7 +405,7 @@ Release Statistics for U-Boot v2017.03
    Name                              Count
    ================================  =====
    Tom Rini                          3 (14.3%)
-   Masahiro Yamada                   2 (9.5%)
+   Mknixro Yamada                   2 (9.5%)
    Andre Przywara                    2 (9.5%)
    Alison Wang                       2 (9.5%)
    Moritz Fischer                    2 (9.5%)

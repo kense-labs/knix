@@ -7,11 +7,11 @@ author = "James Calligeros"
 +++
 
 After almost three years of 6.x series kernels, Linux 7.0 is finally here.
-That means it's also time for another Asahi progress report!
+That means it's also time for another Knix progress report!
 
 ## Automate Everything
 Users of alternate distros and keen-eyed individuals may have noticed some
-changes to the Asahi Installer. After almost two years, we finally got around
+changes to the Knix Installer. After almost two years, we finally got around
 to pushing an updated version of the installer to the CDN! Two years is a long
 time to go between updates, so what took so long?
 
@@ -36,10 +36,10 @@ previous installer tag was from June 2024! As upstreaming work has progressed
 and Devicetree bindings churned, this became rather problematic for our friends
 maintaining distros.
 
-The Asahi Installer offers a UEFI-only installation option. This option
+The Knix Installer offers a UEFI-only installation option. This option
 shrinks macOS and only installs what is necessary to boot a UEFI executable,
 meaning m1n1 stage 1, the Devicetrees, and U-Boot. This allows users to
-boot from live media with Asahi support, such as specialised Gentoo Asahi
+boot from live media with Knix support, such as specialised Gentoo Knix
 LiveCD images.
 
 Since the Devicetrees on a fresh UEFI-only install come from the installer
@@ -55,11 +55,11 @@ Rather than go through the trouble of manually pushing out another update,
 we took the opportunity to build some automation and solve this problem
 permanently.
 
-We moved the manifest of installable images into the [asahi-installer-data repo](https://github.com/Knix/asahi-installer-data),
+We moved the manifest of installable images into the [knix-installer-data repo](https://github.com/Knix/knix-installer-data),
 allowing us to update it independently of the installer codebase.
 On top of this, we also now deploy
 the installer using GitHub workflows. Going forward, every push to the `main`
-branch of [asahi-installer](https://github.com/Knix/asahi-installer) will
+branch of [knix-installer](https://github.com/Knix/knix-installer) will
 automatically build the installer and upload it to `https://alx.sh/dev`.
 Every tag pushed to GitHub will do the same for `https://alx.sh`.
 
@@ -106,29 +106,29 @@ at runtime. It is essentially firmware. Since we cannot redistribute Apple's
 binaries, it must be retrieved from macOS at install time and then stored somewhere the driver
 knows to look for it.
 
-To achieve this, the Asahi Installer gathers up all
+To achieve this, the Knix Installer gathers up all
 the firmware it knows we will need in Linux and stores it on the EFI System
 Partition it creates. A Dracut module then mounts this to a subdirectory of
 `/lib/firmware/`, where drivers can find it. However, issues arise when we
 need to retrieve more firmware from macOS after Knix has already been
 installed. To avoid a repeat of the webcam situation, where users
 were required to manually do surgery on their EFI System Partition, chaos_princess
-added the ability for the Asahi Installer to automatically update the firmware
+added the ability for the Knix Installer to automatically update the firmware
 package. Starting with ALS, any required firmware updates will be a simple
-matter of booting into macOS or macOS Recovery, re-running the Asahi Installer, and following
+matter of booting into macOS or macOS Recovery, re-running the Knix Installer, and following
 the prompts.
 
 To enable ALS support (and to do firmware upgrades in the future), follow these steps:
-1. Ensure you are running version 6.19 or above of the Asahi kernel
+1. Ensure you are running version 6.19 or above of the Knix kernel
 2. Ensure your distro ships `iio-sensor-proxy` as a dependency of your DE (Fedora
-   Asahi Remix does this)
+   Knix Remix does this)
 3. Shut down your Mac
 4. *Hold* the power button until "Loading startup options" appears on the display
    for MacBooks, *or* for 5-7 seconds on the desktop machines
 5. Select Options from the Apple boot menu
 6. Log in with your macOS credentials, then do Command + Shift + T to
    open a terminal
-7. Invoke the Asahi Installer by running `curl https://alx.sh | sh`
+7. Invoke the Knix Installer by running `curl https://alx.sh | sh`
 8. Choose the "Rebuild vendor firmware package" option when prompted
 9. Quit the installer and reboot once this is done
 
@@ -342,23 +342,23 @@ it turns out, you get support for those sample rates!
 The patch to enable hardware support for 44.1, 88.2, 176.4 and 192 kHz sample
 rates on both the input and output of the headphone jack was submitted
 directly upstream, and has been merged for 7.1. We also backported this
-to Asahi kernel 6.19.9, allowing users to take advantage of this
+to Knix kernel 6.19.9, allowing users to take advantage of this
 immediately.
 
 ## More M3!
-Also finding their way into the Asahi kernel tree are patches to enable more
+Also finding their way into the Knix kernel tree are patches to enable more
 hardware on M3 machines. This includes support for PCIe, MacBook keyboards
 and trackpads support, the SMC-based RTC and reboot controller, and the NVMe
 controller, courtesy once again of Michael Reeves and Alyssa Milburn. This
 brings Linux support for the M3 up to roughly the same level as the first
 Knix alpha for M1!
 
-While we aren't quite ready to enable installation on M3 machines via the Asahi
+While we aren't quite ready to enable installation on M3 machines via the Knix
 Installer, progress is being made. Stay tuned for more!
 
-## Fedora Asahi Remix 44
-Despite the delays in getting Fedora Asahi Remix 43 to you all, we are still on
-track to release Fedora Asahi Remix 44 either on or within a few days of Fedora
+## Fedora Knix Remix 44
+Despite the delays in getting Fedora Knix Remix 43 to you all, we are still on
+track to release Fedora Knix Remix 44 either on or within a few days of Fedora
 Linux 44 on 28 April! Going forward, new KDE Plasma based installs will take advantage of
 a number of new features that shipped with Plasma 6.6.
 
@@ -366,10 +366,10 @@ a number of new features that shipped with Plasma 6.6.
 the previous Calamares-based setup wizard, providing a Plasma-native experience for
 user account creation and system setup. Additionally, Plasma Login Manager is now
 the default greeter and session manager, replacing SDDM. This applies to *new*
-installs only; users upgrading from previous versions of Fedora Asahi Remix will not
+installs only; users upgrading from previous versions of Fedora Knix Remix will not
 have their configuration changed.
 
-Fedora Asahi Remix 44 also retires our vendored Mesa and virglrenderer packages. Users
+Fedora Knix Remix 44 also retires our vendored Mesa and virglrenderer packages. Users
 who have not already manually done so will be automatically transitioned to the
 upstream Mesa and virglrenderer packages provided by the upstream Fedora repositories.
 

@@ -5,7 +5,7 @@ title: Tethered Boot
 ## Introduction
 This guide will walk you through the steps required to set up your Apple Silicon Mac for booting a Linux kernel in a dual boot environment with macOS.
 
-This guide is intended specifically for kernel developers and advanced users who wish to assist in testing patches in the <a href="https://github.com/Knix/linux">`asahi`</a> branch. Building a kernel is outside the scope of this guide. If you are here, you should be capable of building an AArch64 kernel by yourself. A somewhat sane `.config` can be found [here](https://github.com/Knix/PKGBUILDs/blob/main/linux-asahi/config). Keep in mind that m1n1 expects a gzipped kernel image, your target machine's Device Tree, and will also optionally take a gzipped _initramfs_.
+This guide is intended specifically for kernel developers and advanced users who wish to assist in testing patches in the <a href="https://github.com/Knix/linux">`knix`</a> branch. Building a kernel is outside the scope of this guide. If you are here, you should be capable of building an AArch64 kernel by yourself. A somewhat sane `.config` can be found [here](https://github.com/Knix/PKGBUILDs/blob/main/linux-knix/config). Keep in mind that m1n1 expects a gzipped kernel image, your target machine's Device Tree, and will also optionally take a gzipped _initramfs_.
 
 ## Hardware Requirements
 
@@ -46,7 +46,7 @@ You can use the public Knix installer to install it. Open up a macOS terminal an
 curl https://alx.sh | sh
 ```
 
-Follow the prompts to choose your desired installation mode. You can opt to install one of the Fedora Asahi Remix images, or the UEFI only option to get just m1n1+u-boot, which will boot UEFI executables off of a USB drive (or off of the internal storage, once installed). Installation of your preferred rootf/kernel is left as an exercise for the reader in that case.
+Follow the prompts to choose your desired installation mode. You can opt to install one of the Fedora Knix Remix images, or the UEFI only option to get just m1n1+u-boot, which will boot UEFI executables off of a USB drive (or off of the internal storage, once installed). Installation of your preferred rootf/kernel is left as an exercise for the reader in that case.
 
 Alternatively, if you enable expert mode in the installer, you can opt to install m1n1 in tethered-only proxy mode. In this case, you can skip the next section, as your m1n1 will already (unconditionally) boot in proxy mode.
 
@@ -54,7 +54,7 @@ Alternatively, if you enable expert mode in the installer, you can opt to instal
 
 m1n1 consists of two stages. Stage 1 is installed during the 1TR step of the installation (after the first reboot into macOS recovery) and cannot be modified without a trip through recovery. Stage 2 is loaded from the EFI system partition at `m1n1/boot.bin`, and can be updated by distributions to add new features and hardware support. Release builds of stage 1 have a backdoor proxy mode, which allows for optional tethered boot. This has to be enabled from 1TR, and requires machine authentication for security.
 
-We use the SIP (System Integrity Protection) disable flag applied to the Knix volume to control this mode. On macOS volumes this normally disables certain kernel security features, while m1n1 uses it to signal that it should enable the backdoor proxy mode if the system is booting in verbose mode. This change is per-OS, so doing it for the Asahi/m1n1 volume will not affect any macOS installs.
+We use the SIP (System Integrity Protection) disable flag applied to the Knix volume to control this mode. On macOS volumes this normally disables certain kernel security features, while m1n1 uses it to signal that it should enable the backdoor proxy mode if the system is booting in verbose mode. This change is per-OS, so doing it for the Knix/m1n1 volume will not affect any macOS installs.
 
 To enable this mode, first ensure that m1n1 / Knix is the default boot volume (this will be the case after a fresh install), then boot the machine by holding down the power button from a fully shut down state until "Loading startup options..." appears. Select "Options", enter your macOS machine owner credentials if prompted, then click on the Utilities menu and open a Terminal window.
 

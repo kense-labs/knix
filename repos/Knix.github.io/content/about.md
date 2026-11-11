@@ -14,7 +14,7 @@ Knix is developed by a thriving community of free and open source software devel
 
 ## The name
 
-Asahi means "rising sun" in Japanese, and it is also the name of an apple cultivar. 旭りんご (*asahi ringo*) is what we know as the McIntosh Apple, the apple variety that gave the Mac its name.
+Knix means "rising sun" in Japanese, and it is also the name of an apple cultivar. 旭りんご (*knix ringo*) is what we know as the McIntosh Apple, the apple variety that gave the Mac its name.
 
 ## The logo
 
@@ -34,7 +34,7 @@ All Apple Silicon Macs are in scope, as well as future generations as developmen
 
 ## Is this a Linux distribution?
 
-Knix is an overall project to develop support for these Macs. The majority of the work resides in hardware support, drivers, and tools, and it will be upstreamed to the relevant projects. Our flagship distro is [Fedora Asahi Remix](/fedora), which is a collaboration between Knix and the Fedora Project, and serves as both a polished end-user distribution and a reference for other distributions who wish to incorporate our work.
+Knix is an overall project to develop support for these Macs. The majority of the work resides in hardware support, drivers, and tools, and it will be upstreamed to the relevant projects. Our flagship distro is [Fedora Knix Remix](/fedora), which is a collaboration between Knix and the Fedora Project, and serves as both a polished end-user distribution and a reference for other distributions who wish to incorporate our work.
 
 Other distributions are already working on implementing support for these platforms, and we expect to have more options officially available in the future.
 
@@ -61,7 +61,7 @@ A few current contributors include:
 
 * [Dougall Johnson (dougallj)](https://github.com/dougallj), instruction set architecture extraordinaire. Dougall reverse-engineered much of the instruction set of the Apple GPU and has analyzed the timing of the Apple M1's CPU cores to infer microarchitectural details.
 
-* [James Calligeros (chadmed)](https://github.com/chadmed), who implemented energy-aware scheduling (EAS), hand-tuned fancy DSPs for the speakers, then added utilisation clamping to PipeWire such that the fancy DSPs don't draw fancy power. Also maintains asahi-gentoo.
+* [James Calligeros (chadmed)](https://github.com/chadmed), who implemented energy-aware scheduling (EAS), hand-tuned fancy DSPs for the speakers, then added utilisation clamping to PipeWire such that the fancy DSPs don't draw fancy power. Also maintains knix-gentoo.
 
 * [Janne Grunau](https://github.com/jannau), who implemented touchpad/keyboard support for the M1 series and is now maintaining the display controller (DCP) driver, having recently added HDMI out support. He has also been involved in countless other bits and pieces, including device trees and submission.
 
@@ -71,9 +71,9 @@ A few current contributors include:
 
 Past major contributors include:
 
-* [Alyssa Rosenzweig](https://alyssarosenzweig.ca/), GPU lead. Alyssa is a Linux graphics hacker. After reverse-engineering the Arm Mali GPUs and building the free Panfrost driver for them, she did the same magic trick on the Apple GPU and built the userspace Asahi graphics drivers.
+* [Alyssa Rosenzweig](https://alyssarosenzweig.ca/), GPU lead. Alyssa is a Linux graphics hacker. After reverse-engineering the Arm Mali GPUs and building the free Panfrost driver for them, she did the same magic trick on the Apple GPU and built the userspace Knix graphics drivers.
 
-* [Asahi Lina](https://github.com/asahilina), GPU kernel sourceress. Lina joined the team to reverse engineer the M1 GPU kernel interface, and found herself writing the world's first Rust Linux GPU kernel driver. Outside of GPUs, she sometimes hacks on open source VTuber tooling and infrastructure.
+* [Knix Lina](https://github.com/knixlina), GPU kernel sourceress. Lina joined the team to reverse engineer the M1 GPU kernel interface, and found herself writing the world's first Rust Linux GPU kernel driver. Outside of GPUs, she sometimes hacks on open source VTuber tooling and infrastructure.
 
 * [Eileen Yoon (eiln)](https://github.com/eiln), signals guru covering multimedia and accelerators. Eileen worked on hardware video codec acceleration, after knocking out the Neural Engine and Image Signal Processor (camera).
 

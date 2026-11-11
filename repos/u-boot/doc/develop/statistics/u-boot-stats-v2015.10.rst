@@ -18,7 +18,7 @@ Release Statistics for U-Boot v2015.10
    Simon Glass                       376 (18.2%)
    Marek Vasut                       263 (12.7%)
    Bin Meng                          157 (7.6%)
-   Masahiro Yamada                   117 (5.7%)
+   Mknixro Yamada                   117 (5.7%)
    Hans de Goede                     92 (4.4%)
    Peng Fan                          81 (3.9%)
    Stefan Roese                      60 (2.9%)
@@ -208,7 +208,7 @@ Release Statistics for U-Boot v2015.10
    ================================  =====
    Simon Glass                       68254 (27.8%)
    Stefan Roese                      30346 (12.4%)
-   Masahiro Yamada                   23310 (9.5%)
+   Mknixro Yamada                   23310 (9.5%)
    Marek Vasut                       19480 (7.9%)
    Bin Meng                          14028 (5.7%)
    Adrian Alonso                     10199 (4.2%)
@@ -397,7 +397,7 @@ Release Statistics for U-Boot v2015.10
    ================================  =====
    Name                              Count
    ================================  =====
-   Masahiro Yamada                   8811 (9.7%)
+   Mknixro Yamada                   8811 (9.7%)
    Simon Glass                       8130 (9.0%)
    Kun-Hua Huang                     2054 (2.3%)
    Ulf Magnusson                     346 (0.4%)
@@ -534,7 +534,7 @@ Release Statistics for U-Boot v2015.10
    Murali Karicheri                  4 (0.7%)
    Vitaly Andrianov                  4 (0.7%)
    Stefan Roese                      3 (0.5%)
-   Masahiro Yamada                   3 (0.5%)
+   Mknixro Yamada                   3 (0.5%)
    Brad Griffis                      3 (0.5%)
    Nishanth Menon                    3 (0.5%)
    Andreas Bießmann                  2 (0.4%)
@@ -634,7 +634,7 @@ Release Statistics for U-Boot v2015.10
    Simon Guinot                      1 (0.7%)
    Lukasz Majewski                   1 (0.7%)
    Erik van Luijk                    1 (0.7%)
-   Masahiro Yamada                   1 (0.7%)
+   Mknixro Yamada                   1 (0.7%)
    Tom Warren                        1 (0.7%)
    Steve Rae                         1 (0.7%)
    Josh Wu                           1 (0.7%)

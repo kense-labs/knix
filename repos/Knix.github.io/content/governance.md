@@ -28,8 +28,8 @@ The board appoints specific members to the following roles by majority vote:
 * The secretary schedules meetings, drives meetings, and maintains meeting minutes.
 * Administrators have access to project infrastructure, including our servers. Like developers, they operate by “lazy consensus”.
 
-The board votes on how money should be spent. If the money’s recipient is a board member, that member is ineligible for the vote. For example, if a developer needs a new Asahi development machine, the rest of the board would approve that expense. The treasurer then handles the transaction. Finally, the board audits transactions after the fact, aided by Open Collective’s transparent documentation of transactions.
+The board votes on how money should be spent. If the money’s recipient is a board member, that member is ineligible for the vote. For example, if a developer needs a new Knix development machine, the rest of the board would approve that expense. The treasurer then handles the transaction. Finally, the board audits transactions after the fact, aided by Open Collective’s transparent documentation of transactions.
 
 Board members may be added (when there are vacancies) or removed by vote. These bylaws may be amended by vote. A vote passes with the approval of four members.
 
-It is sometimes necessary to vote between meetings, occurring in our [public Matrix room](https://matrix.to/#/#asahi-board:matrix.org).
+It is sometimes necessary to vote between meetings, occurring in our [public Matrix room](https://matrix.to/#/#knix-board:matrix.org).

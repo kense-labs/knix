@@ -11,11 +11,11 @@ progress, Apple bugs, and more!
 
 ## Welcome back Master Boot Record
 When you long-press the power button on your Mac to bring up the boot picker (or use the
-Startup Disk application), what you see listed as Asahi is not actually the partition
+Startup Disk application), what you see listed as Knix is not actually the partition
 with the operating system on it. Apple's boot tooling will only work with what it considers
 to be a "valid" macOS installation inside an APFS container. So that we can use Apple's
 bootloader and avoid needing users to run commands from Recovery every time they want to
-use Asahi, the Asahi Installer creates a small APFS container (2.5 GB) with just enough
+use Knix, the Knix Installer creates a small APFS container (2.5 GB) with just enough
 of macOS on it to convince Apple's tools that it is a bootable installation of macOS with
 m1n1 as its kernel. This arrangement worked completely unchanged from macOS 12 to macOS 26,
 and Apple even fixed a couple of bugs in their tools that are only encountered when attempting
@@ -26,28 +26,28 @@ receiving reports that people were no longer able to boot into Linux on their
 machines --- the option had simply disappeared from both Startup Disk and the boot picker!
 Obviously this is quite concerning, and so we made investigating this a priority.
 
-Inspecting the disk using diskutil revealed that all Asahi-related partitions were still
+Inspecting the disk using diskutil revealed that all Knix-related partitions were still
 present on the disk after upgrading to macOS 27. No data loss was occurring, which is a
-positive sign. Additionally, Asahi was still bootable on the same machine when using the
+positive sign. Additionally, Knix was still bootable on the same machine when using the
 boot tooling from a second install of macOS 26.
 
 chaos_princess began inspecting Apple's own macOS Installer and old streams from way back
 when we were first poking at Apple's boot tools. The macOS Installer sets some APFS
 metadata before rebooting the machine, which further investigation revealed to be a flag
 that marks the volume as bootable. Until macOS 27, the boot tooling simply ignored this
-flag entirely. After setting the flag manually on an Asahi APFS container, it becomes
+flag entirely. After setting the flag manually on an Knix APFS container, it becomes
 available in the macOS 27 boot picker with no further changes.
 
-Going forward, all new Asahi installs will have this flag set automatically by the
-Asahi Installer. We've also added an installer mode that will fix existing installations.
-If you've installed the macOS 27 developer beta and cannot access your Asahi install, please
+Going forward, all new Knix installs will have this flag set automatically by the
+Knix Installer. We've also added an installer mode that will fix existing installations.
+If you've installed the macOS 27 developer beta and cannot access your Knix install, please
 run the installer again and use the "Fix macOS 27 boot picker compatibility" option.
 
 chaos_princess has also developed a program that can be run from Linux to fix the issue.
 While we would eventually like to deploy this fix automatically, we need more testing
 data to confirm that it is reliable and will not destroy anyones' filesystems. That's where
-you come in. If you are willing to help us test this, clone [this repo](https://github.com/Knix/asahi-fix27),
-then build and run it from Linux _before_ upgrading to macOS 27. If your Asahi volume
+you come in. If you are willing to help us test this, clone [this repo](https://github.com/Knix/knix-fix27),
+then build and run it from Linux _before_ upgrading to macOS 27. If your Knix volume
 is still selectable as a boot target from macOS, it has worked. Do be sure to let us
 know how it went by popping in to one of our [channels](https://knix.org/community)
 on OFTC or Matrix, especially if you run in to any issues.
@@ -90,7 +90,7 @@ Controlled Oscillator (NCO) has also remained unchanged since M1. Apple have als
 the exact same speaker and headset amplifier chips in almost all Apple Silicon machines.
 So, when chaos_princess started adding speaker and headphone jack support to M3 machines,
 little more was required than some trivial Devicetree additions and config files for
-asahi-audio and speakersafetyd. As such, M3 machines now sport high-quality audio output
+knix-audio and speakersafetyd. As such, M3 machines now sport high-quality audio output
 on Knix!
 
 M3 machines have also grown support for both CPU frequency switching and proper big.LITTLE
@@ -109,7 +109,7 @@ On top of the above, we also have PCIe, WiFi, Bluetooth, NVMe, keyboard, trackpa
 other core SoC block drivers working in Linux for M3 series machines. Most of this work
 has come by way of [Yureka](https://fedi.yuka.dev/yuka), who has been very busy hacking
 on both m1n1 and Linux with her M3 series machines for a while now. We still have a ways
-to go before we can start enabling Asahi Installer support for these machines, but progress
+to go before we can start enabling Knix Installer support for these machines, but progress
 is rapid so watch this space!
 
 ## We're writing firmware now?
@@ -129,7 +129,7 @@ SoCs. The CM3 runs a blob of firmware that exposes an interface for XNU to point
 data, and then programs the actual decoder hardware itself. This would normally be fine, however
 Apple made the interesting choice of bundling both the AVD's firmware and a pile of configuration
 data _inside_ the AVD kext. Making matters worse, each SoC has a slightly different AVD variant.
-This is logistically challenging, as the Asahi Installer would have to constantly be updated
+This is logistically challenging, as the Knix Installer would have to constantly be updated
 with (and keep track of) Apple's changes to the offsets of the firmware data in the kext.
 We _could_ do this, but what if there's a better way?
 

@@ -1,15 +1,15 @@
-%dnl optionally do a minimal asahi specific build
-%bcond asahi_minimal %["%{_arch}" != "aarch64"]
+%dnl optionally do a minimal knix specific build
+%bcond knix_minimal %["%{_arch}" != "aarch64"]
 
-%if %{with asahi_minimal}
+%if %{with knix_minimal}
 %global with_hardware  1
 %global with_vulkan_hw 1
-%global with_asahi     1
+%global with_knix     1
 
 %ifarch x86_64 %{ix86}
-%global with_asahi_fex_emu_overlay 1
+%global with_knix_fex_emu_overlay 1
 %endif
-%global asahi_platform_vulkan %{?with_vulkan_hw:,asahi}%{!?with_vulkan_hw:%{nil}}
+%global knix_platform_vulkan %{?with_vulkan_hw:,knix}%{!?with_vulkan_hw:%{nil}}
 
 %global with_opencl 1
 
@@ -74,15 +74,15 @@
 %global with_etnaviv   1
 %global with_tegra     1
 %endif
-%global with_asahi     1
+%global with_knix     1
 %global with_freedreno 1
 %global with_panfrost  1
 %global with_v3d       1
-%if 0%{?with_asahi}
+%if 0%{?with_knix}
 %ifarch x86_64 %{ix86}
-%global with_asahi_fex_emu_overlay 1
+%global with_knix_fex_emu_overlay 1
 %endif
-%global asahi_platform_vulkan %{?with_vulkan_hw:,asahi}%{!?with_vulkan_hw:%{nil}}
+%global knix_platform_vulkan %{?with_vulkan_hw:,knix}%{!?with_vulkan_hw:%{nil}}
 %endif
 %global extra_platform_vulkan %{?with_vulkan_hw:,broadcom,freedreno,panfrost,imagination-experimental}%{!?with_vulkan_hw:%{nil}}
 %endif
@@ -100,7 +100,7 @@
 %bcond_with valgrind
 %endif
 
-%global vulkan_drivers swrast,virtio%{?base_vulkan}%{?intel_platform_vulkan}%{?asahi_platform_vulkan}%{?extra_platform_vulkan}%{?with_nvk:,nouveau}
+%global vulkan_drivers swrast,virtio%{?base_vulkan}%{?intel_platform_vulkan}%{?knix_platform_vulkan}%{?extra_platform_vulkan}%{?with_nvk:,nouveau}
 
 Name:           mesa
 Summary:        Mesa graphics libraries
@@ -178,7 +178,7 @@ BuildRequires:  flatbuffers-devel
 BuildRequires:  flatbuffers-compiler
 BuildRequires:  xtensor-devel
 %endif
-%if 0%{?with_opencl} || 0%{?with_nvk} || 0%{?with_intel_clc} || 0%{?with_asahi}
+%if 0%{?with_opencl} || 0%{?with_nvk} || 0%{?with_intel_clc} || 0%{?with_knix}
 BuildRequires:  clang-devel
 BuildRequires:  pkgconfig(libclc)
 BuildRequires:  pkgconfig(SPIRV-Tools)
@@ -356,7 +356,7 @@ Obsoletes:      mesa-vulkan-devel < %{?epoch:%{epoch}:}%{version}-%{release}
 %description vulkan-drivers
 The drivers with support for the Vulkan API.
 
-%if 0%{?with_asahi_fex_emu_overlay}
+%if 0%{?with_knix_fex_emu_overlay}
 %package fex-emu-overlay-%{_arch}
 Summary:        Mesa driver overlay for FEX-emu
 BuildArch: noarch
@@ -403,7 +403,7 @@ export MESON_PACKAGE_CACHE_DIR="%{cargo_registry}/"
 %meson \
   -Dplatforms=x11,wayland \
 %if 0%{?with_hardware}
-  -Dgallium-drivers=llvmpipe,virgl%{?with_nouveau:,nouveau}%{?with_r300:,r300}%{?with_crocus:,crocus}%{?with_i915:,i915}%{?with_iris:,iris}%{?with_vmware:,svga}%{?with_radeonsi:,radeonsi}%{?with_r600:,r600}%{?with_freedreno:,freedreno}%{?with_etnaviv:,etnaviv}%{?with_tegra:,tegra}%{?with_vc4:,vc4}%{?with_v3d:,v3d}%{?with_lima:,lima}%{?with_panfrost:,panfrost}%{?with_vulkan_hw:,zink}%{?with_asahi:,asahi} \
+  -Dgallium-drivers=llvmpipe,virgl%{?with_nouveau:,nouveau}%{?with_r300:,r300}%{?with_crocus:,crocus}%{?with_i915:,i915}%{?with_iris:,iris}%{?with_vmware:,svga}%{?with_radeonsi:,radeonsi}%{?with_r600:,r600}%{?with_freedreno:,freedreno}%{?with_etnaviv:,etnaviv}%{?with_tegra:,tegra}%{?with_vc4:,vc4}%{?with_v3d:,v3d}%{?with_lima:,lima}%{?with_panfrost:,panfrost}%{?with_vulkan_hw:,zink}%{?with_knix:,knix} \
 %else
   -Dgallium-drivers=llvmpipe,virgl \
 %endif
@@ -469,7 +469,7 @@ for i in libGL.so ; do
 done
 popd
 
-%if 0%{?with_asahi_fex_emu_overlay}
+%if 0%{?with_knix_fex_emu_overlay}
 mkdir -p fexov
 
 # Note: In order to effectively white-out the underlying RootFS Mesa's
@@ -483,7 +483,7 @@ install -Dpm0755 -s -t "fexov/%{_libdir}/" \
 install -Dpm0755 -s -t "fexov/%{_libdir}/ovl_dri/" \
   %{buildroot}%{_libdir}/dri/libdril_dri.so
 ln -s libdril_dri.so "fexov/%{_libdir}/ovl_dri/apple_dri.so"
-ln -s libdril_dri.so "fexov/%{_libdir}/ovl_dri/asahi_dri.so"
+ln -s libdril_dri.so "fexov/%{_libdir}/ovl_dri/knix_dri.so"
 ln -s ovl_dri "fexov/%{_libdir}/dri"
 
 %dnl GL/EGL ----------------------------
@@ -505,13 +505,13 @@ ln -s ovl_vendors "fexov/%{_sysconfdir}/OpenCL/vendors"
 %endif
 
 %dnl vulkan ----------------------------
-%if "%{?asahi_platform_vulkan}" != ""
+%if "%{?knix_platform_vulkan}" != ""
 install -Dpm0755 -s -t "fexov/%{_libdir}/" \
-  %{buildroot}%{_libdir}/libvulkan_asahi.so \
+  %{buildroot}%{_libdir}/libvulkan_knix.so \
   %{buildroot}%{_libdir}/libVkLayer_MESA_device_select.so
 
 install -Dpm0644 -t "fexov/%{_datadir}/vulkan/ovl_icd.d/" \
-  %{buildroot}%{_datadir}/vulkan/icd.d/asahi_icd.*.json
+  %{buildroot}%{_datadir}/vulkan/icd.d/knix_icd.*.json
 install -Dpm0644 -t "fexov/%{_datadir}/vulkan/implicit_layer.d/" \
   %{buildroot}%{_datadir}/vulkan/implicit_layer.d/VkLayer_MESA_device_select.json
 ln -s ovl_icd.d "fexov/%{_datadir}/vulkan/icd.d"
@@ -612,9 +612,9 @@ install -Dpm0644 -t %{buildroot}%{_datadir}/fex-emu/overlays/ mesa-%{_arch}.erof
 %{_libdir}/dri/radeonsi_dri.so
 %endif
 %ifarch %{ix86} x86_64 aarch64
-%if 0%{?with_asahi}
+%if 0%{?with_knix}
 %{_libdir}/dri/apple_dri.so
-%{_libdir}/dri/asahi_dri.so
+%{_libdir}/dri/knix_dri.so
 %endif
 %endif
 %ifarch %{ix86} x86_64
@@ -757,9 +757,9 @@ install -Dpm0644 -t %{buildroot}%{_datadir}/fex-emu/overlays/ mesa-%{_arch}.erof
 %endif
 %endif
 %ifarch aarch64 x86_64 %{ix86}
-%if "%{?asahi_platform_vulkan}" != ""
-%{_libdir}/libvulkan_asahi.so
-%{_datadir}/vulkan/icd.d/asahi_icd.*.json
+%if "%{?knix_platform_vulkan}" != ""
+%{_libdir}/libvulkan_knix.so
+%{_datadir}/vulkan/icd.d/knix_icd.*.json
 %endif
 %if "%{?extra_platform_vulkan}" != ""
 %{_libdir}/libvulkan_broadcom.so
@@ -775,7 +775,7 @@ install -Dpm0644 -t %{buildroot}%{_datadir}/fex-emu/overlays/ mesa-%{_arch}.erof
 %endif
 %endif
 
-%if 0%{?with_asahi_fex_emu_overlay}
+%if 0%{?with_knix_fex_emu_overlay}
 %files fex-emu-overlay-%{_arch}
 %{_datadir}/fex-emu/overlays/mesa-%{_arch}.erofs
 %doc docs/Mesa-MLAA-License-Clarification-Email.txt

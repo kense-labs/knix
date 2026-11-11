@@ -244,7 +244,7 @@ impl<T: DriverGpuVm> GpuVm<T> {
         unsafe { bindings::drm_gpuvm_is_extobj(self.as_raw(), obj.as_raw()) }
     }
 
-    /// HACK: added for compatibility with asahi downstream driver. Only safe to use
+    /// HACK: added for compatibility with knix downstream driver. Only safe to use
     /// when the gpuvm user forgot the UniqueRefGpuVm it got from `GpuVm::new()`.
     pub unsafe fn exec_lock<'a>(
         &'a self,
@@ -349,7 +349,7 @@ pub trait DriverGpuVm: Sized + Send + Sync {
     ) -> Result<OpRemapped<'op, Self>, Error>;
 }
 
-/// HACK: added for compatibility with asahi downstream driver.
+/// HACK: added for compatibility with knix downstream driver.
 pub struct GpuVmExec<T: DriverGpuVm> {
     vm_exec: KBox<bindings::drm_gpuvm_exec>,
     /// alternative way to get UniqueRefGpuVm when using `GpuVm::exec_lock()`.

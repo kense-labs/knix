@@ -1,9 +1,0 @@
-[Plymouth Theme]
-Name=asahi
-Description=Plymouth theme for Knix
-Comment=(C) 2021 The Knix Contributors
-ModuleName=script
-
-[script]
-ImageDir=/usr/share/plymouth/themes/asahi
-ScriptFile=/usr/share/plymouth/themes/asahi/asahi.script

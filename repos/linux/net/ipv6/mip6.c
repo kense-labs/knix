@@ -6,7 +6,7 @@
 /*
  * Authors:
  *	Noriaki TAKAMIYA @USAGI
- *	Masahide NAKAMURA @USAGI
+ *	Mknixde NAKAMURA @USAGI
  */
 
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt

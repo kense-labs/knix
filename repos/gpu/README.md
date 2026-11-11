@@ -1,4 +1,4 @@
-# Asahi GPU 
+# Knix GPU 
 
 Research for an open source graphics stack for Apple M1.
 

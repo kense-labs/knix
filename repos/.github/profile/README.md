@@ -1,4 +1,4 @@
-[Knix](https://knix.org) aims to bring you a polished Linux experience on Apple Silicon Macs. We [document the hardware](https://knix.org/docs/), write drivers, and publish the [Fedora Asahi Remix distribution](https://knix.org/fedora/).
+[Knix](https://knix.org) aims to bring you a polished Linux experience on Apple Silicon Macs. We [document the hardware](https://knix.org/docs/), write drivers, and publish the [Fedora Knix Remix distribution](https://knix.org/fedora/).
 
 Our goal is not just to make Linux run on these machines but to polish it to the point where it can be used as a daily OS. Doing this requires a tremendous amount of work, as Apple Silicon is an entirely undocumented platform. You can reference our [device support tracker](https://knix.org/fedora/#device-support) for information on supported models and features, with more details available in our [documentation](https://knix.org/docs/platform/feature-support/overview/).
 

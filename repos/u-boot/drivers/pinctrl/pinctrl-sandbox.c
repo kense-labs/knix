@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2020 Sean Anderson <seanga2@gmail.com>
- * Copyright (C) 2015 Masahiro Yamada <yamada.masahiro@socionext.com>
+ * Copyright (C) 2015 Mknixro Yamada <yamada.mknixro@socionext.com>
  */
 
 #include <dm.h>

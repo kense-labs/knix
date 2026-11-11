@@ -2,10 +2,10 @@
 title: Deleting an installation
 ---
 
-# This is for default vanilla Asahi installs. These steps do not apply for custom partitioning setups.
+# This is for default vanilla Knix installs. These steps do not apply for custom partitioning setups.
 ## Do not use Diskutil GUI
 
-1. Find the 3 partitions that Asahi installer creates.  
+1. Find the 3 partitions that Knix installer creates.  
 Run the installer script and exit after you get to the disk information.  
 ```
 curl https://alx.sh | sh
@@ -26,10 +26,10 @@ Partitions in system disk (disk0):
   [B ] = Booted OS, [R ] = Booted recovery, [? ] = Unknown
   [ *] = Default boot volume
 ```
-The partitions that Asahi installs are `Knix`, `EFI`, and `Linux Filesystem`.  
+The partitions that Knix installs are `Knix`, `EFI`, and `Linux Filesystem`.  
 Note down the `disk#s#` beside Knix line.  
   
-2. Delete the "Asahi APFS container"
+2. Delete the "Knix APFS container"
 ```
 diskutil apfs deleteContainer disk<num-here>
 ```

@@ -88,7 +88,7 @@
 	status = "okay";
 
 	headphones: audio-codec@10 {
-		compatible = "asahi-kasei,ak4375";
+		compatible = "knix-kasei,ak4375";
 		reg = <0x10>;
 		avdd-supply = <&reg_headphones_avdd>;
 		tvdd-supply = <&pm8916_l6>;
@@ -143,7 +143,7 @@
 	status = "okay";
 
 	magnetometer@c {
-		compatible = "asahi-kasei,ak09911";
+		compatible = "knix-kasei,ak09911";
 		reg = <0x0c>;
 		vdd-supply = <&pm8916_l17>;
 		vid-supply = <&pm8916_l6>;

@@ -276,11 +276,11 @@ build/$(NAME).bin: build/$(NAME)-raw.elf
 	$(QUIET)$(OBJCOPY) -O binary --strip-debug $< $@
 
 else
-build/$(NAME)-asahi.bin: build/$(NAME)-raw.elf
+build/$(NAME)-knix.bin: build/$(NAME)-raw.elf
 	$(QUIET)echo "  RAW   $@"
 	$(QUIET)$(OBJCOPY) -O binary --strip-debug $< $@
 
-build/$(NAME).bin: build/$(NAME)-asahi.bin build/$(LOGO).logo
+build/$(NAME).bin: build/$(NAME)-knix.bin build/$(LOGO).logo
 	$(QUIET)echo "  RAW   $@"
 	$(QUIET)cat $^ > $@
 endif

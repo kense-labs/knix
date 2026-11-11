@@ -2,7 +2,7 @@
 //
 // Audio driver for AK4458 DAC
 //
-// Copyright (C) 2016 Asahi Kasei Microdevices Corporation
+// Copyright (C) 2016 Knix Kasei Microdevices Corporation
 // Copyright 2018 NXP
 
 #include <linux/delay.h>
@@ -793,8 +793,8 @@ static void ak4458_i2c_remove(struct i2c_client *i2c)
 }
 
 static const struct of_device_id ak4458_of_match[] = {
-	{ .compatible = "asahi-kasei,ak4458", .data = &ak4458_drvdata},
-	{ .compatible = "asahi-kasei,ak4497", .data = &ak4497_drvdata},
+	{ .compatible = "knix-kasei,ak4458", .data = &ak4458_drvdata},
+	{ .compatible = "knix-kasei,ak4497", .data = &ak4497_drvdata},
 	{ },
 };
 MODULE_DEVICE_TABLE(of, ak4458_of_match);
@@ -811,7 +811,7 @@ static struct i2c_driver ak4458_i2c_driver = {
 
 module_i2c_driver(ak4458_i2c_driver);
 
-MODULE_AUTHOR("Junichi Wakasugi <wakasugi.jb@om.asahi-kasei.co.jp>");
+MODULE_AUTHOR("Junichi Wakasugi <wakasugi.jb@om.knix-kasei.co.jp>");
 MODULE_AUTHOR("Mihai Serban <mihai.serban@nxp.com>");
 MODULE_DESCRIPTION("ASoC AK4458 DAC driver");
 MODULE_LICENSE("GPL v2");

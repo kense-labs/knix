@@ -852,7 +852,7 @@ u64 get_page_table_size(void)
 	return SZ_256K;
 }
 
-static char *asahi_esp_devpart(void)
+static char *knix_esp_devpart(void)
 {
 	struct disk_partition info;
 	struct blk_desc *nvme_blk;
@@ -867,7 +867,7 @@ static char *asahi_esp_devpart(void)
 
 	node = ofnode_path("/chosen");
 	if (ofnode_valid(node)) {
-		uuid = ofnode_get_property(node, "asahi,efi-system-partition",
+		uuid = ofnode_get_property(node, "knix,efi-system-partition",
 					   &len);
 	}
 
@@ -917,7 +917,7 @@ const char *env_fat_get_intf(void)
 
 char *env_fat_get_dev_part(void)
 {
-	return asahi_esp_devpart();
+	return knix_esp_devpart();
 }
 
 #define KERNEL_COMP_SIZE	SZ_128M
@@ -930,7 +930,7 @@ int board_late_init(void)
 	phys_addr_t addr;
 
 	env_set("storage_interface", blk_get_uclass_name(UCLASS_NVME));
-	env_set("fw_dev_part", asahi_esp_devpart());
+	env_set("fw_dev_part", knix_esp_devpart());
 
 	/* somewhat based on the Linux Kernel boot requirements:
 	 * align by 2M and maximal FDT size 2M

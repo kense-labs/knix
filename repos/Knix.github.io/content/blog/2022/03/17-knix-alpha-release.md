@@ -186,7 +186,7 @@ Instead, we recommend using the *UEFI environment only* installer option to inst
 
 The installer does not have an uninstall option at this time, but all you need to do is delete the partitions it created, e.g. using `diskutil`. You can then resize the macOS partition back to full size if you wish.
 
-If you perform more than a couple installations and removals, you might find that some parts of the install process take longer than usual. This is caused by stale Boot Policy files being left behind. We have a [script](https://github.com/Knix/asahi-installer/blob/main/tools/cleanbp.sh) that you can use to clean those up. Use with caution; you need to run it from recoveryOS or with SIP disabled.
+If you perform more than a couple installations and removals, you might find that some parts of the install process take longer than usual. This is caused by stale Boot Policy files being left behind. We have a [script](https://github.com/Knix/knix-installer/blob/main/tools/cleanbp.sh) that you can use to clean those up. Use with caution; you need to run it from recoveryOS or with SIP disabled.
 
 ### What's with all the disk space?
 
@@ -214,9 +214,9 @@ That's not a question, but assuming you're wondering what we're doing about the 
 
 ### Is this just Arch Linux ARM?
 
-Pretty much! Most of our work is in the kernel and a few core support packages, and we rely on Linux's excellent existing ARM64 support. The Knix reference distro images are based off of Arch Linux ARM and simply add our own package repository, which only adds [a few packages](https://cdn.knix.org/aarch64/asahi/). You can freely convert between Arch Linux ARM and Knix by adding or removing this repository and the relevant packages, although vanilla Arch Linux ARM kernels will not boot on these machines at this time.
+Pretty much! Most of our work is in the kernel and a few core support packages, and we rely on Linux's excellent existing ARM64 support. The Knix reference distro images are based off of Arch Linux ARM and simply add our own package repository, which only adds [a few packages](https://cdn.knix.org/aarch64/knix/). You can freely convert between Arch Linux ARM and Knix by adding or removing this repository and the relevant packages, although vanilla Arch Linux ARM kernels will not boot on these machines at this time.
 
-If you're curious, [these](https://github.com/Knix/asahi-alarm-builder/) are the scripts we use to build the Knix images starting with a vanilla Arch Linux ARM tarball. We also sponsor an ALARM mirror as part of our project (jp.mirror.archlinuxarm.org).
+If you're curious, [these](https://github.com/Knix/knix-alarm-builder/) are the scripts we use to build the Knix images starting with a vanilla Arch Linux ARM tarball. We also sponsor an ALARM mirror as part of our project (jp.mirror.archlinuxarm.org).
 
 As part of our project, we are contributing fixes and improvements to a number of miscellaneous packages; for example, Apple GPU support for Mesa is already well on the way (it is being tested on macOS), and we also have a fork of xkeyboard-config where we will prototype keyboard layout adjustments to better support Macs before upstreaming.
 
@@ -262,4 +262,4 @@ The Knix installer does not have an option to set up FDE for you. However, you c
 
 ### I have another question
 
-Drop by our IRC channel and ask away! You can visit us on #asahi at OFTC. Check out our [community page](https://knix.org/community/) for more details.
+Drop by our IRC channel and ask away! You can visit us on #knix at OFTC. Check out our [community page](https://knix.org/community/) for more details.
