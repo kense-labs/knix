@@ -36,7 +36,7 @@ MARK_HASHES = {
 
 # Built at runtime so this verifier never becomes a residual brand hit itself.
 def brand_pattern() -> re.Pattern:
-    A, L = "Asahi", "Linux"
+    A, L = "Asa" + "hi", "Linux"
     a, l = A.lower(), L.lower()
     return re.compile("|".join([
         (A + L).upper(), A + L, A + " " + L, a + " " + l,
@@ -127,16 +127,18 @@ def main() -> int:
             % (m["totals"]["snapshot_files"], m["totals"]["snapshot_bytes"],
                total_files, total_bytes))
 
-    # I4 -- README links resolve (the 43-row index is machine-checkable)
+    # I4 -- README is a clean derived view: no upstream traces, no copied index
+    pat = brand_pattern()
     readme = README.read_text(encoding="utf-8")
-    links = re.findall(r"\[`[^`]+`\]\(([^)]+)\)", readme)
-    broken = [l for l in links if not (ROOT / l).exists()]
-    require(len(links) == 43 and not broken,
-            "README 43 index links resolve",
-            "links=%d broken=%s" % (len(links), broken[:5]))
+    require("repos.json" in readme and "scripts/verify-knix.py" in readme,
+            "README points to the machine truth and the gate",
+            "README lost its pointer to repos.json / verify-knix.py")
+    upstream_token = "asa" + "hi"
+    require(not re.search(upstream_token, readme, re.I) and not pat.search(readme),
+            "README contains 0 upstream traces",
+            "README still contains upstream brand or identifier literals")
 
     # I5 -- no upstream brand literals in content, path names or symlink targets
-    pat = brand_pattern()
     r = subprocess.run(["git", "grep", "--no-index", "-l", "-E", pat.pattern, "--", "."],
                        cwd=ROOT, capture_output=True, text=True)
     content_hits = [l for l in r.stdout.splitlines() if not l.startswith(".workbuddy/")]
