@@ -1,6 +1,6 @@
-# Asahi Linux Plymouth Theme
+# Knix Plymouth Theme
 
-This is a Plymouth theme for the Asahi Linux distribution for Apple Silicon Macs.
+This is a Plymouth theme for the Knix distribution for Apple Silicon Macs.
 
 ## Installing (works for most distros)
 You should have Plymouth installed and hooked into your initrd.
@@ -17,7 +17,7 @@ will appear in tty1.
 modes and parameters you can test.
 
 ## What works
-* The Asahi Linux logo shows up
+* The Knix logo shows up
 * The progress bar fills up while booting
 * Boot time messages appear below the progress bar
 
@@ -26,4 +26,4 @@ Password/text entry (required for users with LUKS-encrypted disks, etc.)
 Currently, Plymouth will fall back to the tty for user input.
 
 ## Attributions
-* The Asahi Linux logo was created by <a href="https://soundflora.tokyo/">soundflora*</a> and <a href="https://github.com/marcan/">Hector Martin</a>. It is available under the CC BY-SA 4.0 license.
+* The Knix logo was created by <a href="https://soundflora.tokyo/">soundflora*</a> and <a href="https://github.com/marcan/">Hector Martin</a>. It is available under the CC BY-SA 4.0 license.

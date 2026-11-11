@@ -1,7 +1,7 @@
 /*
  * SPDX-License-Identifier: Apache-2.0
  *
- * Copyright The Asahi Linux Contributors
+ * Copyright The Knix Contributors
  */
 
 pub mod cd321x;

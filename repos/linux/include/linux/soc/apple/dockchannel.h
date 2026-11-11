@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-only OR MIT */
 /*
  * Apple Dockchannel devices
- * Copyright (C) The Asahi Linux Contributors
+ * Copyright (C) The Knix Contributors
  */
 #ifndef _LINUX_APPLE_DOCKCHANNEL_H_
 #define _LINUX_APPLE_DOCKCHANNEL_H_

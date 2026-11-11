@@ -5,7 +5,7 @@
             "default_os_name": "Fedora Linux with KDE Plasma",
             "boot_object": "m1n1.bin",
             "next_object": "m1n1/boot.bin",
-            "package": "https://asahilinux-fedora.b-cdn.net/os/fedora-45-kde-202611011600.zip",
+            "package": "https://knix-fedora.b-cdn.net/os/fedora-45-kde-202611011600.zip",
             "icon": "fedora.icns",
             "supported_fw": [
                 "12.3",
@@ -48,7 +48,7 @@
             "default_os_name": "Fedora Linux with GNOME",
             "boot_object": "m1n1.bin",
             "next_object": "m1n1/boot.bin",
-            "package": "https://asahilinux-fedora.b-cdn.net/os/fedora-45-gnome-202611011600.zip",
+            "package": "https://knix-fedora.b-cdn.net/os/fedora-45-gnome-202611011600.zip",
             "icon": "fedora.icns",
             "supported_fw": [
                 "12.3",
@@ -91,7 +91,7 @@
             "default_os_name": "Fedora Linux Server",
             "boot_object": "m1n1.bin",
             "next_object": "m1n1/boot.bin",
-            "package": "https://asahilinux-fedora.b-cdn.net/os/fedora-45-server-202611011600.zip",
+            "package": "https://knix-fedora.b-cdn.net/os/fedora-45-server-202611011600.zip",
             "icon": "fedora.icns",
             "supported_fw": [
                 "12.3",
@@ -131,7 +131,7 @@
             "default_os_name": "Fedora Linux Minimal",
             "boot_object": "m1n1.bin",
             "next_object": "m1n1/boot.bin",
-            "package": "https://asahilinux-fedora.b-cdn.net/os/fedora-45-minimal-202611011600.zip",
+            "package": "https://knix-fedora.b-cdn.net/os/fedora-45-minimal-202611011600.zip",
             "icon": "fedora.icns",
             "supported_fw": [
                 "12.3",

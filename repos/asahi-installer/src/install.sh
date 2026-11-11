@@ -38,7 +38,7 @@ fi
 if ! arch -arm64 ls >/dev/null 2>/dev/null; then
     echo
     echo "Looks like this is an Intel Mac!"
-    echo "Sorry, Asahi Linux only supports Apple Silicon machines."
+    echo "Sorry, Knix only supports Apple Silicon machines."
     echo "May we interest you in https://t2linux.org/ instead?"
     exit 1
 fi

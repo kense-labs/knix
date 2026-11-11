@@ -1,5 +1,5 @@
-# Asahi Linux documentation repository
-This is the [Asahi Linux documentation](https://asahilinux.org/docs/) repository.
+# Knix documentation repository
+This is the [Knix documentation](https://knix.org/docs/) repository.
 
 ## Documentation structure
 Our documentation is organised into categories.

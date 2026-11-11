@@ -9,11 +9,11 @@ title: AGX Driver Notes
 ## Git links
 * [Upstream Mesa](https://gitlab.freedesktop.org/mesa/mesa) ([merge requests](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests?label_name%5B%5D=asahi))
 * [Asahi Mesa](https://gitlab.freedesktop.org/asahi/mesa) (`mesa-asahi-edge` releases cut from here)
-* [Lina's WIP kernel branch](https://github.com/AsahiLinux/linux/tree/gpu/rust-wip) (UAPI may be out of sync with mesa)
+* [Lina's WIP kernel branch](https://github.com/Knix/linux/tree/gpu/rust-wip) (UAPI may be out of sync with mesa)
 
 ## UAPI design
 
-The [UAPI](https://github.com/AsahiLinux/linux/blob/asahi-wip/include/uapi/drm/asahi_drm.h) design is inspired by the upcoming [Intel Xe UAPI](https://cgit.freedesktop.org/drm/drm-xe/tree/include/uapi/drm/xe_drm.h?h=drm-xe-next).
+The [UAPI](https://github.com/Knix/linux/blob/asahi-wip/include/uapi/drm/asahi_drm.h) design is inspired by the upcoming [Intel Xe UAPI](https://cgit.freedesktop.org/drm/drm-xe/tree/include/uapi/drm/xe_drm.h?h=drm-xe-next).
 
 * File: An open file descriptor to the DRM device
 * VM: A GPU address space

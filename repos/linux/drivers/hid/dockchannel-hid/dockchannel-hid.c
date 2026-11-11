@@ -3,7 +3,7 @@
  *
  * Apple DockChannel HID transport driver
  *
- * Copyright The Asahi Linux Contributors
+ * Copyright The Knix Contributors
  */
 #include <linux/bitfield.h>
 #include <linux/delay.h>

@@ -1,1 +1,1 @@
-## [Asahi Linux logos](logos/)
+## [Knix logos](logos/)

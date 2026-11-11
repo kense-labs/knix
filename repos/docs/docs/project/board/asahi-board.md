@@ -1,8 +1,8 @@
 ---
-title: Asahi Linux Board
+title: Knix Board
 ---
 
-The Asahi Linux Board is the governing body of the Asahi Linux project. The board
+The Knix Board is the governing body of the Knix project. The board
 handles the administration of the project, including day-to-day operations, finances,
 and the Code of Conduct.
 

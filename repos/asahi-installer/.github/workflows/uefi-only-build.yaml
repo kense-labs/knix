@@ -30,7 +30,7 @@ jobs:
       - name: Checkout linux
         uses: actions/checkout@v7
         with:
-          repository: AsahiLinux/linux
+          repository: Knix/linux
           ref: ${{ vars.UEFI_LINUX_TAG }}
           path: linux
           sparse-checkout: 'arch/arm64/boot/dts/apple/'
@@ -38,7 +38,7 @@ jobs:
       - name: Checkout u-boot
         uses: actions/checkout@v7
         with:
-          repository: AsahiLinux/u-boot
+          repository: Knix/u-boot
           ref: ${{ vars.UEFI_UBOOT_TAG }}
           path: u-boot
 
@@ -72,7 +72,7 @@ jobs:
           echo "CONFIG_LOCALVERSION_AUTO=n" >> configs/apple_m1_defconfig
           export LOCALVERSION=-${{ vars.UEFI_UBOOT_TAG }}
           echo 'bootdelay=10' >> board/apple/mac/mac.env
-          echo 'preboot=usb start; echo; echo "Welcome to AsahiLinux UEFI boot"; echo "Enter `bootmenu -e` for boot menu"; echo' >> board/apple/mac/mac.env
+          echo 'preboot=usb start; echo; echo "Welcome to Knix UEFI boot"; echo "Enter `bootmenu -e` for boot menu"; echo' >> board/apple/mac/mac.env
           make CROSS_COMPILE=aarch64-linux-gnu- apple_m1_defconfig
           make CROSS_COMPILE=aarch64-linux-gnu- ARCH=arm -k -j2
           unset LOCALVERSION

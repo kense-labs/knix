@@ -2,7 +2,7 @@
 /*
  * Apple T6034 "M3 Max" SoC
  *
- * Copyright The Asahi Linux Contributors
+ * Copyright The Knix Contributors
  */
 
 #include "t6031.dtsi"

@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 /*
- * Copyright (C) The Asahi Linux Contributors
+ * Copyright (C) The Knix Contributors
  *
  * Based on sound/soc/codecs/cs42l42.h
  *

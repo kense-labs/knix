@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only OR MIT
 /*
  * Apple Generic RTKit helper coprocessor
- * Copyright The Asahi Linux Contributors
+ * Copyright The Knix Contributors
  */
 
 #include <linux/device.h>

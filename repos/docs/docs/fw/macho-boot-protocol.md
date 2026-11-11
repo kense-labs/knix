@@ -79,7 +79,7 @@ you'll just confuse yourself.
 ### Entry
 
 iBoot enters us at the entrypoint defined in the (ridiculous) Mach-O data structure as an unslid
-vaddr. Entry is with the MMU off. `x0` points to the [boot_args structure](https://github.com/AsahiLinux/m1n1/blob/main/src/xnuboot.h).
+vaddr. Entry is with the MMU off. `x0` points to the [boot_args structure](https://github.com/Knix/m1n1/blob/main/src/xnuboot.h).
 
 In addition, iBoot sets and locks the RVBAR of the boot CPU to be the top of the page that the
 entrypoint lives in. This cannot be changed after boot, and thus this address will always have

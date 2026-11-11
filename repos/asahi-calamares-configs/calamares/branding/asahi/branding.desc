@@ -121,17 +121,17 @@ navigation: widget
 # are visible as buttons there if the corresponding *show* keys
 # are set to "true" (they can also be overridden).
 strings:
-    productName:         Asahi Linux
-    shortProductName:    Asahi Linux
+    productName:         Knix
+    shortProductName:    Knix
     #version:             2020.2 LTS
     #shortVersion:        2020.2
-    versionedName:       Asahi Linux
-    shortVersionedName:  Asahi Linux
-    productUrl:          https://asahilinux.org/
-    supportUrl:          https://github.com/AsahiLinux/docs/wiki
-    #knownIssuesUrl:      https://github.com/AsahiLinux/docs/issues
+    versionedName:       Knix
+    shortVersionedName:  Knix
+    productUrl:          https://knix.org/
+    supportUrl:          https://github.com/Knix/docs/wiki
+    #knownIssuesUrl:      https://github.com/Knix/docs/issues
     #releaseNotesUrl:     https://calamares.io/news/
-    donateUrl:           https://asahilinux.org/support/
+    donateUrl:           https://knix.org/support/
 
 # These images are loaded from the branding module directory.
 #
@@ -162,10 +162,10 @@ strings:
 # These filenames can also use substitutions from os-release (see above).
 images:
     # productBanner:       "banner.png"
-    productIcon:         "AsahiLinux_logomark.svg"
-    productLogo:         "AsahiLinux_logomark.svg"
+    productIcon:         "Knix_logomark.svg"
+    productLogo:         "Knix_logomark.svg"
     # productWallpaper:    "wallpaper.png"
-    productWelcome:      "AsahiLinux_laptop.svg"
+    productWelcome:      "Knix_laptop.svg"
 
 # Colors for text and background components.
 #
@@ -203,7 +203,7 @@ style:
 # To configure images, like the filenames (here, as an inline list):
 #   slideshow: [ "/etc/calamares/slideshow/0.png", "/etc/logo.png" ]
 #slideshow:               "show.qml"
-slideshow: ["AsahiLinux_laptop.svg"]
+slideshow: ["Knix_laptop.svg"]
 
 # There are two available APIs for a QML slideshow:
 #  - 1 (the default) loads the entire slideshow when the installation-

@@ -3,7 +3,7 @@
  *
  * Apple SPI HID transport driver - Open Firmware
  *
- * Copyright (C) The Asahi Linux Contributors
+ * Copyright (C) The Knix Contributors
  */
 
 #include <linux/delay.h>

@@ -11,7 +11,7 @@ I have no idea what I'm doing with IOKit and CoreFoundation -marcan
 This is based on portions of [ThunderboltPatcher](https://github.com/osy/ThunderboltPatcher) and licensed under Apache-2.0.
 
 * Copyright (C) 2019 osy86. All rights reserved.
-* Copyright (C) 2021 The Asahi Linux Contributors
+* Copyright (C) 2021 The Knix Contributors
 
 Thanks to t8012.dev and mrarm for assistance with the VDM and Ace2 host interface commands.
 

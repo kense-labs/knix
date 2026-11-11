@@ -15,7 +15,7 @@ dt() {
 
 banner() {
     cat <<EOF
-# Asahi Linux System Diagnostic Dump
+# Knix System Diagnostic Dump
 
     Collected at:   $(date) ($(date -Iseconds))
     Username:       $(whoami)
@@ -95,7 +95,7 @@ package_versions() {
       cmd="pacman -Q"
       pkgs="m1n1 uboot-asahi asahi-scripts asahi-meta asahi-desktop-meta
             asahi-fwextract asahi-configs alsa-ucm-conf-asahi
-            asahilinux-keyring linux linux-asahi linux-asahi-edge
+            knix-keyring linux linux-knix-asahi-edge
             mesa xorg-server pipewire kwin mutter"
     elif [ -e /etc/fedora-release ]; then
       cmd="rpm -q"
@@ -195,7 +195,7 @@ diagnose() {
             echo
             echo "** WARNING! **"
             echo "You are using an unsupported firmware version ($ver) on this platform ($plat)."
-            echo "This means you explicitly chose expert mode when installing Asahi Linux,"
+            echo "This means you explicitly chose expert mode when installing Knix,"
             echo "and then explicitly selected a non-default unsupported version."
             echo "You are on your own. Please do not file bugs. We can't help you."
             echo "Reinstall without using expert mode if you want support."

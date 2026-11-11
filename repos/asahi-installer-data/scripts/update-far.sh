@@ -5,7 +5,7 @@ cd "$(dirname "$0")/.."
 
 VERSION="Fedora Linux 45"
 TARGET_VERSION="Fedora Asahi Remix 45"
-PACKAGE_BASE="https://asahilinux-fedora.b-cdn.net/os/"
+PACKAGE_BASE="https://knix-fedora.b-cdn.net/os/"
 
 curl -s https://fedora-asahi-remix.org/installer_data.json > /tmp/far.json
 

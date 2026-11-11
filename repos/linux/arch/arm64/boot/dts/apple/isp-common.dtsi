@@ -2,7 +2,7 @@
 /*
  * Common ISP configuration for Apple silicon platforms.
  *
- * Copyright The Asahi Linux Contributors
+ * Copyright The Knix Contributors
  */
 
 / {

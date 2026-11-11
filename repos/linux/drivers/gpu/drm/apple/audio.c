@@ -2,7 +2,7 @@
 /*
  * DCP Audio Bits
  *
- * Copyright (C) The Asahi Linux Contributors
+ * Copyright (C) The Knix Contributors
  *
  * TODO:
  *  - figure some nice identification of the sound card (in case

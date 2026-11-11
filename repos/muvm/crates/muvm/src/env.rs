@@ -35,7 +35,7 @@ const WELL_KNOWN_ENV_VARS: [&str; 20] = [
     "XMODIFIERS",
 ];
 
-/// See https://github.com/AsahiLinux/docs/wiki/Devices
+/// See https://github.com/Knix/docs/wiki/Devices
 const ASAHI_SOC_COMPAT_IDS: [&str; 1] = ["apple,arm-platform"];
 
 pub fn prepare_env_vars(env: Vec<(String, Option<String>)>) -> Result<HashMap<String, String>> {

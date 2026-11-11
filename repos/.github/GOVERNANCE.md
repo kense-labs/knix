@@ -1,3 +1,3 @@
 # Governance
 
-See https://asahilinux.org/governance/
+See https://knix.org/governance/

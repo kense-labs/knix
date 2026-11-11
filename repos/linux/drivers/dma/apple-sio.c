@@ -2,7 +2,7 @@
 /*
  * Driver for SIO coprocessor on t8103 (M1) and other Apple SoCs
  *
- * Copyright (C) The Asahi Linux Contributors
+ * Copyright (C) The Knix Contributors
  */
 
 #include <linux/bitfield.h>

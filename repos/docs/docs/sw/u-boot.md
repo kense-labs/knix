@@ -29,11 +29,11 @@ do things like boot off external media, execute arbitrary UEFI code, load and ju
 ## Prerequisites
 * An Apple Silicon machine running Asahi
 * A clean build of m1n1, see the [m1n1 User Guide](m1n1-user-guide.md)
-* The Apple DTBs from `AsahiLinux/linux`. Compiling these is out of scope for this document.
+* The Apple DTBs from `Knix/linux`. Compiling these is out of scope for this document.
 * The Asahi EFI System Partition mounted at `/boot/efi/`.
 
 ## Building
-1. Clone the `AsahiLinux/u-boot` repository.
+1. Clone the `Knix/u-boot` repository.
 2. `make apple_m1_defconfig`
 3. `make -j$(nproc)`
 

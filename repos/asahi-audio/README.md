@@ -1,7 +1,7 @@
 ## Linux userspace audio configuration for Apple Silicon Macs.
 
 This repo contains DSP configuration files for Apple Silicon Macs supported by the
-Asahi Linux project. Our goal is to make the Asahi Linux audio experience better than macOS,
+Knix project. Our goal is to make the Knix audio experience better than macOS,
 and in doing so demonstrate that desktop Linux audio can be made fit for purpose with
 a little bit of effort.
 

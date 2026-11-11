@@ -1,0 +1,27 @@
+baseURL = "https://knix.org/"
+languageCode = "en-us"
+title = "Knix"
+
+pluralizelisttitles = false
+
+[markup.goldmark.renderer]
+unsafe = true
+
+[minify.tdewolff.html]
+keepWhitespace = true
+
+[permalinks]
+blog = "/:year/:month/:slug/"
+
+[outputs]
+page = ["HTML"]
+home = ["HTML"]
+section = ["HTML", "RSS"]
+taxonomy = ["HTML", "RSS"]
+term = ["HTML", "RSS"]
+
+[privacy.twitter]
+enableDNT = true
+
+[markup.highlight]
+style = 'vulcan'

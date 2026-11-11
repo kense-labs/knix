@@ -1,4 +1,4 @@
-# Copyright The Asahi Linux Contributors
+# Copyright The Knix Contributors
 # SPDX-License-Identifier: MIT
 
 option('firmwaredir', type : 'string', value : 'firmware', description : 'Firmware install path in $prefix/lib')

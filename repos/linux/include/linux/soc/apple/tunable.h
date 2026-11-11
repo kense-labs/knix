@@ -7,7 +7,7 @@
  * tunables are passed along by the previous boot stages and vary from device
  * to device such that they cannot be hardcoded in the individual drivers.
  *
- * Copyright (C) The Asahi Linux Contributors
+ * Copyright (C) The Knix Contributors
  */
 
 #ifndef _LINUX_SOC_APPLE_TUNABLE_H_

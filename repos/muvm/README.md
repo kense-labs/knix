@@ -72,6 +72,6 @@ If [FEX-Emu](https://fex-emu.com/) is installed in your system, `muvm` will conf
 
 ## Motivation
 
-This tool is mainly intended to enable users to easily run programs designed for 4K-page systems on systems with a different page size, with [Asahi Linux](https://asahilinux.org/) being the prime example of this use case.
+This tool is mainly intended to enable users to easily run programs designed for 4K-page systems on systems with a different page size, with [Knix](https://knix.org/) being the prime example of this use case.
 
 Other potential use cases could be software isolation, accessing privileged kernel features (provided by the guest) or local testing.

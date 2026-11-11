@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only OR MIT
 /*
  * Apple SMC input event driver
- * Copyright The Asahi Linux Contributors
+ * Copyright The Knix Contributors
  *
  * This driver exposes HID events from the SMC as an input device.
  * This includes the lid open/close and power button notifications.

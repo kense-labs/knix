@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only OR MIT
 /*
  * Apple SMC RTC driver
- * Copyright The Asahi Linux Contributors
+ * Copyright The Knix Contributors
  */
 
 #include <linux/bitops.h>

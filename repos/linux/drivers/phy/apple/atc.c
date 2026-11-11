@@ -18,7 +18,7 @@
  * calibration values copied from Apple's firmware by our bootloader m1n1 are
  * required. Without these only USB2 operation is possible.
  *
- * Copyright (C) The Asahi Linux Contributors
+ * Copyright (C) The Knix Contributors
  * Author: Sven Peter <sven@kernel.org>
  */
 

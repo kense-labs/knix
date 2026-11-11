@@ -1,13 +1,13 @@
 {
   "name": "knix",
-  "description": "Source snapshots of every public repository in the AsahiLinux GitHub organization",
-  "source_org": "https://github.com/AsahiLinux",
+  "description": "Source snapshots of every public repository in the Knix GitHub organization",
+  "source_org": "https://github.com/Knix",
   "collection_method": "git clone --depth 1 --single-branch --no-tags <default_branch>, then strip .git metadata",
   "generated_at": "2026-11-11T02:27:42+00:00",
   "count": 43,
   "totals": {
     "snapshot_files": 147032,
-    "snapshot_bytes": 2076120078,
+    "snapshot_bytes": 2076111665,
     "upstream_history_bytes": 8943190016,
     "default_branches": {
       "asahi": 6,
@@ -20,12 +20,12 @@
   "repositories": [
     {
       "name": ".github",
-      "source_url": "https://github.com/AsahiLinux/.github",
-      "clone_url": "git@github.com:AsahiLinux/.github.git",
+      "source_url": "https://github.com/Knix/.github",
+      "clone_url": "git@github.com:Knix/.github.git",
       "default_branch": "main",
       "snapshot_sha": "7aec1bb4d3e9910920ee509ab398ce4f2492bb09",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
-      "description": "GitHub settings for the AsahiLinux organization",
+      "description": "GitHub settings for the Knix organization",
       "archived": false,
       "fork": false,
       "license": "NOASSERTION",
@@ -33,12 +33,12 @@
       "upstream_size_kb": 10,
       "local_path": "repos/.github",
       "snapshot_files": 10,
-      "snapshot_bytes": 5197
+      "snapshot_bytes": 5017
     },
     {
       "name": "alsa-ucm-conf-asahi",
-      "source_url": "https://github.com/AsahiLinux/alsa-ucm-conf-asahi",
-      "clone_url": "git@github.com:AsahiLinux/alsa-ucm-conf-asahi.git",
+      "source_url": "https://github.com/Knix/alsa-ucm-conf-asahi",
+      "clone_url": "git@github.com:Knix/alsa-ucm-conf-asahi.git",
       "default_branch": "master",
       "snapshot_sha": "1473329acab595dfef039f38c384ce16674d6b15",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
@@ -50,16 +50,16 @@
       "upstream_size_kb": 43,
       "local_path": "repos/alsa-ucm-conf-asahi",
       "snapshot_files": 47,
-      "snapshot_bytes": 14119
+      "snapshot_bytes": 14112
     },
     {
       "name": "artwork",
-      "source_url": "https://github.com/AsahiLinux/artwork",
-      "clone_url": "git@github.com:AsahiLinux/artwork.git",
+      "source_url": "https://github.com/Knix/artwork",
+      "clone_url": "git@github.com:Knix/artwork.git",
       "default_branch": "main",
       "snapshot_sha": "80d14f8b6f485b310e305a84b4b806361518ddd1",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
-      "description": "Asahi Linux logo and other artwork",
+      "description": "Knix logo and other artwork",
       "archived": false,
       "fork": false,
       "license": "NOASSERTION",
@@ -67,16 +67,16 @@
       "upstream_size_kb": 1906,
       "local_path": "repos/artwork",
       "snapshot_files": 105,
-      "snapshot_bytes": 2237477
+      "snapshot_bytes": 2237041
     },
     {
       "name": "asahi-audio",
-      "source_url": "https://github.com/AsahiLinux/asahi-audio",
-      "clone_url": "git@github.com:AsahiLinux/asahi-audio.git",
+      "source_url": "https://github.com/Knix/asahi-audio",
+      "clone_url": "git@github.com:Knix/asahi-audio.git",
       "default_branch": "main",
       "snapshot_sha": "ab1b46928d056bb02bb4ad72d522dab57dc9efe1",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
-      "description": "Userspace audio for Asahi Linux",
+      "description": "Userspace audio for Knix",
       "archived": false,
       "fork": false,
       "license": "GPL-2.0",
@@ -84,12 +84,12 @@
       "upstream_size_kb": 31300,
       "local_path": "repos/asahi-audio",
       "snapshot_files": 77,
-      "snapshot_bytes": 1996087
+      "snapshot_bytes": 1996059
     },
     {
       "name": "asahi-calamares-configs",
-      "source_url": "https://github.com/AsahiLinux/asahi-calamares-configs",
-      "clone_url": "git@github.com:AsahiLinux/asahi-calamares-configs.git",
+      "source_url": "https://github.com/Knix/asahi-calamares-configs",
+      "clone_url": "git@github.com:Knix/asahi-calamares-configs.git",
       "default_branch": "main",
       "snapshot_sha": "8c957638e732d5b3a33647e026317eec0b52f7a7",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
@@ -101,12 +101,12 @@
       "upstream_size_kb": 29,
       "local_path": "repos/asahi-calamares-configs",
       "snapshot_files": 13,
-      "snapshot_bytes": 75056
+      "snapshot_bytes": 74919
     },
     {
       "name": "asahi-fedora-remix-logos",
-      "source_url": "https://github.com/AsahiLinux/asahi-fedora-remix-logos",
-      "clone_url": "git@github.com:AsahiLinux/asahi-fedora-remix-logos.git",
+      "source_url": "https://github.com/Knix/asahi-fedora-remix-logos",
+      "clone_url": "git@github.com:Knix/asahi-fedora-remix-logos.git",
       "default_branch": "main",
       "snapshot_sha": "e68f9ef8578cff48abe7ed9c44d3b2e310e72ecb",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
@@ -118,12 +118,12 @@
       "upstream_size_kb": 756,
       "local_path": "repos/asahi-fedora-remix-logos",
       "snapshot_files": 84,
-      "snapshot_bytes": 1027101
+      "snapshot_bytes": 1026983
     },
     {
       "name": "asahi-fedora-remix-release",
-      "source_url": "https://github.com/AsahiLinux/asahi-fedora-remix-release",
-      "clone_url": "git@github.com:AsahiLinux/asahi-fedora-remix-release.git",
+      "source_url": "https://github.com/Knix/asahi-fedora-remix-release",
+      "clone_url": "git@github.com:Knix/asahi-fedora-remix-release.git",
       "default_branch": "main",
       "snapshot_sha": "2adaa98695b768ff64f35f9ffca5d44adfdf8186",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
@@ -139,8 +139,8 @@
     },
     {
       "name": "asahi-fedora-remix.org",
-      "source_url": "https://github.com/AsahiLinux/asahi-fedora-remix.org",
-      "clone_url": "git@github.com:AsahiLinux/asahi-fedora-remix.org.git",
+      "source_url": "https://github.com/Knix/asahi-fedora-remix.org",
+      "clone_url": "git@github.com:Knix/asahi-fedora-remix.org.git",
       "default_branch": "main",
       "snapshot_sha": "29ef4f318916902d521f8322d48bb375979babc4",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
@@ -156,8 +156,8 @@
     },
     {
       "name": "asahi-fix27",
-      "source_url": "https://github.com/AsahiLinux/asahi-fix27",
-      "clone_url": "git@github.com:AsahiLinux/asahi-fix27.git",
+      "source_url": "https://github.com/Knix/asahi-fix27",
+      "clone_url": "git@github.com:Knix/asahi-fix27.git",
       "default_branch": "master",
       "snapshot_sha": "7718b90e0dbc103a6845fca980252229e83cb453",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
@@ -169,16 +169,16 @@
       "upstream_size_kb": 14,
       "local_path": "repos/asahi-fix27",
       "snapshot_files": 8,
-      "snapshot_bytes": 35153
+      "snapshot_bytes": 35141
     },
     {
       "name": "asahi-installer",
-      "source_url": "https://github.com/AsahiLinux/asahi-installer",
-      "clone_url": "git@github.com:AsahiLinux/asahi-installer.git",
+      "source_url": "https://github.com/Knix/asahi-installer",
+      "clone_url": "git@github.com:Knix/asahi-installer.git",
       "default_branch": "main",
       "snapshot_sha": "e93743d52178b3e26e428fa05174ef549abf30cb",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
-      "description": "Asahi Linux installer",
+      "description": "Knix installer",
       "archived": false,
       "fork": false,
       "license": "MIT",
@@ -186,16 +186,16 @@
       "upstream_size_kb": 306,
       "local_path": "repos/asahi-installer",
       "snapshot_files": 50,
-      "snapshot_bytes": 230936
+      "snapshot_bytes": 230604
     },
     {
       "name": "asahi-installer-data",
-      "source_url": "https://github.com/AsahiLinux/asahi-installer-data",
-      "clone_url": "git@github.com:AsahiLinux/asahi-installer-data.git",
+      "source_url": "https://github.com/Knix/asahi-installer-data",
+      "clone_url": "git@github.com:Knix/asahi-installer-data.git",
       "default_branch": "main",
       "snapshot_sha": "06543833b81f520e9e98b6b16904f1cd185b2519",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
-      "description": "Asahi Linux installer data for alx.sh",
+      "description": "Knix installer data for alx.sh",
       "archived": false,
       "fork": false,
       "license": "MIT",
@@ -203,12 +203,12 @@
       "upstream_size_kb": 15,
       "local_path": "repos/asahi-installer-data",
       "snapshot_files": 4,
-      "snapshot_bytes": 10226
+      "snapshot_bytes": 10176
     },
     {
       "name": "asahi-nvram",
-      "source_url": "https://github.com/AsahiLinux/asahi-nvram",
-      "clone_url": "git@github.com:AsahiLinux/asahi-nvram.git",
+      "source_url": "https://github.com/Knix/asahi-nvram",
+      "clone_url": "git@github.com:Knix/asahi-nvram.git",
       "default_branch": "master",
       "snapshot_sha": "3df52c939fbcedb03344212090d25c98afe4dec1",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
@@ -220,16 +220,16 @@
       "upstream_size_kb": 112,
       "local_path": "repos/asahi-nvram",
       "snapshot_files": 28,
-      "snapshot_bytes": 111698
+      "snapshot_bytes": 111679
     },
     {
       "name": "asahi-plymouth",
-      "source_url": "https://github.com/AsahiLinux/asahi-plymouth",
-      "clone_url": "git@github.com:AsahiLinux/asahi-plymouth.git",
+      "source_url": "https://github.com/Knix/asahi-plymouth",
+      "clone_url": "git@github.com:Knix/asahi-plymouth.git",
       "default_branch": "main",
       "snapshot_sha": "14f4f7099ad83cf654f6ef75d171dff8efb847e3",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
-      "description": "Plymouth theme for Asahi Linux",
+      "description": "Plymouth theme for Knix",
       "archived": false,
       "fork": false,
       "license": "GPL-3.0",
@@ -237,16 +237,16 @@
       "upstream_size_kb": 145,
       "local_path": "repos/asahi-plymouth",
       "snapshot_files": 11,
-      "snapshot_bytes": 68018
+      "snapshot_bytes": 67962
     },
     {
       "name": "asahi-scripts",
-      "source_url": "https://github.com/AsahiLinux/asahi-scripts",
-      "clone_url": "git@github.com:AsahiLinux/asahi-scripts.git",
+      "source_url": "https://github.com/Knix/asahi-scripts",
+      "clone_url": "git@github.com:Knix/asahi-scripts.git",
       "default_branch": "main",
       "snapshot_sha": "755b1d19e61d58b010f32349b7aba8f2c580fc29",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
-      "description": "Miscellaneous admin scripts for the Asahi Linux reference distro",
+      "description": "Miscellaneous admin scripts for the Knix reference distro",
       "archived": false,
       "fork": false,
       "license": "MIT",
@@ -254,12 +254,12 @@
       "upstream_size_kb": 71,
       "local_path": "repos/asahi-scripts",
       "snapshot_files": 29,
-      "snapshot_bytes": 33531
+      "snapshot_bytes": 33463
     },
     {
       "name": "asahi-va-driver",
-      "source_url": "https://github.com/AsahiLinux/asahi-va-driver",
-      "clone_url": "git@github.com:AsahiLinux/asahi-va-driver.git",
+      "source_url": "https://github.com/Knix/asahi-va-driver",
+      "clone_url": "git@github.com:Knix/asahi-va-driver.git",
       "default_branch": "master",
       "snapshot_sha": "0e54d318004e204d2f73818c96e89c4642178351",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
@@ -274,47 +274,47 @@
       "snapshot_bytes": 336867
     },
     {
-      "name": "asahilinux-keyring",
-      "source_url": "https://github.com/AsahiLinux/asahilinux-keyring",
-      "clone_url": "git@github.com:AsahiLinux/asahilinux-keyring.git",
+      "name": "knix-keyring",
+      "source_url": "https://github.com/Knix/knix-keyring",
+      "clone_url": "git@github.com:Knix/knix-keyring.git",
       "default_branch": "master",
       "snapshot_sha": "a9f10ab8fb1c34568935969a44452f35fb26e633",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
-      "description": "Asahi Linux Keyring",
+      "description": "Knix Keyring",
       "archived": true,
       "fork": true,
       "license": "NOASSERTION",
       "upstream_pushed_at": "2022-02-25T10:59:22Z",
       "upstream_size_kb": 18,
-      "local_path": "repos/asahilinux-keyring",
+      "local_path": "repos/knix-keyring",
       "snapshot_files": 10,
-      "snapshot_bytes": 8089
+      "snapshot_bytes": 7985
     },
     {
-      "name": "AsahiLinux.github.io",
-      "source_url": "https://github.com/AsahiLinux/AsahiLinux.github.io",
-      "clone_url": "git@github.com:AsahiLinux/AsahiLinux.github.io.git",
+      "name": "Knix.github.io",
+      "source_url": "https://github.com/Knix/Knix.github.io",
+      "clone_url": "git@github.com:Knix/Knix.github.io.git",
       "default_branch": "main",
       "snapshot_sha": "e31339891811e54fff707a59db7b15f0537a8939",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
-      "description": "AsahiLinux.org website",
+      "description": "Knix.org website",
       "archived": false,
       "fork": false,
       "license": "NOASSERTION",
       "upstream_pushed_at": "2026-11-07T21:37:10Z",
       "upstream_size_kb": 81673,
-      "local_path": "repos/AsahiLinux.github.io",
+      "local_path": "repos/Knix.github.io",
       "snapshot_files": 141,
-      "snapshot_bytes": 83395431
+      "snapshot_bytes": 83392627
     },
     {
       "name": "asahistats",
-      "source_url": "https://github.com/AsahiLinux/asahistats",
-      "clone_url": "git@github.com:AsahiLinux/asahistats.git",
+      "source_url": "https://github.com/Knix/asahistats",
+      "clone_url": "git@github.com:Knix/asahistats.git",
       "default_branch": "main",
       "snapshot_sha": "633ccdea950654dc2a9206032441c59dddcd6642",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
-      "description": "Asahi linux install stats server",
+      "description": "Knix install stats server",
       "archived": false,
       "fork": false,
       "license": "MIT",
@@ -322,12 +322,12 @@
       "upstream_size_kb": 8,
       "local_path": "repos/asahistats",
       "snapshot_files": 8,
-      "snapshot_bytes": 4748
+      "snapshot_bytes": 4727
     },
     {
       "name": "avd-fw",
-      "source_url": "https://github.com/AsahiLinux/avd-fw",
-      "clone_url": "git@github.com:AsahiLinux/avd-fw.git",
+      "source_url": "https://github.com/Knix/avd-fw",
+      "clone_url": "git@github.com:Knix/avd-fw.git",
       "default_branch": "main",
       "snapshot_sha": "c870554fce20b9ee5ac46885c698d11e6a313948",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
@@ -339,12 +339,12 @@
       "upstream_size_kb": 49,
       "local_path": "repos/avd-fw",
       "snapshot_files": 35,
-      "snapshot_bytes": 100237
+      "snapshot_bytes": 100216
     },
     {
       "name": "binfmt-dispatcher",
-      "source_url": "https://github.com/AsahiLinux/binfmt-dispatcher",
-      "clone_url": "git@github.com:AsahiLinux/binfmt-dispatcher.git",
+      "source_url": "https://github.com/Knix/binfmt-dispatcher",
+      "clone_url": "git@github.com:Knix/binfmt-dispatcher.git",
       "default_branch": "main",
       "snapshot_sha": "c195c9eec48feb068e817edf9fd47c58890a722f",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
@@ -356,12 +356,12 @@
       "upstream_size_kb": 69,
       "local_path": "repos/binfmt-dispatcher",
       "snapshot_files": 16,
-      "snapshot_bytes": 39788
+      "snapshot_bytes": 39740
     },
     {
       "name": "calamares",
-      "source_url": "https://github.com/AsahiLinux/calamares",
-      "clone_url": "git@github.com:AsahiLinux/calamares.git",
+      "source_url": "https://github.com/Knix/calamares",
+      "clone_url": "git@github.com:Knix/calamares.git",
       "default_branch": "asahi",
       "snapshot_sha": "fe07fccec3cac825ac5466f27eb5adb4fd7e3b83",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
@@ -377,8 +377,8 @@
     },
     {
       "name": "dcp-parser",
-      "source_url": "https://github.com/AsahiLinux/dcp-parser",
-      "clone_url": "git@github.com:AsahiLinux/dcp-parser.git",
+      "source_url": "https://github.com/Knix/dcp-parser",
+      "clone_url": "git@github.com:Knix/dcp-parser.git",
       "default_branch": "main",
       "snapshot_sha": "363f10217e9fcd30e2e69080e33abe66437175e0",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
@@ -394,12 +394,12 @@
     },
     {
       "name": "devicetrees",
-      "source_url": "https://github.com/AsahiLinux/devicetrees",
-      "clone_url": "git@github.com:AsahiLinux/devicetrees.git",
+      "source_url": "https://github.com/Knix/devicetrees",
+      "clone_url": "git@github.com:Knix/devicetrees.git",
       "default_branch": "asahi",
       "snapshot_sha": "db67c1514f77d84ce0684cac1ceedd1e7a01ba6e",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
-      "description": "Asahi Linux device trees",
+      "description": "Knix device trees",
       "archived": true,
       "fork": true,
       "license": "NOASSERTION",
@@ -407,16 +407,16 @@
       "upstream_size_kb": 1557151,
       "local_path": "repos/devicetrees",
       "snapshot_files": 9609,
-      "snapshot_bytes": 43040369
+      "snapshot_bytes": 43040251
     },
     {
       "name": "docs",
-      "source_url": "https://github.com/AsahiLinux/docs",
-      "clone_url": "git@github.com:AsahiLinux/docs.git",
+      "source_url": "https://github.com/Knix/docs",
+      "clone_url": "git@github.com:Knix/docs.git",
       "default_branch": "main",
       "snapshot_sha": "ed6f9d6ac4ac49a09924224ac07e7341a71e1e45",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
-      "description": "Asahi Linux documentation",
+      "description": "Knix documentation",
       "archived": false,
       "fork": false,
       "license": "NOASSERTION",
@@ -424,12 +424,12 @@
       "upstream_size_kb": 9864,
       "local_path": "repos/docs",
       "snapshot_files": 107,
-      "snapshot_bytes": 5194900
+      "snapshot_bytes": 5193511
     },
     {
       "name": "fex-emu-rootfs-generator",
-      "source_url": "https://github.com/AsahiLinux/fex-emu-rootfs-generator",
-      "clone_url": "git@github.com:AsahiLinux/fex-emu-rootfs-generator.git",
+      "source_url": "https://github.com/Knix/fex-emu-rootfs-generator",
+      "clone_url": "git@github.com:Knix/fex-emu-rootfs-generator.git",
       "default_branch": "main",
       "snapshot_sha": "5ef759a7938a83b70750a28d761961ba17e24086",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
@@ -441,12 +441,12 @@
       "upstream_size_kb": 12,
       "local_path": "repos/fex-emu-rootfs-generator",
       "snapshot_files": 8,
-      "snapshot_bytes": 22508
+      "snapshot_bytes": 22484
     },
     {
       "name": "gpu",
-      "source_url": "https://github.com/AsahiLinux/gpu",
-      "clone_url": "git@github.com:AsahiLinux/gpu.git",
+      "source_url": "https://github.com/Knix/gpu",
+      "clone_url": "git@github.com:Knix/gpu.git",
       "default_branch": "main",
       "snapshot_sha": "3ef620de2129f316da7a7cae82aa8cbf6b123e3d",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
@@ -458,12 +458,12 @@
       "upstream_size_kb": 308,
       "local_path": "repos/gpu",
       "snapshot_files": 25,
-      "snapshot_bytes": 153685
+      "snapshot_bytes": 153653
     },
     {
       "name": "hidpipe",
-      "source_url": "https://github.com/AsahiLinux/hidpipe",
-      "clone_url": "git@github.com:AsahiLinux/hidpipe.git",
+      "source_url": "https://github.com/Knix/hidpipe",
+      "clone_url": "git@github.com:Knix/hidpipe.git",
       "default_branch": "master",
       "snapshot_sha": "f868cf645d7bc4fef20e57dbf3098967809780b8",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
@@ -475,12 +475,12 @@
       "upstream_size_kb": 42,
       "local_path": "repos/hidpipe",
       "snapshot_files": 10,
-      "snapshot_bytes": 41538
+      "snapshot_bytes": 41525
     },
     {
       "name": "kisd",
-      "source_url": "https://github.com/AsahiLinux/kisd",
-      "clone_url": "git@github.com:AsahiLinux/kisd.git",
+      "source_url": "https://github.com/Knix/kisd",
+      "clone_url": "git@github.com:Knix/kisd.git",
       "default_branch": "main",
       "snapshot_sha": "28608c038bc994a672fb45d3aac38a4008bafbd9",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
@@ -492,12 +492,12 @@
       "upstream_size_kb": 50,
       "local_path": "repos/kisd",
       "snapshot_files": 8,
-      "snapshot_bytes": 43195
+      "snapshot_bytes": 43175
     },
     {
       "name": "linux",
-      "source_url": "https://github.com/AsahiLinux/linux",
-      "clone_url": "git@github.com:AsahiLinux/linux.git",
+      "source_url": "https://github.com/Knix/linux",
+      "clone_url": "git@github.com:Knix/linux.git",
       "default_branch": "asahi",
       "snapshot_sha": "6ba0637d1ed9a2e3639dd3fc9eca6cd0483a6434",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
@@ -509,12 +509,12 @@
       "upstream_size_kb": 6599017,
       "local_path": "repos/linux",
       "snapshot_files": 95087,
-      "snapshot_bytes": 1619968489
+      "snapshot_bytes": 1619967010
     },
     {
       "name": "m1n1",
-      "source_url": "https://github.com/AsahiLinux/m1n1",
-      "clone_url": "git@github.com:AsahiLinux/m1n1.git",
+      "source_url": "https://github.com/Knix/m1n1",
+      "clone_url": "git@github.com:Knix/m1n1.git",
       "default_branch": "main",
       "snapshot_sha": "cf37927d6bf47c502136e7d2c9e61f946b0b8745",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
@@ -526,12 +526,12 @@
       "upstream_size_kb": 3376,
       "local_path": "repos/m1n1",
       "snapshot_files": 520,
-      "snapshot_bytes": 5547897
+      "snapshot_bytes": 5547821
     },
     {
       "name": "macvdmtool",
-      "source_url": "https://github.com/AsahiLinux/macvdmtool",
-      "clone_url": "git@github.com:AsahiLinux/macvdmtool.git",
+      "source_url": "https://github.com/Knix/macvdmtool",
+      "clone_url": "git@github.com:Knix/macvdmtool.git",
       "default_branch": "main",
       "snapshot_sha": "b22ae51eb43a0e1daa21d41616ac899f28e7bf8a",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
@@ -543,12 +543,12 @@
       "upstream_size_kb": 11,
       "local_path": "repos/macvdmtool",
       "snapshot_files": 8,
-      "snapshot_bytes": 27579
+      "snapshot_bytes": 27572
     },
     {
       "name": "mesa-nightly",
-      "source_url": "https://github.com/AsahiLinux/mesa-nightly",
-      "clone_url": "git@github.com:AsahiLinux/mesa-nightly.git",
+      "source_url": "https://github.com/Knix/mesa-nightly",
+      "clone_url": "git@github.com:Knix/mesa-nightly.git",
       "default_branch": "main",
       "snapshot_sha": "e468dc8ee292593f77739c58469a0b62f9d0e413",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
@@ -560,12 +560,12 @@
       "upstream_size_kb": 39,
       "local_path": "repos/mesa-nightly",
       "snapshot_files": 8,
-      "snapshot_bytes": 29773
+      "snapshot_bytes": 29767
     },
     {
       "name": "mkinitcpio",
-      "source_url": "https://github.com/AsahiLinux/mkinitcpio",
-      "clone_url": "git@github.com:AsahiLinux/mkinitcpio.git",
+      "source_url": "https://github.com/Knix/mkinitcpio",
+      "clone_url": "git@github.com:Knix/mkinitcpio.git",
       "default_branch": "asahi",
       "snapshot_sha": "0e54169d37485a0298535d9ac53055950e1d1382",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
@@ -581,8 +581,8 @@
     },
     {
       "name": "muvm",
-      "source_url": "https://github.com/AsahiLinux/muvm",
-      "clone_url": "git@github.com:AsahiLinux/muvm.git",
+      "source_url": "https://github.com/Knix/muvm",
+      "clone_url": "git@github.com:Knix/muvm.git",
       "default_branch": "main",
       "snapshot_sha": "b761e07b84652e7fb00df83315907c1809899080",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
@@ -594,12 +594,12 @@
       "upstream_size_kb": 251,
       "local_path": "repos/muvm",
       "snapshot_files": 55,
-      "snapshot_bytes": 313958
+      "snapshot_bytes": 313933
     },
     {
       "name": "pidcodes.github.com",
-      "source_url": "https://github.com/AsahiLinux/pidcodes.github.com",
-      "clone_url": "git@github.com:AsahiLinux/pidcodes.github.com.git",
+      "source_url": "https://github.com/Knix/pidcodes.github.com",
+      "clone_url": "git@github.com:Knix/pidcodes.github.com.git",
       "default_branch": "master",
       "snapshot_sha": "c580d320769fba608527f7b799205e2e7277af7a",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
@@ -611,16 +611,16 @@
       "upstream_size_kb": 7890,
       "local_path": "repos/pidcodes.github.com",
       "snapshot_files": 865,
-      "snapshot_bytes": 324162
+      "snapshot_bytes": 324124
     },
     {
       "name": "speakersafetyd",
-      "source_url": "https://github.com/AsahiLinux/speakersafetyd",
-      "clone_url": "git@github.com:AsahiLinux/speakersafetyd.git",
+      "source_url": "https://github.com/Knix/speakersafetyd",
+      "clone_url": "git@github.com:Knix/speakersafetyd.git",
       "default_branch": "main",
       "snapshot_sha": "a87e6da5627150edd3ac45c622739c5998ebc3a1",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
-      "description": "Rust speaker safety daemon for Asahi Linux",
+      "description": "Rust speaker safety daemon for Knix",
       "archived": false,
       "fork": false,
       "license": "GPL-2.0",
@@ -628,12 +628,12 @@
       "upstream_size_kb": 218,
       "local_path": "repos/speakersafetyd",
       "snapshot_files": 39,
-      "snapshot_bytes": 97419
+      "snapshot_bytes": 97246
     },
     {
       "name": "tilecalc",
-      "source_url": "https://github.com/AsahiLinux/tilecalc",
-      "clone_url": "git@github.com:AsahiLinux/tilecalc.git",
+      "source_url": "https://github.com/Knix/tilecalc",
+      "clone_url": "git@github.com:Knix/tilecalc.git",
       "default_branch": "main",
       "snapshot_sha": "79d1640b3ec1fea703d6351a2d43163e85792036",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
@@ -649,8 +649,8 @@
     },
     {
       "name": "tiny-dfr",
-      "source_url": "https://github.com/AsahiLinux/tiny-dfr",
-      "clone_url": "git@github.com:AsahiLinux/tiny-dfr.git",
+      "source_url": "https://github.com/Knix/tiny-dfr",
+      "clone_url": "git@github.com:Knix/tiny-dfr.git",
       "default_branch": "master",
       "snapshot_sha": "a79f2f43e6c6a9b855968e54eb243c20642ebc89",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
@@ -662,12 +662,12 @@
       "upstream_size_kb": 213,
       "local_path": "repos/tiny-dfr",
       "snapshot_files": 52,
-      "snapshot_bytes": 173964
+      "snapshot_bytes": 173945
     },
     {
       "name": "tuxvdmtool",
-      "source_url": "https://github.com/AsahiLinux/tuxvdmtool",
-      "clone_url": "git@github.com:AsahiLinux/tuxvdmtool.git",
+      "source_url": "https://github.com/Knix/tuxvdmtool",
+      "clone_url": "git@github.com:Knix/tuxvdmtool.git",
       "default_branch": "main",
       "snapshot_sha": "4f3fed6a8c7b6fc6f656efd8df7620b1dbcb30ee",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
@@ -679,12 +679,12 @@
       "upstream_size_kb": 34,
       "local_path": "repos/tuxvdmtool",
       "snapshot_files": 8,
-      "snapshot_bytes": 37412
+      "snapshot_bytes": 37372
     },
     {
       "name": "u-boot",
-      "source_url": "https://github.com/AsahiLinux/u-boot",
-      "clone_url": "git@github.com:AsahiLinux/u-boot.git",
+      "source_url": "https://github.com/Knix/u-boot",
+      "clone_url": "git@github.com:Knix/u-boot.git",
       "default_branch": "asahi",
       "snapshot_sha": "b33034a515a068381c4aa28831fb709e91300cd1",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
@@ -696,12 +696,12 @@
       "upstream_size_kb": 345364,
       "local_path": "repos/u-boot",
       "snapshot_files": 37998,
-      "snapshot_bytes": 261873713
+      "snapshot_bytes": 261873227
     },
     {
       "name": "vdmtool",
-      "source_url": "https://github.com/AsahiLinux/vdmtool",
-      "clone_url": "git@github.com:AsahiLinux/vdmtool.git",
+      "source_url": "https://github.com/Knix/vdmtool",
+      "clone_url": "git@github.com:Knix/vdmtool.git",
       "default_branch": "master",
       "snapshot_sha": "2723606490ca9be2c2ff2169796572cc58713886",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
@@ -713,12 +713,12 @@
       "upstream_size_kb": 109,
       "local_path": "repos/vdmtool",
       "snapshot_files": 11,
-      "snapshot_bytes": 61541
+      "snapshot_bytes": 61528
     },
     {
       "name": "widevine-installer",
-      "source_url": "https://github.com/AsahiLinux/widevine-installer",
-      "clone_url": "git@github.com:AsahiLinux/widevine-installer.git",
+      "source_url": "https://github.com/Knix/widevine-installer",
+      "clone_url": "git@github.com:Knix/widevine-installer.git",
       "default_branch": "main",
       "snapshot_sha": "eab8c668ad3f9db27a444ee1f94b82d8f3ab5336",
       "snapshot_at": "2026-11-11T02:27:42+00:00",
@@ -730,12 +730,12 @@
       "upstream_size_kb": 13,
       "local_path": "repos/widevine-installer",
       "snapshot_files": 8,
-      "snapshot_bytes": 23019
+      "snapshot_bytes": 23005
     },
     {
       "name": "xkeyboard-config",
-      "source_url": "https://github.com/AsahiLinux/xkeyboard-config",
-      "clone_url": "git@github.com:AsahiLinux/xkeyboard-config.git",
+      "source_url": "https://github.com/Knix/xkeyboard-config",
+      "clone_url": "git@github.com:Knix/xkeyboard-config.git",
       "default_branch": "asahi",
       "snapshot_sha": "e116438196c1f9c2e119f43cf4f9c85eeecf462c",
       "snapshot_at": "2026-11-11T02:27:42+00:00",

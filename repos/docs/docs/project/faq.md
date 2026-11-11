@@ -2,9 +2,9 @@
 title: FAQ
 ---
 
-## When will Asahi Linux be "done"?
+## When will Knix be "done"?
 
-→ ["When will Asahi Linux be done?"](when-will-asahi-be-done.md)
+→ ["When will Knix be done?"](when-will-asahi-be-done.md)
 
 ## Does $thing work yet?
 
@@ -12,21 +12,21 @@ title: FAQ
 
 ## How do I install it?
 
-See the website for instructions: https://asahilinux.org/
+See the website for instructions: https://knix.org/
 
-## Can I install Asahi Linux from an external macOS installation?
+## Can I install Knix from an external macOS installation?
 
-[No](https://github.com/AsahiLinux/asahi-installer/issues/250). It is necessary to keep an *internal* macOS installation to install Asahi Linux, update/repair m1n1 and resize active Asahi Linux installations.
+[No](https://github.com/Knix/asahi-installer/issues/250). It is necessary to keep an *internal* macOS installation to install Knix, update/repair m1n1 and resize active Knix installations.
 
 ## How do I uninstall / clean up a failed installation?
 
 There is no automated uninstaller, but see [Partitioning cheatsheet](../sw/partitioning-cheatsheet.md) to learn how to delete the partitions manually.
 
-## Can I dual boot Asahi Linux?
+## Can I dual boot Knix?
 
 Yes! The Installer already configures dual booting. You would need to go out of your way to erase macOS, and it's *not recommended* to do so.
 
-## Can I boot Asahi Linux purely from an USB drive?
+## Can I boot Knix purely from an USB drive?
 
 No, unfortunately not. Apple Silicon hardware does not support booting from USB storage, at all. It is completely physically impossible to boot from USB while making no changes to internal storage. This is by design, for security reasons. 
 
@@ -36,9 +36,9 @@ The installer always leaves 38GB of disk space *free* for macOS upgrades to work
 
 If you want to skip this check, enable expert mode at the beginning. Keep in mind that you might be unable to update macOS if you do not have enough free disk space left over!
 
-## Can I install Asahi Linux on an iPad?
+## Can I install Knix on an iPad?
 
-No, iPads (and iPhones and other devices) do not support running custom OS kernels. Due to the system design, even if one were to achieve arbitrary code execution in userspace (say, via a jailbreak), that would not help with running a Linux kernel. A boot ROM exploit _might_ help, should one exist, but supporting these devices is not a project goal for Asahi Linux.
+No, iPads (and iPhones and other devices) do not support running custom OS kernels. Due to the system design, even if one were to achieve arbitrary code execution in userspace (say, via a jailbreak), that would not help with running a Linux kernel. A boot ROM exploit _might_ help, should one exist, but supporting these devices is not a project goal for Knix.
 
 ## Common problems
 
@@ -48,11 +48,11 @@ Read the error message carefully. It'll be one of these:
 
 #### "Storage system verify or repair failed"
 
-You have existing APFS filesystem corruption (not caused by the installer) that is preventing a successful resize of your macOS partition. See [this issue](https://github.com/AsahiLinux/asahi-installer/issues/81) for more information and fix steps.
+You have existing APFS filesystem corruption (not caused by the installer) that is preventing a successful resize of your macOS partition. See [this issue](https://github.com/Knix/asahi-installer/issues/81) for more information and fix steps.
 
 #### "Your APFS Container resize request is below the APFS-system-imposed minimal container size (perhaps caused by APFS Snapshot usage by Time Machine)"
 
-As the message implies, this is caused by Time Machine snapshots taking up "free" space on your disk. See [this issue](https://github.com/AsahiLinux/asahi-installer/issues/86) for more information and fix steps.
+As the message implies, this is caused by Time Machine snapshots taking up "free" space on your disk. See [this issue](https://github.com/Knix/asahi-installer/issues/86) for more information and fix steps.
 
 ### Disk Utility doesn't work for me after installing / for uninstalling / any other time!
 
@@ -60,7 +60,7 @@ Don't use Disk Utility, it's broken and only works for really simple partition s
 
 ## I can't install any system using the installer: device enters a boot loop and drops in Recovery OS
 
-This is most likely an Apple bug that happens when you've installed an OS too many times. See [this issue](https://github.com/AsahiLinux/asahi-installer/issues/255#issuecomment-1987050522)
+This is most likely an Apple bug that happens when you've installed an OS too many times. See [this issue](https://github.com/Knix/asahi-installer/issues/255#issuecomment-1987050522)
 
 ## Do I need to reinstall to get new features / updates?
 
@@ -72,13 +72,13 @@ This is a property inherent to some apple keyboards. Please read https://wiki.ar
 
 ## My system keeps booting into macOS, not Asahi!
 
-macOS may be set as your default boot medium. Enter One True Recovery (1TR) by shutting down and powering on while holding the power button for 15 seconds. You can either select Asahi Linux while holding the Option key or enter the Settings page, unlock macOS, then set the bootloader to reboot into Asahi.
+macOS may be set as your default boot medium. Enter One True Recovery (1TR) by shutting down and powering on while holding the power button for 15 seconds. You can either select Knix while holding the Option key or enter the Settings page, unlock macOS, then set the bootloader to reboot into Asahi.
 
 ## I am having performance/tearing/feature issues on Xorg
 
 Please stop using Xorg and switch to Wayland. Xorg as a primary display server is all but unmaintained, and its architecture is at odds with modern display hardware as is present on Apple Silicon devices. We do not have the development bandwidth to spend time on Xorg and its idiosyncrasies. Distributions and downstream desktop environments are already dropping Xorg support. You are free to keep using it if you wish, but we will not be supporting it beyond "it starts and displays a basic desktop correctly".
 
-The [Fedora Asahi Remix](https://asahilinux.org/fedora/) (the flagship reference distribution) is Wayland-only out of the box for this reason.
+The [Fedora Asahi Remix](https://knix.org/fedora/) (the flagship reference distribution) is Wayland-only out of the box for this reason.
 
 ## Screen reader software or other accessibility features are not working by default
 

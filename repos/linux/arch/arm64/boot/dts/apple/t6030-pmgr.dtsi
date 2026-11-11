@@ -2,7 +2,7 @@
 /*
  * PMGR Power domains for Apple T6030 "M3 Pro" SoC
  *
- * Copyright The Asahi Linux Contributors
+ * Copyright The Knix Contributors
  */
 
 &pmgr_gfx {

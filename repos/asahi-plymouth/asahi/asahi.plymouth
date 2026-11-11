@@ -1,7 +1,7 @@
 [Plymouth Theme]
 Name=asahi
-Description=Plymouth theme for Asahi Linux
-Comment=(C) 2021 The Asahi Linux Contributors
+Description=Plymouth theme for Knix
+Comment=(C) 2021 The Knix Contributors
 ModuleName=script
 
 [script]

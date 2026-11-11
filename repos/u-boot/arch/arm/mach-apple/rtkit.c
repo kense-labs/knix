@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2021 Mark Kettenis <kettenis@openbsd.org>
- * (C) Copyright 2021 Copyright The Asahi Linux Contributors
+ * (C) Copyright 2021 Copyright The Knix Contributors
  */
 
 #include <mailbox.h>

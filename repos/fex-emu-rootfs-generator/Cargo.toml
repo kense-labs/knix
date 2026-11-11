@@ -1,11 +1,11 @@
 [package]
 name = "fex-emu-rootfs-generator"
 version = "0.1.0"
-authors = ["Davide Cavalca <davide@asahilinux.org>", "Alyssa Rosenzweig <alyssa@asahilinux.org>"]
+authors = ["Davide Cavalca <davide@knix.org>", "Alyssa Rosenzweig <alyssa@knix.org>"]
 edition = "2024"
 description = "systemd generator for the FEX RootFS"
-repository = "https://github.com/AsahiLinux/fex-rootfs-systemd-generator.git"
-homepage = "https://github.com/AsahiLinux/fex-rootfs-systemd-generator"
+repository = "https://github.com/Knix/fex-rootfs-systemd-generator.git"
+homepage = "https://github.com/Knix/fex-rootfs-systemd-generator"
 license = "MIT"
 categories = ["emulators"]
 keywords = ["asahi"]

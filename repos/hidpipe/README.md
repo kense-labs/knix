@@ -1,7 +1,7 @@
 # hidpipe
 Pass input devices through to virtual machines
 
-**NOTE:** this project was merged into [muvm](https://github.com/AsahiLinux/muvm) and is no longer actively developed.
+**NOTE:** this project was merged into [muvm](https://github.com/Knix/muvm) and is no longer actively developed.
 
 ## Dependencies
 udev, uinput enabled in kernel config
@@ -10,6 +10,6 @@ udev, uinput enabled in kernel config
 
 hidpipe is licensed under the MIT license, as included in the [LICENSE](LICENSE) file.
 
-* Copyright The Asahi Linux Contributors
+* Copyright The Knix Contributors
 
 Please see the Git history for authorship information.

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
  * Apple Silicon DWC3 Glue driver
- * Copyright (C) The Asahi Linux Contributors
+ * Copyright (C) The Knix Contributors
  *
  * Based on:
  *  - dwc3-qcom.c Copyright (c) 2018, The Linux Foundation. All rights reserved.

@@ -199,7 +199,7 @@ class MultitouchFWCollection(object):
 
     def load(self, source_path):
         if not os.path.exists(source_path):
-            #log.warning("fud_firmware is missing. You may need to update your stub with the Asahi Linux installer for Touch Bar functionality.")
+            #log.warning("fud_firmware is missing. You may need to update your stub with the Knix installer for Touch Bar functionality.")
             return
 
         for fname in os.listdir(source_path):

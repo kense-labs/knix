@@ -9,7 +9,7 @@ cairo, libinput, freetype, fontconfig, librsvg 2.59 or later, uinput enabled in 
 
 tiny-dfr is licensed under the MIT license, as included in the [LICENSE](LICENSE) file.
 
-* Copyright The Asahi Linux Contributors
+* Copyright The Knix Contributors
 
 Please see the Git history for authorship information.
 

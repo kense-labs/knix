@@ -2,13 +2,13 @@
 title: Secure Enclave Processor (SEP)
 ---
 
-Some notes on the SEP based on past community research and digging into the SEP, along with some TODOs for anyone wanting to trace the SEP on Asahi Linux
+Some notes on the SEP based on past community research and digging into the SEP, along with some TODOs for anyone wanting to trace the SEP on Knix
 
 fair warning: this page is messy and will likely remain so, until enough understanding is built up to build a clean page.
 
 Notes for anyone tracing for Asahi:
 
-Since you don't control the SEP firmware that gets loaded, the parts that matter for Linux itself is really just the communication protocol between AP and SEP, similarly to other ASCs. For understanding the xART/Gigalocker creation and provisioning flow, creating a new user should provision new encryption keys for them which very likely would involve adding entries to the Gigalockers. Also goes without saying but the tracing should be done on the same macOS version as will be the firmware for Asahi Linux installs. (13.5 as of 11/13/2024) - Not fully true, SEP firmware is determined by the highest version macos to be ever installed on the device, but the protocol is backwards compatible.
+Since you don't control the SEP firmware that gets loaded, the parts that matter for Linux itself is really just the communication protocol between AP and SEP, similarly to other ASCs. For understanding the xART/Gigalocker creation and provisioning flow, creating a new user should provision new encryption keys for them which very likely would involve adding entries to the Gigalockers. Also goes without saying but the tracing should be done on the same macOS version as will be the firmware for Knix installs. (13.5 as of 11/13/2024) - Not fully true, SEP firmware is determined by the highest version macos to be ever installed on the device, but the protocol is backwards compatible.
 
 TODOs for tracing:
 - Massively reduce the message spam from the tracer over the Python console, it *greatly* slows down the system, and has led to panics on occasion as the message spam leads to things timing out.

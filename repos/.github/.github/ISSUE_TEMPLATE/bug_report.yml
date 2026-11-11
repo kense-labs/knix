@@ -50,7 +50,7 @@ body:
       options:
         - label: I have reproduced this on Fedora Asahi Remix
           required: true
-        - label: I have isolated this issue to software vendored by Asahi Linux
+        - label: I have isolated this issue to software vendored by Knix
           required: true
         - label: I am not acting as a meat proxy for an LLM
           required: true

@@ -30,7 +30,7 @@ jobs:
       - name: Checkout linux
         uses: actions/checkout@v7
         with:
-          repository: AsahiLinux/linux
+          repository: Knix/linux
           ref: 'asahi'
           path: linux
           sparse-checkout: 'arch/arm64/boot/dts/apple/'
@@ -39,7 +39,7 @@ jobs:
       - name: Checkout u-boot
         uses: actions/checkout@v7
         with:
-          repository: AsahiLinux/u-boot
+          repository: Knix/u-boot
           ref: 'asahi-releng'
           path: u-boot
 

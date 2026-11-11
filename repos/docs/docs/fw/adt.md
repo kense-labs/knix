@@ -75,7 +75,7 @@ While this does not require decoding, it outputs much less information than usin
 
 ## Decoding an ADT
 
-after m1n1 installation (see [repo page](https://github.com/AsahiLinux/m1n1))
+after m1n1 installation (see [repo page](https://github.com/Knix/m1n1))
 
 `cd m1n1/proxyclient`
 

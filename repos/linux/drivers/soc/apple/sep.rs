@@ -3,7 +3,7 @@
 
 //! Apple SEP driver
 //!
-//! Copyright (C) The Asahi Linux Contributors
+//! Copyright (C) The Knix Contributors
 
 use kernel::{
     bindings,

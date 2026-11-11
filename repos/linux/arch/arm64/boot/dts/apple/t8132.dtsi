@@ -2,7 +2,7 @@
 /*
  * Apple T8132 "M4" SoC
  *
- * Copyright The Asahi Linux Contributors
+ * Copyright The Knix Contributors
  */
 
 #include <dt-bindings/interrupt-controller/apple-aic.h>

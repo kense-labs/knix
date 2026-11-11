@@ -138,7 +138,7 @@ void m1n1_main(void)
     u64 lp_sip0 = 0;
 
     printf("\n\nm1n1 %s\n", m1n1_version);
-    printf("Copyright The Asahi Linux Contributors\n");
+    printf("Copyright The Knix Contributors\n");
     printf("Licensed under the GNU General Public License v2 or later\n\n");
 
     printf("Running in EL%lu\n\n", mrs(CurrentEL) >> 2);

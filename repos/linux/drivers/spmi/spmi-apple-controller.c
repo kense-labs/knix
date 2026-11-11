@@ -2,7 +2,7 @@
 /*
  * Apple SoC SPMI device driver
  *
- * Copyright The Asahi Linux Contributors
+ * Copyright The Knix Contributors
  *
  * Inspired by:
  *		OpenBSD support Copyright (c) 2021 Mark Kettenis <kettenis@openbsd.org>

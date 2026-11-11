@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
  * Apple ANS NVM Express device driver
- * Copyright The Asahi Linux Contributors
+ * Copyright The Knix Contributors
  *
  * Based on the pci.c NVM Express device driver
  * Copyright (c) 2011-2014, Intel Corporation.

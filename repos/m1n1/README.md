@@ -10,7 +10,7 @@ $ rustup target add aarch64-unknown-none-softfloat
 ```
 
 ```shell
-$ git clone --recursive https://github.com/AsahiLinux/m1n1.git
+$ git clone --recursive https://github.com/Knix/m1n1.git
 $ cd m1n1
 $ make
 ```
@@ -38,7 +38,7 @@ To build verbosely, use `make V=1`.
 If you have a container runtime installed, like Podman or Docker, you can make use of the compose setup, which contains all build dependencies.
 
 ```shell
-$ git clone --recursive https://github.com/AsahiLinux/m1n1.git
+$ git clone --recursive https://github.com/Knix/m1n1.git
 $ cd m1n1
 $ podman-compose run m1n1 make
 $ # or
@@ -47,7 +47,7 @@ $ docker-compose run m1n1 make
 
 ## Usage
 
-Our [wiki](https://asahilinux.org/docs/sw/m1n1-user-guide/) has more information on how to
+Our [wiki](https://knix.org/docs/sw/m1n1-user-guide/) has more information on how to
 use m1n1.
 
 To install on an OS container based on macOS <12.1, use `m1n1.macho`:
@@ -89,7 +89,7 @@ under that same license. Starting from version 2.0.0, m1n1 is licensed
 under the terms of the [GNU General Public License version 2](LICENSE) (or later); any
 code checked in thereafter is available under the terms of the GPL exclusively.
 
-* Copyright The Asahi Linux Contributors
+* Copyright The Knix Contributors
 
 Please see the Git history for authorship information.
 

@@ -1,3 +1,3 @@
 # Code of Conduct
 
-See https://asahilinux.org/code-of-conduct/
+See https://knix.org/code-of-conduct/

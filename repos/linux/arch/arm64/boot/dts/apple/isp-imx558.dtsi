@@ -2,7 +2,7 @@
 /*
  * ISP configuration for platforms with IMX558 sensor.
  *
- * Copyright The Asahi Linux Contributors
+ * Copyright The Knix Contributors
  */
 
 #include "isp-common.dtsi"

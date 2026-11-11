@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2021 Mark Kettenis <kettenis@openbsd.org>
- * Copyright The Asahi Linux Contributors
+ * Copyright The Knix Contributors
  */
 
 #include <dm.h>

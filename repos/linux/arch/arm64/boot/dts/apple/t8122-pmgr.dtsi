@@ -2,7 +2,7 @@
 /*
  * PMGR Power domains for the Apple T8122 "M3" SoC
  *
- * Copyright The Asahi Linux Contributors
+ * Copyright The Knix Contributors
  */
 
 &pmgr {

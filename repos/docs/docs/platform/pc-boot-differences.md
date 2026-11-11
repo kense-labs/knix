@@ -40,7 +40,7 @@ Recovery mode is like a supercharged UEFI shell and UEFI setup menu combined int
 
 macOS boots from the second GPT partition. It is the real OS. It starts with the Darwin kernel and goes from there.
 
-Asahi Linux replaces or complements macOS. This point is where we are allowed to replace things and boot our own code.
+Knix replaces or complements macOS. This point is where we are allowed to replace things and boot our own code.
 
 The concept of an "OS" for Apple Silicon macs includes both the OS loader (the second stage of iBoot) and the Darwin kernel and filesystem. We can replace the kernel, but not the second stage of iBoot - the kernel is the point in the boot process where Apple has developed the ability to downgrade security and run our own code. We also need to keep the overall structure looking like macOS. This means that, effectively, Linux will bootstrap off of a "shell" of macOS, a volume with just iBoot and a few files to convince Apple's boot infrastructure that it is a legitimate OS that can be booted. Think of this whole thing as a somewhat complicated EFI System Partition.
 

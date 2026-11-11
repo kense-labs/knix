@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
- * Copyright (C) 2026 The Asahi Linux Contributors
+ * Copyright (C) 2026 The Knix Contributors
  */
 
 #include <net/bluetooth/bluetooth.h>

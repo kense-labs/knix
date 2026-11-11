@@ -2,7 +2,7 @@
 /*
  * GPIO pin mappings for Apple T6031/T6032/T6034 SoCs.
  *
- * Copyright The Asahi Linux Contributors
+ * Copyright The Knix Contributors
  */
 
 &pinctrl_ap {

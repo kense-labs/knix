@@ -2,7 +2,7 @@
 title: Userspace Audio Stack
 ---
 
-# Speaker support in Asahi Linux
+# Speaker support in Knix
 
 Currently supported models:
 
@@ -20,7 +20,7 @@ Proper speaker support has been a multi-year development effort involving many p
 
 ## Current state
 
-We are ready to begin releasing preliminary speaker support to users. Keep in mind that as Asahi Linux is the first desktop Linux platform with integrated advanced speaker DSP, there will likely be bugs. In addition, the DSP profiles will be improved and adjusted over time, and do not represent the absolute best possible results.
+We are ready to begin releasing preliminary speaker support to users. Keep in mind that as Knix is the first desktop Linux platform with integrated advanced speaker DSP, there will likely be bugs. In addition, the DSP profiles will be improved and adjusted over time, and do not represent the absolute best possible results.
 
 Speaker DSP is currently only supported on Fedora Asahi Remix (things are moving fast), however alternative distros should be able to integrate this work relatively painlessly once things settle down (see the section below).
 
@@ -49,7 +49,7 @@ That said, for the types of processing we *do* intend to apply, failing to work 
 
 ## "Smart Amp" / safety support
 
-In addition to the DSP processing, we also have the world's first (as far as we know) open source "smart amp" implementation. This allows the speakers to be driven to much higher peak levels than the worst-case safe volume level, greatly extending their dynamic range. Our implementation, [speakersafetyd](https://github.com/AsahiLinux/speakersafetyd), monitors feedback signals from the amplifiers, estimates speaker voice coil temperature using a two-stage thermal model, and reduces the hardware speaker volumes when the speakers get too warm. We also have kernel-side interlocks to disable or limit speaker volumes if speakersafetyd is not running or non-responsive.
+In addition to the DSP processing, we also have the world's first (as far as we know) open source "smart amp" implementation. This allows the speakers to be driven to much higher peak levels than the worst-case safe volume level, greatly extending their dynamic range. Our implementation, [speakersafetyd](https://github.com/Knix/speakersafetyd), monitors feedback signals from the amplifiers, estimates speaker voice coil temperature using a two-stage thermal model, and reduces the hardware speaker volumes when the speakers get too warm. We also have kernel-side interlocks to disable or limit speaker volumes if speakersafetyd is not running or non-responsive.
 
 Right now, we are shipping with a hard volume reduction limit of -7dBFS to catch potential bugs or misbehavior. If you notice that your speakers cut off for approximately one second and then come back at a reduced volume level, it is likely that you triggered this safety limit. Stop playback to let the speakers cool down (just in case) and let the limit re-arm, and then check `/var/lib/speakersafetyd/blackbox` for any blackbox dumps and [file a bug]() attaching them together with any speakersafetyd logs (try `journalctl -S '10m ago' -u speakersafetyd`). If you play full-scale test tones or "extreme" music at maximum volume, it is expected that you will hit this limit and trigger a blackbox dump / panic. This is intended to help catch any badness while playing normal music, and we will remove this conservative limit once we are confident in the software stack (speakersafetyd has other safety limits built in and will gain more over time).
 
@@ -59,7 +59,7 @@ You can watch speakersafetyd in action by using `sudo journalctl -fu speakersafe
 
 ## Distro integration notes
 
-Requirements according to [asahi-audio](https://github.com/AsahiLinux/asahi-audio)'s [README.md](https://github.com/AsahiLinux/asahi-audio/blob/main/README.md).
+Requirements according to [asahi-audio](https://github.com/Knix/asahi-audio)'s [README.md](https://github.com/Knix/asahi-audio/blob/main/README.md).
 
 The correct deployment order is asahi-audio/speakersafetyd > (whatever you use to get those installed for users, e.g. metapackage) > kernel. If you push the kernel first before asahi-audio, users will get either a nonfunctional (if no speakersafetyd) or functional but bad-sounding (if speakersafetyd is installed) raw speaker device with no DSP.
 

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only OR MIT
 /*
- * Copyright The Asahi Linux Contributors
+ * Copyright The Knix Contributors
  *
  * CPU idle support for Apple SoCs
  */

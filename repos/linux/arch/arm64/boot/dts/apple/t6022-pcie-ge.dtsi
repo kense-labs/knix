@@ -3,7 +3,7 @@
  * Include PCIe-GE nodes presen on both dies of T6022 (M2 Ultra) in the
  * Mac Pro (2023).
  *
- * Copyright The Asahi Linux Contributors
+ * Copyright The Knix Contributors
  */
 
 #define DIE

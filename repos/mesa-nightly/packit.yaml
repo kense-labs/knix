@@ -24,7 +24,7 @@ actions:
   # Use `fix-spec-file` to control Version-Release precisely
   fix-spec-file:
     - bash -c "sed -i -r \"s/Version:(\s*).*$/Version:\1${PACKIT_PROJECT_VERSION}/\" mesa.spec"
-    - bash -c "(cd mesa && git log -n1 --date=format:\"%a %B %d %Y\" --format=format:\"* %cd packit <packit@asahilinux.org> - ${PACKIT_PROJECT_VERSION}-1%n\" && git log --since \"1 day ago\" --no-merges --pretty=\"format:- %s (%an)\" && echo) >> mesa.spec"
+    - bash -c "(cd mesa && git log -n1 --date=format:\"%a %B %d %Y\" --format=format:\"* %cd packit <packit@knix.org> - ${PACKIT_PROJECT_VERSION}-1%n\" && git log --since \"1 day ago\" --no-merges --pretty=\"format:- %s (%an)\" && echo) >> mesa.spec"
 
 srpm_build_deps:
   - bash

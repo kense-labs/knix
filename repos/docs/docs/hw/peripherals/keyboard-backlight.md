@@ -48,4 +48,4 @@ changing the frequency while keeping a 50% duty cycle:
 >>> write32(0x235044000, 0x4239)
 ```
 
-PR at https://github.com/AsahiLinux/linux/pull/5
+PR at https://github.com/Knix/linux/pull/5

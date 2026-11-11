@@ -3,7 +3,7 @@
  * PCIe-GE Nodes present on both dies of a T6022 (M2 Ultra) and M2 Pro/Max but
  * only used on T6022 in the Mac Pro (2023).
  *
- * Copyright The Asahi Linux Contributors
+ * Copyright The Knix Contributors
  */
 
 &SOC_NODE {

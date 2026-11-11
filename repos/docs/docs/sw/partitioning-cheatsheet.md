@@ -4,17 +4,17 @@ title: Partitioning Cheatsheet
 
 # WARNING: NEVER DELETE THE `Apple_APFS_Recovery` PARTITION
 
-The last partition on your disk, listed as type `Apple_APFS_Recovery` in diskutil, contains critical system recovery components. **If you delete this partition accidentally, macOS upgrades will cease to work, and any other problem with your system will leave it unbootable and require a factory restore and complete wipe**. Restoring this partition without a full machine wipe is [a major pain in the ass](https://www.reddit.com/r/AsahiLinux/comments/1fmnzm5/guide_how_to_fix_failed_to_find_sfr_recovery/). Do NOT, under any circumstances, mess with this partition.
+The last partition on your disk, listed as type `Apple_APFS_Recovery` in diskutil, contains critical system recovery components. **If you delete this partition accidentally, macOS upgrades will cease to work, and any other problem with your system will leave it unbootable and require a factory restore and complete wipe**. Restoring this partition without a full machine wipe is [a major pain in the ass](https://www.reddit.com/r/Knix/comments/1fmnzm5/guide_how_to_fix_failed_to_find_sfr_recovery/). Do NOT, under any circumstances, mess with this partition.
 
-It is **not** possible for the Asahi Linux installer to cause this by itself, since it doesn't contain any partition deletion code at all and never has, nor does it access the raw partition table in any way. If you find yourself in this situation, then you either deleted the partition yourself unknowingly (from Linux or from macOS/recoveryOS), or some kind of Apple bug did.
+It is **not** possible for the Knix installer to cause this by itself, since it doesn't contain any partition deletion code at all and never has, nor does it access the raw partition table in any way. If you find yourself in this situation, then you either deleted the partition yourself unknowingly (from Linux or from macOS/recoveryOS), or some kind of Apple bug did.
 
 ## Intro
 
 Partition management from macOS can be confusing. Hopefully this helps explain things.
 
-Note: We'll add uninstall/cleanup options to the installer soon, but by definition it will always be a simplified tool that is only guaranteed to work for the common case of vanilla Asahi Linux installs; if you do your own partition management or install another distro, you'll have to know how to do it manually like this in order to clean up properly.
+Note: We'll add uninstall/cleanup options to the installer soon, but by definition it will always be a simplified tool that is only guaranteed to work for the common case of vanilla Knix installs; if you do your own partition management or install another distro, you'll have to know how to do it manually like this in order to clean up properly.
 
-**Note: If you are deleting Asahi Linux, you will have to set macOS as the default boot OS again if you have not already done so.** You can do this from System Settings in macOS itself, or by holding down the Option key while selecting it in Startup Options. Not doing this ahead of time won't break your computer, but you may not be able to boot automatically until you do so. If you find you cannot go into the Startup Options screen normally, try starting up with a double tap (tap, release, tap and hold the power button).
+**Note: If you are deleting Knix, you will have to set macOS as the default boot OS again if you have not already done so.** You can do this from System Settings in macOS itself, or by holding down the Option key while selecting it in Startup Options. Not doing this ahead of time won't break your computer, but you may not be able to boot automatically until you do so. If you find you cannot go into the Startup Options screen normally, try starting up with a double tap (tap, release, tap and hold the power button).
 
 ## Do not use the *Disk Utility* application
 
@@ -49,9 +49,9 @@ Multiple macOS installs can share one APFS container. Each OS has a *volume grou
 
 Each macOS install has within it *its own copy of recoveryOS*. Then there is a global System recoveryOS, and (rarely) an additional System Fallback recoveryOS.
 
-## Asahi Linux installs
+## Knix installs
 
-For Asahi Linux, we do not install alongside macOS in the same container, because that would require using APFS for Linux (which isn't stable yet nor mainlined). We just create normal GPT partitions for Linux. Asahi Linux also needs to install itself the same way macOS would, into an APFS container as a volume group, to be actually bootable. This is what we call the "stub macOS" and is what links the Apple world to the Linux world. Think of it as a bootloader partition. We *could* share a container with macOS for this, but we *choose* not to because it makes it less error-prone and easier to delete, and we're already partitioning the disk anyway.
+For Knix, we do not install alongside macOS in the same container, because that would require using APFS for Linux (which isn't stable yet nor mainlined). We just create normal GPT partitions for Linux. Knix also needs to install itself the same way macOS would, into an APFS container as a volume group, to be actually bootable. This is what we call the "stub macOS" and is what links the Apple world to the Linux world. Think of it as a bootloader partition. We *could* share a container with macOS for this, but we *choose* not to because it makes it less error-prone and easier to delete, and we're already partitioning the disk anyway.
 
 So the installer will (for a normal Fedora Asahi Remix install) create three partitions:
 
@@ -64,20 +64,20 @@ So the installer will (for a normal Fedora Asahi Remix install) create three par
 
 To uninstall, you need to delete all three.
 
-Asahi Linux is unusual in that, unlike on traditional UEFI systems, we create an EFI System Partition *for each instance you install*. We have a bespoke mechanism for OSes to find the right ESP to install into/boot from to handle this. This is because each ESP is logically tied to the 2.5G stub, and it makes OS management easier if we treat it all as one unit, and use the native boot picker to choose among different OSes (and thus ESPs). You should think of the 2.5GB APFS stub container, the EFI System Partition, and whatever root/... partitions are created after that as one logical "container" for an open source OS within an Apple Silicon system. In a way, m1n1+U-Boot turn your machine into a UEFI system, and each time you install you are creating a new "virtual UEFI environment" within your Apple Silicon Mac (note: this isn't a VM).
+Knix is unusual in that, unlike on traditional UEFI systems, we create an EFI System Partition *for each instance you install*. We have a bespoke mechanism for OSes to find the right ESP to install into/boot from to handle this. This is because each ESP is logically tied to the 2.5G stub, and it makes OS management easier if we treat it all as one unit, and use the native boot picker to choose among different OSes (and thus ESPs). You should think of the 2.5GB APFS stub container, the EFI System Partition, and whatever root/... partitions are created after that as one logical "container" for an open source OS within an Apple Silicon system. In a way, m1n1+U-Boot turn your machine into a UEFI system, and each time you install you are creating a new "virtual UEFI environment" within your Apple Silicon Mac (note: this isn't a VM).
 
-## Listing partitions with the Asahi Linux installer
+## Listing partitions with the Knix installer
 
-`diskutil` can be very baroque and enumerating installed OSes can be painful, so the Asahi Linux installer itself tries to condense the most important disk information into an easily understandable format. You can run it as usual (`curl https://alx.sh | sh`) and simply quit without doing anything if you just want to see this information.
+`diskutil` can be very baroque and enumerating installed OSes can be painful, so the Knix installer itself tries to condense the most important disk information into an easily understandable format. You can run it as usual (`curl https://alx.sh | sh`) and simply quit without doing anything if you just want to see this information.
 
-Here's an example from right after installing Asahi Linux, before completing the second step of the installation:
+Here's an example from right after installing Knix, before completing the second step of the installation:
 
 ```
 Partitions in system disk (disk0):
   1: APFS [Macintosh HD] (380.00 GB, 6 volumes)
     OS: [B ] [Macintosh HD] macOS v12.3 [disk3s1, D44D4ED9-B162-4542-BF50-9470C7AFDA43]
-  2: APFS [Asahi Linux] (2.50 GB, 4 volumes)
-    OS: [ *] [Asahi Linux] incomplete install (macOS 12.3 stub) [disk4s2, 53F853CF-4851-4E82-933C-2AAEB247B372]
+  2: APFS [Knix] (2.50 GB, 4 volumes)
+    OS: [ *] [Knix] incomplete install (macOS 12.3 stub) [disk4s2, 53F853CF-4851-4E82-933C-2AAEB247B372]
   3: EFI (500.17 MB)
   4: Linux Filesystem (54.19 GB)
   5: (free space: 57.19 GB)
@@ -94,7 +94,7 @@ This shows:
     * If you had another macOS install sharing space in the same container, it would be listed as another `OS:` line under the same partition.
     * disk3s1 is the *volume* for this macOS system, which means `disk3` is the virtual disk that represents this APFS container partition
     * The UUID is the Volume Group ID of this OS, which is the primary identifier for it (e.g. how the machine finds it to boot it, how you select it in `bputil` prompts, the associated subdirectory name within the Preboot and Recovery subvolumes, and more)
-* One APFS container (2.5GB) containing 4 volumes which is actually an Asahi Linux bootloader stub, using macOS 12.3 as its base version, named "Asahi Linux"
+* One APFS container (2.5GB) containing 4 volumes which is actually an Knix bootloader stub, using macOS 12.3 as its base version, named "Knix"
     * If the install were complete, this would show your m1n1 stage 1 version. However, because it is not, it is listed as `incomplete install` until you reboot into it holding down the power button and complete the second step of installation.
     * disk4s2 is the *volume* for this stub's system, which means `disk4` is the virtual disk that represents this APFS container partition
 * One EFI system partition (FAT32)
@@ -104,9 +104,9 @@ This shows:
 * The System Recovery partition (always exists last), which contains 2 APFS volumes and has one instance of recoveryOS installed (version 12.3).
     * You don't want to touch this, but we show it since knowing what version of recoveryOS is present is useful. There could be a fallback version too.
 
-Note how it tells you that you are currently booted into the *Macintosh HD* OS (`[B ]`), but that the default boot OS is set to Asahi Linux (`[ *]`). If you were to run this from recoveryOS, it'd be shown as a `[R*]` (running the recoveryOS that is part of your default boot OS), unless you ended up falling back to System Recovery, in which case the boot mark would be in the last line, starting `[R ] recoveryOS...`.
+Note how it tells you that you are currently booted into the *Macintosh HD* OS (`[B ]`), but that the default boot OS is set to Knix (`[ *]`). If you were to run this from recoveryOS, it'd be shown as a `[R*]` (running the recoveryOS that is part of your default boot OS), unless you ended up falling back to System Recovery, in which case the boot mark would be in the last line, starting `[R ] recoveryOS...`.
 
-Note that the Asahi Linux installer will *not* show you the iBoot System Container partition (to not confuse users too much) but *will* show you your System Recovery partition, so you can see what System Recovery versions(s) you have (but won't let you do anything with it). It also doesn't show physical disk partition numbers.
+Note that the Knix installer will *not* show you the iBoot System Container partition (to not confuse users too much) but *will* show you your System Recovery partition, so you can see what System Recovery versions(s) you have (but won't let you do anything with it). It also doesn't show physical disk partition numbers.
 
 ## Listing partitions with `diskutil`
 
@@ -139,8 +139,8 @@ Use `diskutil list`. The same set-up above looks like this:
    #:                       TYPE NAME                    SIZE       IDENTIFIER
    0:      APFS Container Scheme -                      +2.5 GB     disk4
                                  Physical Store disk0s5
-   1:                APFS Volume ⁨Asahi Linux - Data⁩      884.7 KB   disk4s1
-   2:                APFS Volume ⁨Asahi Linux⁩             1.1 MB     disk4s2
+   1:                APFS Volume ⁨Knix - Data⁩      884.7 KB   disk4s1
+   2:                APFS Volume ⁨Knix⁩             1.1 MB     disk4s2
    3:                APFS Volume ⁨Preboot⁩                 63.6 MB    disk4s3
    4:                APFS Volume ⁨Recovery⁩                1.8 GB     disk4s4
 ```
@@ -153,7 +153,7 @@ This shows the physical partitions in the order they are present on disk0 first:
     * This stores a bunch of system-critical information, you don't want to mess with it
 * `disk0s2` is the first APFS container, which holds the "Macintosh HD" macOS volume
     * Note how it says "Container disk3" to indicate this is shown as the virtual/synthesized `disk3` disk.
-* `disk0s5` is the Asahi Linux bootloader stub
+* `disk0s5` is the Knix bootloader stub
     * The partition index is out of order! This is logically after `disk0s2` and also in that position in the GPT. These partition numbers don't mean anything, it's whatever macOS feels like assigning that day.
     * This is virtual disk `disk4`.
 * `disk0s4` is the FAT32 EFI System Partition (displayed as type `EFI`, and with name `EFI - ASAHI` because it gets truncated for these)
@@ -174,7 +174,7 @@ Deleting partitions works *differently* for APFS and non-APFS partitions.
 
 ### Deleting APFS containers
 
-To delete the *Asahi Linux* APFS container, use one of these forms:
+To delete the *Knix* APFS container, use one of these forms:
 
 `diskutil apfs deleteContainer disk4`
 
@@ -195,7 +195,7 @@ This is called "eraseVolume free free" because diskutil's amazingly intuitive in
 
 ## Resizing APFS containers
 
-After deleting Asahi Linux, you could re-install it again (no need to use the resize option in the installer). But if you want to grow macOS to use the full size of the disk again, use either of these:
+After deleting Knix, you could re-install it again (no need to use the resize option in the installer). But if you want to grow macOS to use the full size of the disk again, use either of these:
 
 `diskutil apfs resizeContainer disk0s2 0`
 
@@ -207,7 +207,7 @@ Please note that running this command might momentarily freeze your macOS termin
 
 ### `Storage system verify or repair failed`
 
-If you get this error during the APFS resize operation, it means you have latent APFS filesystem corruption. This problem is caused by bugs in Apple's APFS drivers, not Asahi Linux (which does not touch APFS partitions at all). To fix it, **boot into recoveryOS** (this will not work from macOS), then run the following command (substituting disk0s2 for your APFS container disk name, as above):
+If you get this error during the APFS resize operation, it means you have latent APFS filesystem corruption. This problem is caused by bugs in Apple's APFS drivers, not Knix (which does not touch APFS partitions at all). To fix it, **boot into recoveryOS** (this will not work from macOS), then run the following command (substituting disk0s2 for your APFS container disk name, as above):
 
 `diskutil repairVolume disk0s2`
 
@@ -215,7 +215,7 @@ If this complains about "encrypted and locked volumes", you will have to run `di
 
 Finally, retry the resize operation after the repair successfully completes.
 
-If this does not repair your volume successfully and the resize operation still fails, unfortunately, there is no known solution other than a complete wipe and reformat of the macOS volume (losing all data). The Asahi Linux project cannot offer bugfixes or support for Apple's own system drivers and tools. If you find a reproducible way of causing APFS corruption, please report it directly to Apple.
+If this does not repair your volume successfully and the resize operation still fails, unfortunately, there is no known solution other than a complete wipe and reformat of the macOS volume (losing all data). The Knix project cannot offer bugfixes or support for Apple's own system drivers and tools. If you find a reproducible way of causing APFS corruption, please report it directly to Apple.
 
 ## Addendum: Mounting EFI partition
 There are two methods to mount the EFI partition. The first one is this:

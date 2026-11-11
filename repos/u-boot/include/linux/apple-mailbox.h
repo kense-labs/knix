@@ -2,7 +2,7 @@
 /*
  * Apple mailbox message format
  *
- * Copyright (C) 2021 The Asahi Linux Contributors
+ * Copyright (C) 2021 The Knix Contributors
  */
 
 #ifndef _LINUX_APPLE_MAILBOX_H_

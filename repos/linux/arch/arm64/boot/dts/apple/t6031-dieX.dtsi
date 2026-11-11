@@ -3,7 +3,7 @@
  * Nodes present on both dies of T6032 (M3 Ultra) and present on T6031 / T6034
  * (M3 Max).
  *
- * Copyright The Asahi Linux Contributors
+ * Copyright The Knix Contributors
  */
 
 &SOC_NODE {

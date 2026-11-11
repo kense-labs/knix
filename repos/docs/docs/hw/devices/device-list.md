@@ -1,10 +1,10 @@
 ---
 title: Device List
 summary:
-  List of devices supported or intended to be supported by Asahi Linux
+  List of devices supported or intended to be supported by Knix
 ---
 
-This is a list of devices Asahi Linux intends to support. The Product and SoC are used for matching against device trees. Please check [Feature Support](../../platform/feature-support/overview.md) for the state of support for specific models.
+This is a list of devices Knix intends to support. The Product and SoC are used for matching against device trees. Please check [Feature Support](../../platform/feature-support/overview.md) for the state of support for specific models.
 
 ## Devices
 | Marketing name | Device | Product | SoC |

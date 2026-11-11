@@ -2,7 +2,7 @@
 
 //! Apple AOP sensors common code
 //!
-//! Copyright (C) The Asahi Linux Contributors
+//! Copyright (C) The Knix Contributors
 
 use core::marker::{PhantomData, PhantomPinned};
 use core::ptr;

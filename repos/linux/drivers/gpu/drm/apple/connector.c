@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0+ OR MIT
 /*
- * Copyright (C) The Asahi Linux Contributors
+ * Copyright (C) The Knix Contributors
  */
 
 #include "connector.h"

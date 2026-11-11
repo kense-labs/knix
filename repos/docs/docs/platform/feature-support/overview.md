@@ -12,4 +12,4 @@ page. Each page below follows the same format as the old unified page.
 - [M5 Series (M5, M5 Pro, M5 Max, M5 Ultra) Feature Support](m5.md)
 - [M6 Series (M6) Feature Support](m6.md)
 
-A condensed feature overview for the Fedora Asahi Remix is available at [https://asahilinux.org/fedora/#device-support](https://asahilinux.org/fedora/#device-support).
+A condensed feature overview for the Fedora Asahi Remix is available at [https://knix.org/fedora/#device-support](https://knix.org/fedora/#device-support).

@@ -7,7 +7,7 @@ if true; then
 
     if [ ! -e /System ]; then
         echo "You appear to be running this script from Linux or another non-macOS system."
-        echo "Asahi Linux can only be installed from macOS (or recoveryOS)."
+        echo "Knix can only be installed from macOS (or recoveryOS)."
         exit 1
     fi
 
@@ -17,16 +17,16 @@ if true; then
 
     if ! curl --no-progress-meter file:/// >/dev/null 2>&1; then
         echo "Your version of cURL is too old. This usually means your macOS is very out"
-        echo "of date. Installing Asahi Linux requires at least macOS version 13.5."
+        echo "of date. Installing Knix requires at least macOS version 13.5."
         exit 1
     fi
 
-    export VERSION_FLAG=https://cdn.asahilinux.org/installer/latest
-    export INSTALLER_BASE=https://cdn.asahilinux.org/installer
-    export INSTALLER_DATA=https://github.com/AsahiLinux/asahi-installer-data/raw/prod/data/installer_data.json
+    export VERSION_FLAG=https://cdn.knix.org/installer/latest
+    export INSTALLER_BASE=https://cdn.knix.org/installer
+    export INSTALLER_DATA=https://github.com/Knix/asahi-installer-data/raw/prod/data/installer_data.json
     export INSTALLER_DATA_ALT=https://alx.sh/installer_data.json
-    export REPO_BASE=https://cdn.asahilinux.org
-    export REPORT=https://stats.asahilinux.org/report
+    export REPO_BASE=https://cdn.knix.org
+    export REPORT=https://stats.knix.org/report
     export REPORT_TAG=alx-prod
 
     #TMP="$(mktemp -d)"

@@ -2,7 +2,7 @@
 /*
  * Apple SoC eFuse driver
  *
- * Copyright (C) The Asahi Linux Contributors
+ * Copyright (C) The Knix Contributors
  */
 
 #include <linux/io.h>

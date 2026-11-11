@@ -6,7 +6,7 @@
  *
  * target-type: J180d / J475d
  *
- * Copyright The Asahi Linux Contributors
+ * Copyright The Knix Contributors
  */
 
 /* delete power-domains for missing disp0 / disp0_die1 */

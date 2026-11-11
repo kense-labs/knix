@@ -2,7 +2,7 @@
 
 kisd is a daemon which implements parts of the KIS / DebugUSB protocol.
 The main use at this time is accessing the "dockchannel uart" of Apple
-Silicon machines from a device running Asahi Linux.
+Silicon machines from a device running Knix.
 
 
 ### Usage

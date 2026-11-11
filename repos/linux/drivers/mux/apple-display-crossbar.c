@@ -2,7 +2,7 @@
 /*
  * Apple Silicon Display Crossbar multiplexer driver
  *
- * Copyright (C) Asahi Linux Contributors
+ * Copyright (C) Knix Contributors
  *
  * Author: Sven Peter <sven@svenpeter.dev>
  */

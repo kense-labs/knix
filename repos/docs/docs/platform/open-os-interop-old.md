@@ -8,7 +8,7 @@ This document presents our vision for how open OSes should interoperate on Apple
 
 The ideas in this document are not intended to set hard requirements or rules; anyone is of course free (and encouraged) to go their own way if they so choose. Rather, we would like to agree on a set of standards that make it easier for different OSes to co-exist and be installed by end users, aiming to make the process as simple, seamless, and future-proof as possible.
 
-This document is a draft, and we welcome all commentary and discussion in order to help shape the future of how to build an open OS ecosystem on these platforms. Please drop by #asahi on OFTC if you have general questions or feedback, or ping us on #asahi-dev if you are a developer and would like to discuss technical aspects ([further info](https://asahilinux.org/community/)).
+This document is a draft, and we welcome all commentary and discussion in order to help shape the future of how to build an open OS ecosystem on these platforms. Please drop by #asahi on OFTC if you have general questions or feedback, or ping us on #asahi-dev if you are a developer and would like to discuss technical aspects ([further info](https://knix.org/community/)).
 
 ## OS layout & boot
 
@@ -102,7 +102,7 @@ GRUB does the final Linux loading and provides users with the familiar kernel se
 
 Installed OSes are in control of the boot chain starting from m1n1 stage 2, and thus are free to manage it however they wish. For example, a Linux distro could append Linux kernels directly to m1n1 stage 2, or use U-Boot directly to boot kernels, or use the Linux EFI stub, or GRUB.
 
-OS installers booted via USB must use the standard UEFI boot protocol from a FAT32 EFI System Partition if they want to work with the UEFI-only setup mode of the Asahi Linux Installer (which installs m1n1 stage 2 + U-Boot set up like that). The installer may overwrite this with another mechanism as part of the installation, if desired, although this is not recommended without a good reason: keeping the second stage blob installed by the Asahi Linux Installer may allow for booting on machines not yet supported by a given OS release, by providing new device trees, if those platforms are sufficiently backwards compatible.
+OS installers booted via USB must use the standard UEFI boot protocol from a FAT32 EFI System Partition if they want to work with the UEFI-only setup mode of the Knix Installer (which installs m1n1 stage 2 + U-Boot set up like that). The installer may overwrite this with another mechanism as part of the installation, if desired, although this is not recommended without a good reason: keeping the second stage blob installed by the Knix Installer may allow for booting on machines not yet supported by a given OS release, by providing new device trees, if those platforms are sufficiently backwards compatible.
 
 For OSes that use the typical m1n1+U-Boot approach, it is recommended that they check the existing version in the ESP and refuse to downgrade automatically it if the package provided by the OS is older. This, again, allows for future hardware to be partially supported with only an installer update. TODO: specify how this version check should work (we need to start tagging m1n1 builds properly).
 
@@ -110,13 +110,13 @@ For OSes that use the typical m1n1+U-Boot approach, it is recommended that they 
 
 On these machines, there is a mismatch between the point where a third-party kernel boots (after iBoot2), and the required per-OS boot components (including iBoot2 itself, firmware, and other files, as well as the recoveryOS image and XNU kernel for it). In addition, Apple's tooling requires these files to be laid out in a certain way in the Preboot partition in order to work properly in the OS selection menus, beyond the requirements imposed by iBoot1/2 themselves. In effect, creating a new OS container requires, essentially, installing macOS minus the root filesystem.
 
-Thankfully, all the required components can be fetched from the restore images (IPSW files) which are publicly available at [well-known](https://ipsw.me/), stable URLs. We have implemented this process in [asahi-installer](https://github.com/AsahiLinux/asahi-installer), a Python-based installation framework that is intended to run from 1TR. It streams the required bits of the IPSW file, avoiding a complete download, and sets up the partitions and contents as required to boot recoveryOS and subsequently a custom kernel.
+Thankfully, all the required components can be fetched from the restore images (IPSW files) which are publicly available at [well-known](https://ipsw.me/), stable URLs. We have implemented this process in [asahi-installer](https://github.com/Knix/asahi-installer), a Python-based installation framework that is intended to run from 1TR. It streams the required bits of the IPSW file, avoiding a complete download, and sets up the partitions and contents as required to boot recoveryOS and subsequently a custom kernel.
 
 We don't expect OSes to want to reinvent this particular wheel (trust us, you don't want to), so we'd like to make the installer flexible enough to support bootstrapping different installation flows.
 
 ### Launching the installer
 
-At this time, the Asahi Linux installer is supported as a purely online installer (`curl | sh` style), which can be launched from macOS or from recoveryOS. OSes to be installed are downloaded on demand (streamed directly to the target disk without any intermediate storage). Alternatively, users may choose to install only a UEFI boot environment, which can then boot any OS from USB using the standard mechanisms, leaving unpartitioned space for e.g. an OS installer to use.
+At this time, the Knix installer is supported as a purely online installer (`curl | sh` style), which can be launched from macOS or from recoveryOS. OSes to be installed are downloaded on demand (streamed directly to the target disk without any intermediate storage). Alternatively, users may choose to install only a UEFI boot environment, which can then boot any OS from USB using the standard mechanisms, leaving unpartitioned space for e.g. an OS installer to use.
 
 Future installation options could include:
 
@@ -161,7 +161,7 @@ A booted OS shall mount the ESP and inspect the `manifest.txt` file. If it is fo
 
 Alternatively, an OS that supports a more complex dynamic firmware loading mechanism could read the `firmware.tar` file directly as firmware is requested.
 
-An example implementation of this process is available in the asahi-scripts repo [here](https://github.com/AsahiLinux/asahi-scripts/blob/main/update-vendor-firmware).
+An example implementation of this process is available in the asahi-scripts repo [here](https://github.com/Knix/asahi-scripts/blob/main/update-vendor-firmware).
 
 The firmware package should be checked on every boot, to pick up changes from users who upgrade their stub OS by re-running the installer. This will be rare, but it's worth supporting properly.
 

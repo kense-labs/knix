@@ -5,7 +5,7 @@ authors = ["Sergio Lopez <slp@redhat.com>", "Teoh Han Hui <teohhanhui@gmail.com>
 edition = "2021"
 rust-version = "1.80.0"
 description = "Run programs from your system in a microVM"
-repository = "https://github.com/AsahiLinux/muvm"
+repository = "https://github.com/Knix/muvm"
 license = "MIT"
 
 [dependencies]

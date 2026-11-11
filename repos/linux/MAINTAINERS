@@ -2585,10 +2585,10 @@ R:	Neal Gompa <neal@gompa.dev>
 L:	asahi@lists.linux.dev
 L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
 S:	Maintained
-W:	https://asahilinux.org
-B:	https://github.com/AsahiLinux/linux/issues
+W:	https://knix.org
+B:	https://github.com/Knix/linux/issues
 C:	irc://irc.oftc.net/asahi-dev
-T:	git https://github.com/AsahiLinux/linux.git
+T:	git https://github.com/Knix/linux.git
 F:	Documentation/devicetree/bindings/arm/apple.yaml
 F:	Documentation/devicetree/bindings/arm/apple/*
 F:	Documentation/devicetree/bindings/clock/apple,nco.yaml
@@ -8812,8 +8812,8 @@ R:	Janne Grunau <j@jannau.net>
 L:	dri-devel@lists.freedesktop.org
 L:	asahi@lists.linux.dev
 S:	Maintained
-W:	https://asahilinux.org
-B:	https://github.com/AsahiLinux/linux/issues
+W:	https://knix.org
+B:	https://github.com/Knix/linux/issues
 C:	irc://irc.oftc.net/asahi-dev
 T:	git https://gitlab.freedesktop.org/drm/misc/kernel.git
 F:	Documentation/devicetree/bindings/display/apple,h7-display-pipe-mipi.yaml

@@ -4,7 +4,7 @@
  *
  * Other names: H14J, "Rhodes Chop"
  *
- * Copyright The Asahi Linux Contributors
+ * Copyright The Knix Contributors
  */
 
 /* This chip is just a cut down version of t6021, so include it and disable the missing parts */

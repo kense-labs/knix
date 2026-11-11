@@ -1,8 +1,8 @@
 ---
-title: Asahi Linux Distribution Guidelines
+title: Knix Distribution Guidelines
 ---
 
-Asahi Linux exists to reverse engineer, document, and ultimately
+Knix exists to reverse engineer, document, and ultimately
 implement Linux support for the Apple Silicon platform. While
 [Fedora Asahi Remix](https://fedora-asahi-remix.org) is our flagship distribution, representing the
 state of the art of Linux support on Apple Silicon, we have always
@@ -11,7 +11,7 @@ encouraged interested parties representing other distributions
 support for the platform.
 
 Traditionally, it has been unclear whether or not these efforts
-are officially endorsed by the Asahi Linux project. This has led
+are officially endorsed by the Knix project. This has led
 to frustration and confusion on the part of users, distro maintainers,
 and Asahi developers alike. Some distros have been semi-integrated
 into the project on account of being the distro of choice of
@@ -56,21 +56,21 @@ it is acceptable for them to be in a third-party repository (e.g.
 Fedora COPR, Portage Overlay) provided that your repository has been
 endorsed by your distro's official maintainers.
 
-* [The Asahi Linux fork of the Linux kernel](https://github.com/AsahiLinux/linux)
-* [m1n1](https://github.com/AsahiLinux/m1n1)
-* [The Asahi Linux fork of Das U-Boot](https://github.com/AsahiLinux/u-boot)
-* [asahi-scripts](https://github.com/AsahiLinux/asahi-scripts) or equivalent configuration presets/scripts
-* [tiny-dfr](https://github.com/AsahiLinux/tiny-dfr)
-* [asahi-firmware](https://github.com/AsahiLinux/asahi-installer) (including its dependency lzfse)
-* [speakersafetyd](https://github.com/AsahiLinux/speakersafetyd)
-* [asahi-audio](https://github.com/AsahiLinux/asahi-audio) (and its LV2 plugin dependencies)
+* [The Knix fork of the Linux kernel](https://github.com/Knix/linux)
+* [m1n1](https://github.com/Knix/m1n1)
+* [The Knix fork of Das U-Boot](https://github.com/Knix/u-boot)
+* [asahi-scripts](https://github.com/Knix/asahi-scripts) or equivalent configuration presets/scripts
+* [tiny-dfr](https://github.com/Knix/tiny-dfr)
+* [asahi-firmware](https://github.com/Knix/asahi-installer) (including its dependency lzfse)
+* [speakersafetyd](https://github.com/Knix/speakersafetyd)
+* [asahi-audio](https://github.com/Knix/asahi-audio) (and its LV2 plugin dependencies)
 
 New versions of the above software must be packaged in your
 distro's bleeding edge (e.g. Fedora Rawhide or Gentoo's
 unstable package stream) within 2 weeks of becoming available upstream.
 
 ## Installation procedure
-Asahi Linux uses Das U-Boot's UEFI environment to chainload standard UEFI
+Knix uses Das U-Boot's UEFI environment to chainload standard UEFI
 bootloaders, such as GRUB and systemd-boot. The Asahi Installer is capable
 of setting up a minimal UEFI-only environment capable of booting UEFI
 executables on removable media. This provides users an installation
@@ -137,7 +137,7 @@ Installer can free space on the NVMe drive and then flash a prebuilt OS image
 into that space. This mimics other AArch64 embedded platforms, such as the
 Raspberry Pi, and provides a way for users not familiar or confident with
 installing Linux an easy way to get started at the expense of customisability.
-For more details on how this works, please see [AsahiLinux/asahi-installer](https://github.com/AsahiLinux/asahi-installer).
+For more details on how this works, please see [Knix/asahi-installer](https://github.com/Knix/asahi-installer).
 
 We expect distros to fork, modify, and host the reference Asahi Installer themselves
 if choosing to go down this route. We cannot host your images or make distro-specific
@@ -170,14 +170,14 @@ installation tooling sufficiently foolproof on Apple Silicon devices, we _may_ r
 the need to support the image-based installation flow going forward.
 
 ## Disendorsement
-Through diligent QA and attention to detail, Asahi Linux has
+Through diligent QA and attention to detail, Knix has
 become well-regarded as one of the best desktop Linux experiences available.
 This is a great source of pride for us, and we are determined to meet the high
 user expectations that come with such a reputation. We expect officially
 endorsed distros to strive to meet those same expectations.
 
 We hope that it will never be necessary to do so, but we may be required to
-disendorse distros that are not meeting user or Asahi Linux expectations.
+disendorse distros that are not meeting user or Knix expectations.
 Disendorsed distros will be delisted from our documentation. Depending on the
 circumstances, we may also discourage use of the disendorsed distro.
 

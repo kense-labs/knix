@@ -2,7 +2,7 @@
 /*
  * Apple Video Decoder driver
  *
- * Copyright The Asahi Linux Contributors
+ * Copyright The Knix Contributors
  *
  * Based on rkvdec driver by Collabora, Ltd.
  * Copyright (C) 2019 Collabora, Ltd.

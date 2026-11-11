@@ -2,7 +2,7 @@
 /*
  * Tracepoints for Apple DCP driver
  *
- * Copyright (C) The Asahi Linux Contributors
+ * Copyright (C) The Knix Contributors
  */
 
 #define CREATE_TRACE_POINTS

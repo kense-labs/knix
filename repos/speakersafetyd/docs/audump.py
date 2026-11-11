@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-2.0-only
-# Copyright The Asahi Linux Contributors
+# Copyright The Knix Contributors
 
 import struct, sys, os.path, plistlib, pprint
 

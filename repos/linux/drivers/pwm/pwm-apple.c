@@ -2,7 +2,7 @@
 /*
  * Driver for the Apple SoC PWM controller
  *
- * Copyright The Asahi Linux Contributors
+ * Copyright The Knix Contributors
  *
  * Limitations:
  * - The writes to cycle registers are shadowed until a write to

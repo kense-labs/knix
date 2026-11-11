@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only OR MIT
-/* Copyright The Asahi Linux Contributors */
+/* Copyright The Knix Contributors */
 
 #ifndef _DRM_APPLE_EPIC_DPAVSERV_H
 #define _DRM_APPLE_EPIC_DPAVSERV_H

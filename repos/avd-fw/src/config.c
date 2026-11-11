@@ -10,7 +10,7 @@ __attribute__((section(".license"), used))
 const char avd_fw_license[] = "Licensed under " AVD_FW_LICENSE;
 
 __attribute__((section(".license"), used))
-const char avd_fw_copyright[] = "Copyright The Asahi Linux Contributors";
+const char avd_fw_copyright[] = "Copyright The Knix Contributors";
 
 __attribute__((section(".config"), used))
 const struct avd_config config = {

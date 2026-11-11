@@ -2,9 +2,9 @@
 title: m1n1 User Guide
 ---
 
-m1n1 is the bootloader developed by the Asahi Linux project to bridge the Apple (XNU) boot ecosystem to the Linux boot ecosystem.
+m1n1 is the bootloader developed by the Knix project to bridge the Apple (XNU) boot ecosystem to the Linux boot ecosystem.
 
-GitHub: [AsahiLinux/m1n1](https://github.com/AsahiLinux/m1n1)
+GitHub: [Knix/m1n1](https://github.com/Knix/m1n1)
 
 ## What it does
 
@@ -25,7 +25,7 @@ You need an `aarch64-linux-gnu-gcc` cross-compiler toolchain (or a native one, i
 You also need `convert` (from ImageMagick) for the boot logos.
 
 ```shell
-$ git clone --recursive https://github.com/AsahiLinux/m1n1.git
+$ git clone --recursive https://github.com/Knix/m1n1.git
 $ cd m1n1
 $ make
 ```
@@ -48,7 +48,7 @@ After that, just type `make`.
 If you have a container runtime installed, like Podman or Docker, you can make use of the compose setup, which contains all build dependencies.
 
 ```shell
-$ git clone --recursive https://github.com/AsahiLinux/m1n1.git
+$ git clone --recursive https://github.com/Knix/m1n1.git
 $ cd m1n1
 $ podman-compose build m1n1
 $ podman-compose run m1n1 make
@@ -62,7 +62,7 @@ $ docker-compose run m1n1 make
 
 * `make CHAINLOADING=1` enables chainloading support. This requires a Rust nightly toolchain with aarch64 support, which you can get with: `rustup toolchain install nightly && rustup target install aarch64-unknown-none-softfloat`.
 
-m1n1 stage 1 release builds packaged with the Asahi Linux Installer have both of those options set. m1n1 stage 2 release builds packaged by distros should just have `RELEASE=1` (since they do not need to chainload further) and thus do not need Rust to build.
+m1n1 stage 1 release builds packaged with the Knix Installer have both of those options set. m1n1 stage 2 release builds packaged by distros should just have `RELEASE=1` (since they do not need to chainload further) and thus do not need Rust to build.
 
 ## Installation
 
@@ -105,9 +105,9 @@ On older versions (not recommended), you need the `macho` instead:
 kmutil configure-boot -c m1n1-stage1.macho -v <path to your OS volume>
 ```
 
-The Asahi Linux installer will normally do this for you, and most users will never have to do it again manually.
+The Knix installer will normally do this for you, and most users will never have to do it again manually.
 
-Each OS has its own recovery OS. You must go to the recovery for Asahi Linux to run this command, or you'll get errors with something like `not paired`. 
+Each OS has its own recovery OS. You must go to the recovery for Knix to run this command, or you'll get errors with something like `not paired`. 
 
 If you're not in the correct recovery OS, you can go to the correct one by:
 ```shell
@@ -137,7 +137,7 @@ Payloads are simply concatenated after the initial m1n1 binary.
 
 ### Configuring for stage 1
 
-m1n1 stage 1 is configured by the Asahi Linux Installer by appending variables like this:
+m1n1 stage 1 is configured by the Knix Installer by appending variables like this:
 
 ```
 cp build/m1n1.bin m1n1-stage1.bin
@@ -173,7 +173,7 @@ cat build/m1n1.bin \
     >m1n1-linux.bin
 ```
 
-Again note the use of a compressed kernel image. Also, if you want to concatenate multiple initramfs images, you should *uncompress them first*, then concatenate them and compress them again ([bug](https://github.com/AsahiLinux/m1n1/issues/157)).
+Again note the use of a compressed kernel image. Also, if you want to concatenate multiple initramfs images, you should *uncompress them first*, then concatenate them and compress them again ([bug](https://github.com/Knix/m1n1/issues/157)).
 
 ### Configuring for proxy mode
 
@@ -237,7 +237,7 @@ See [m1n1 Hypervisor](m1n1-hypervisor.md)
 
 ### Backdoor proxy mode in stage 1 release builds
 
-If you have a standard release build of m1n1 installed as fuOS (i.e. what you get when you run the Asahi Linux installer), you can enable verbose messages and a backdoor proxy mode by going into 1TR and doing this from the macOS Terminal:
+If you have a standard release build of m1n1 installed as fuOS (i.e. what you get when you run the Knix installer), you can enable verbose messages and a backdoor proxy mode by going into 1TR and doing this from the macOS Terminal:
 
 ```
 csrutil disable

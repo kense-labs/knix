@@ -2,7 +2,7 @@
 /*
  * Apple SoC CIO (USB4/Thunderbolt) block reset driver
  *
- * Copyright The Asahi Linux Contributors
+ * Copyright The Knix Contributors
  *
  * The CIO blocks have a reset inside the power manager (PMGR) that
  * has to be deasserted before their co-processor can be booted. On

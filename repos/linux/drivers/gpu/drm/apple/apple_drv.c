@@ -698,6 +698,6 @@ static void __exit appledrm_unregister(void)
 module_init(appledrm_register);
 module_exit(appledrm_unregister);
 
-MODULE_AUTHOR("Asahi Linux contributors");
+MODULE_AUTHOR("Knix contributors");
 MODULE_DESCRIPTION(DRIVER_DESC);
 MODULE_LICENSE("Dual MIT/GPL");

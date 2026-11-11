@@ -2,7 +2,7 @@
 /*
  * ASoC machine driver for Apple Silicon Macs
  *
- * Copyright (C) The Asahi Linux Contributors
+ * Copyright (C) The Knix Contributors
  *
  * Based on sound/soc/qcom/{sc7180.c|common.c}
  * Copyright (c) 2018, Linaro Limited.

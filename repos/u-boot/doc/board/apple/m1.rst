@@ -4,7 +4,7 @@ U-Boot for Apple Silicon Macs
 =============================
 
 Allows Apple Silicon Macs to boot U-Boot via the m1n1 bootloader
-developed by the Asahi Linux project.  At this point the machines with
+developed by the Knix project.  At this point the machines with
 the following SoCs work:
 
  - Apple M1 SoC (t8103)
@@ -47,7 +47,7 @@ In order to run U-Boot on an Apple Silicon Mac, U-Boot has to be used
 as a payload for the m1n1 bootloader.  Instructions for building m1n1
 can be found here:
 
-    https://github.com/AsahiLinux/docs/wiki/SW%3Am1n1
+    https://github.com/Knix/docs/wiki/SW%3Am1n1
 
 .. code-block:: bash
 
@@ -61,7 +61,7 @@ Image installation
 
 Instructions on how to install U-Boot on your Mac can be found at:
 
-    https://github.com/AsahiLinux/docs/wiki/Developer-Quickstart
+    https://github.com/Knix/docs/wiki/Developer-Quickstart
 
 Just replace ``m1n1.macho`` with ``u-boot.macho`` in the instructions.
 

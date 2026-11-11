@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /*
- * Copyright The Asahi Linux Contributors
+ * Copyright The Knix Contributors
  *
  * Based on irq-lpc32xx:
  *   Copyright 2015-2016 Vladimir Zapolskiy <vz@mleia.com>

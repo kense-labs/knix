@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only OR MIT
-/* Copyright (C) The Asahi Linux Contributors */
+/* Copyright (C) The Knix Contributors */
 
 #include <drm/drm_atomic.h>
 #include <drm/drm_crtc.h>

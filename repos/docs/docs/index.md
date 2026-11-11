@@ -1,4 +1,4 @@
-Welcome to the Asahi Linux documentation! Here, you will find documentation on the
+Welcome to the Knix documentation! Here, you will find documentation on the
 Apple Silicon platform as implemented on Mac computers with M-series SoCs. We aim
 to document the platform in a way that is useful for everyone, however our focus is
 supporting third-party operating systems, particularly Linux.
@@ -13,7 +13,7 @@ Apple Silicon platform.
 - Operating system and kernel developers looking to implement support for Apple Silicon
 - Folks interested in hacking on and reverse engineering the Apple Silicon platform
 - End users looking for guides and information on supported features
-- Anyone interested in the Asahi Linux project looking for more information
+- Anyone interested in the Knix project looking for more information
 
 Questions? Please check out the [FAQ](project/faq.md) first!
 
@@ -27,5 +27,5 @@ Check out [Feature Support](platform/feature-support/overview.md) for supported 
 and features. If you're after documentation on something specific, use the search feature
 at the top of the page or check out the sidebar for places to start!
 
-Be sure to also read [our blog](https://asahilinux.org/blog/) where we post regular
+Be sure to also read [our blog](https://knix.org/blog/) where we post regular
 progress updates, as well as other news about the project.

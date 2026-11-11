@@ -88,7 +88,7 @@ DEVICES = {
     "j516map":  Device("14.8.3", False), # MacBook Pro (16-inch, M3 Max, 2023)
 }
 
-# Asahi Linux does not support running in a virtual machine, this option
+# Knix does not support running in a virtual machine, this option
 # exists only for development of the installer itself.
 if os.environ.get("ALLOW_VM", None):
     CHIP_MIN_VER[0xfe00] = "12.0"
@@ -955,7 +955,7 @@ class InstallerMain:
         self.expert = False
         if os.environ.get("EXPERT", None):
             p_message("By default, this installer will hide certain advanced options that")
-            p_message("are only useful for Asahi Linux developers. You can enable expert mode")
+            p_message("are only useful for Knix developers. You can enable expert mode")
             p_message("to show them. Do not enable this unless you know what you are doing.")
             p_message("Please do not file bugs if things go wrong in expert mode.")
             self.expert = self.yesno("Enable expert mode?")
@@ -972,9 +972,9 @@ class InstallerMain:
         self.device = DEVICES.get(self.sysinfo.device_class, None)
         if not self.chip_min_ver or not self.device or (self.device.expert_only and not self.expert):
             p_error("This device is not supported yet!")
-            p_error("Please check out the Asahi Linux Blog for updates on device support:")
+            p_error("Please check out the Knix Blog for updates on device support:")
             print()
-            p_error("   https://asahilinux.org/blog/")
+            p_error("   https://knix.org/blog/")
             print()
             sys.exit(1)
 

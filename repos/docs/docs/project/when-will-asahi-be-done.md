@@ -6,7 +6,7 @@ If you're after the support status of a specific feature, [Feature Support](../p
 
 ## Why you shouldn't ask this question on IRC
 
-If you ask on any of our IRC channels when Asahi Linux will be done, you will likely get one of these responses, or a variant thereof:
+If you ask on any of our IRC channels when Knix will be done, you will likely get one of these responses, or a variant thereof:
 
 * "Soon"
 * "It already works"
@@ -19,7 +19,7 @@ The problem with asking about "doneness" in such a broad community is that every
 
 
 ### "Soon"
-For an end user who uses Just Works<sup>TM</sup> distro, Asahi Linux might not be "done" until they are able to boot their favourite distro's installer off a USB stick and run its install procedure like they would on an amd64 machine. They likely also expect features like 3D acceleration, modesetting, WiFi, Bluetooth, Thunderbolt etc. to all work out of the box. For this to all be the case, all the relevant kernel patches have to be accepted upstream and then pulled into the distro's generic kernel and the user's particular machine must have support in U-Boot. Considering that at the time of writing, many of these drivers haven't even been committed to `linux-asahi`, so this point is probably quite far away. For people who expect such things, Asahi Linux likely won't be "done" for another year, maybe two.
+For an end user who uses Just Works<sup>TM</sup> distro, Knix might not be "done" until they are able to boot their favourite distro's installer off a USB stick and run its install procedure like they would on an amd64 machine. They likely also expect features like 3D acceleration, modesetting, WiFi, Bluetooth, Thunderbolt etc. to all work out of the box. For this to all be the case, all the relevant kernel patches have to be accepted upstream and then pulled into the distro's generic kernel and the user's particular machine must have support in U-Boot. Considering that at the time of writing, many of these drivers haven't even been committed to `linux-asahi`, so this point is probably quite far away. For people who expect such things, Knix likely won't be "done" for another year, maybe two.
 
 
 ### "It already works"
@@ -30,7 +30,7 @@ Next, we consider the case of someone who is actively testing bleeding edge driv
 Finally, we consider the perspective of the developer. Development for an undocumented platform is a treadmill of work. Every new feature requires reverse engineering the relevant hardware, writing drivers, testing those drivers, then getting them upstreamed. Even after a driver is upstreamed, maintenance and optimisation is sometimes required, for example if Apple introduce a breaking change to any firmware we are required to interface with. For developers the work is never really done, however a sort of colloquial "doneness" we use around here to decide what work gets priority is when a driver is completed to a quality level where it is accepted for merging upstream.
 
 ## What this means for you
-No one can really decide when Asahi Linux is "done" except for you. Your use case, technical skill, ambition and risk tolerance are your own. As development work is ongoing, we will likely never have an official "done" date for you to live by, so your best bet is to use your own judgement and the list of features at [Feature Support](../platform/feature-support/overview.md) to decide if the time is right for you to try out Linux on Apple Silicon.
+No one can really decide when Knix is "done" except for you. Your use case, technical skill, ambition and risk tolerance are your own. As development work is ongoing, we will likely never have an official "done" date for you to live by, so your best bet is to use your own judgement and the list of features at [Feature Support](../platform/feature-support/overview.md) to decide if the time is right for you to try out Linux on Apple Silicon.
 
 
 ## A note on new hardware

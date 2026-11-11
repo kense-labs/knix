@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-only OR MIT */
 /*
  * Apple RTKit IPC Library
- * Copyright (C) The Asahi Linux Contributors
+ * Copyright (C) The Knix Contributors
  *
  * Apple's SoCs come with various co-processors running their RTKit operating
  * system. This protocol library is used by client drivers to use the

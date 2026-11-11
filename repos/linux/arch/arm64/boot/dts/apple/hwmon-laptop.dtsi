@@ -2,7 +2,7 @@
 /*
  * hwmon sensors expected on all laptops
  *
- * Copyright The Asahi Linux Contributors
+ * Copyright The Knix Contributors
  */
 
 &smc_hwmon {

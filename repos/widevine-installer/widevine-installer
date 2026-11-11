@@ -74,7 +74,7 @@ echo "Content Decryption Module for aarch64 systems."
 echo
 echo "Widevine is a proprietary DRM technology developed by Google."
 echo "This script uses ARM64 builds intended for ChromeOS images and is"
-echo "not supported nor endorsed by Google. The Asahi Linux community"
+echo "not supported nor endorsed by Google. The Knix community"
 echo "also cannot provide direct support for using this proprietary"
 echo "software, nor any guarantees about its security, quality,"
 echo "functionality, nor privacy. You assume all responsibility for"

@@ -1,13 +1,13 @@
 # Zensical config file for Asahi docs
-# Copyright (C) 2026 The Asahi Linux Contributors
+# Copyright (C) 2026 The Knix Contributors
 
 [project]
-site_name = "Asahi Linux Documentation"
-site_url = "https://asahilinux.org/docs"
+site_name = "Knix Documentation"
+site_url = "https://knix.org/docs"
 site_description = "Porting Linux to Apple Silicon"
-repo_url = "https://github.com/AsahiLinux/docs"
-repo_name = "AsahiLinux/docs"
-copyright = "&copy; 2022-2026 The Asahi Linux Contributors"
+repo_url = "https://github.com/Knix/docs"
+repo_name = "Knix/docs"
+copyright = "&copy; 2022-2026 The Knix Contributors"
 docs_dir = "docs"
 site_dir = "site"
 extra_css = ["stylesheets/extra.css"]
@@ -25,9 +25,9 @@ nav = [
     { "Project" = [
         "project/glossary.md",
         { "FAQs" = "project/faq.md" },
-        {'"When will Asahi Linux be done?"' = "project/when-will-asahi-be-done.md" },
+        {'"When will Knix be done?"' = "project/when-will-asahi-be-done.md" },
         {"Reference Material" = "project/references.md" },
-        { "Asahi Linux Board" = "project/board/asahi-board.md" },
+        { "Knix Board" = "project/board/asahi-board.md" },
         { "Policies"  = [
             { "Generative AI" = "project/policies/slop.md" }
         ] },
@@ -95,8 +95,8 @@ accent = "custom"
 
 [[project.extra.social]]
 icon = "fontawesome/brands/github"
-link = "https://github.com/AsahiLinux"
+link = "https://github.com/Knix"
 
 [[project.extra.social]]
 icon = "fontawesome/brands/mastodon"
-link = "https://social.treehouse.systems/@AsahiLinux"
+link = "https://social.treehouse.systems/@Knix"

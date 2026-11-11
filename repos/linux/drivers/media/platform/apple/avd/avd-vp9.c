@@ -2,7 +2,7 @@
 /*
  * Apple AVD VPU codec driver
  *
- * Copyright The Asahi Linux Contributors
+ * Copyright The Knix Contributors
  * Copyright 2023 Eileen Yoon <eyn@gmx.com>
  *
  * Copyright (C) 2019 Collabora, Ltd.

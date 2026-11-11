@@ -1,4 +1,4 @@
-## asahilinux_laptop.svg
+## knix_laptop.svg
 
 Used on the website, [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
 

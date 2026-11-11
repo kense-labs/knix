@@ -57,13 +57,13 @@ To initialize the GPU, a single message is sent containing a pointer to an initi
 * UAT layout information
 * Various unknown buffers
 
-Data structures: see [initdata.py](https://github.com/AsahiLinux/m1n1/blob/main/proxyclient/m1n1/fw/agx/initdata.py)
+Data structures: see [initdata.py](https://github.com/Knix/m1n1/blob/main/proxyclient/m1n1/fw/agx/initdata.py)
 
 ### Channels
 
 Communication with the firmware happens via channel ring buffers. Channels hold small, fixed-size messages delivered in-line in the ring buffers. A control structure has the read/write buffer pointers and size, cacheline-aligned so the GPU/CPU do not bounce things all the time. There are channels in both directions.
 
-Data structures: see [channels.py](https://github.com/AsahiLinux/m1n1/blob/main/proxyclient/m1n1/fw/agx/channels.py)
+Data structures: see [channels.py](https://github.com/Knix/m1n1/blob/main/proxyclient/m1n1/fw/agx/channels.py)
 
 #### CPU->GPU channels
 
@@ -99,13 +99,13 @@ A work queue holds work items of a specific type. There are usually multiple wor
 
 To process a work queue, the OS submits a message on a work channel with a pointer to the work queue management structure and the most recent ring buffer write pointer, plus an event index to signal work completion, and a flag indicating whether this is the first submission from a new work queue.
 
-Data structures: see [cmdqueue.py](https://github.com/AsahiLinux/m1n1/blob/main/proxyclient/m1n1/fw/agx/cmdqueue.py)
+Data structures: see [cmdqueue.py](https://github.com/Knix/m1n1/blob/main/proxyclient/m1n1/fw/agx/cmdqueue.py)
 
 ### Work items
 
 Work items represent GPU work or related operations. These are fairly large buffers containing embedded sub-structures in a particular layout (pointers to some of these sub-structures exist, but the firmware assumes the embedding in a particular way, so the layout must be respected).
 
-Data structures: see [cmdqueue.py](https://github.com/AsahiLinux/m1n1/blob/main/proxyclient/m1n1/fw/agx/cmdqueue.py)
+Data structures: see [cmdqueue.py](https://github.com/Knix/m1n1/blob/main/proxyclient/m1n1/fw/agx/cmdqueue.py)
 
 ### Micro Sequences
 
@@ -117,7 +117,7 @@ The ASC firmware contains a command sequencer that can run fairly complex "scrip
 * Write Timestamp
 * Finish (3D/TA/CP)
 
-Data structures: see [microsequence.py](https://github.com/AsahiLinux/m1n1/blob/main/proxyclient/m1n1/fw/agx/microsequence.py)
+Data structures: see [microsequence.py](https://github.com/Knix/m1n1/blob/main/proxyclient/m1n1/fw/agx/microsequence.py)
 
 ### Tiler buffer management
 
@@ -125,7 +125,7 @@ The GPU tiler needs a buffer to store vertex attribute and primitive data. This 
 
 The tiler buffer overflow / partial store / reload process is entirely managed by ASC firmware.
 
-Data structures: see BufferManager* in [microsequence.py](https://github.com/AsahiLinux/m1n1/blob/main/proxyclient/m1n1/fw/agx/microsequence.py)
+Data structures: see BufferManager* in [microsequence.py](https://github.com/Knix/m1n1/blob/main/proxyclient/m1n1/fw/agx/microsequence.py)
 
 ### Event Management
 

@@ -2,7 +2,7 @@
 /*
  * Apple Z2 touchscreen driver
  *
- * Copyright (C) The Asahi Linux Contributors
+ * Copyright (C) The Knix Contributors
  */
 
 #include <linux/delay.h>

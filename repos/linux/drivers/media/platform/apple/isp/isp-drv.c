@@ -2,7 +2,7 @@
 /*
  * Apple Image Signal Processor driver
  *
- * Copyright (C) 2023 The Asahi Linux Contributors
+ * Copyright (C) 2023 The Knix Contributors
  */
 
 #include <linux/iommu.h>

@@ -2,7 +2,7 @@
 /*
  * Apple SoC PMP power state reporting driver
  *
- * Copyright The Asahi Linux Contributors
+ * Copyright The Knix Contributors
  */
 
 #include <linux/iopoll.h>

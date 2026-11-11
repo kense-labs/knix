@@ -21,7 +21,7 @@ jobs:
 
       - name: Deploy to Bunny
         env:
-          PKG_URL: https://storage.bunnycdn.com/asahilinux/os
+          PKG_URL: https://storage.bunnycdn.com/knix/os
           PKG_VER: ${{ env.UEFI_ONLY_VERSION }}.zip
           ACCESS_KEY: ${{ secrets.BUNNY_TOKEN }}
         run: |

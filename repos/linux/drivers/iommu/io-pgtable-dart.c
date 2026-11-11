@@ -2,7 +2,7 @@
 /*
  * Apple DART page table allocator.
  *
- * Copyright (C) 2022 The Asahi Linux Contributors
+ * Copyright (C) 2022 The Knix Contributors
  *
  * Based on io-pgtable-arm.
  *

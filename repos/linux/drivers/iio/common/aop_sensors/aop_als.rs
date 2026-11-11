@@ -2,7 +2,7 @@
 
 //! Apple AOP ambient light sensor driver
 //!
-//! Copyright (C) The Asahi Linux Contributors
+//! Copyright (C) The Knix Contributors
 
 use kernel::{
     bindings, c_str,

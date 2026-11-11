@@ -1,10 +1,10 @@
 ---
 layout: pid
 title: m1n1 CDC-ACM Proxy/Console Device
-owner: AsahiLinux
+owner: Knix
 license: MIT
-site: https://github.com/AsahiLinux/m1n1
-source: https://github.com/AsahiLinux/m1n1
+site: https://github.com/Knix/m1n1
+source: https://github.com/Knix/m1n1
 ---
 m1n1 is an open early-stage bootloader for Apple Silicon macs.  It is
 designed to take the place of a XNU kernel in the Mac boot process and

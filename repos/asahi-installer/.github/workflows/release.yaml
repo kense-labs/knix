@@ -25,7 +25,7 @@ jobs:
 
       - name: Push to Bunny
         env:
-          PKG_URL: "https://storage.bunnycdn.com/asahilinux/${{ inputs.upload-type }}"
+          PKG_URL: "https://storage.bunnycdn.com/knix/${{ inputs.upload-type }}"
           PKG_VER: "installer-${{ needs.build.outputs.installer_ver }}"
           ACCESS_KEY: ${{ secrets.BUNNY_TOKEN }}
         run: |

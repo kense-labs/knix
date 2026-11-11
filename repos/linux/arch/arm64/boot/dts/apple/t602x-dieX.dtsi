@@ -2,7 +2,7 @@
 /*
  * Nodes present on both dies of T6022 (M2 Ultra) and present on M2 Pro/Max.
  *
- * Copyright The Asahi Linux Contributors
+ * Copyright The Knix Contributors
  */
 
 &SOC_NODE {

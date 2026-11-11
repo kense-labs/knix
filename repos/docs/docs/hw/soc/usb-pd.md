@@ -14,7 +14,7 @@ Apple uses vendor-specific structured VDM(Vendor Define Message) messages with t
 
 It is recommended to run this protocol acting as a DFP (i.e. a power source), because the Macs will only act as a DFP themselves after the OS has been booted.
 
-The following commands are in hex-encoded comma-separated format for easy pasting into [vdmtool](https://github.com/AsahiLinux/vdmtool)'s serial console. The protocol makes heavy use of 16-bit data units, packed high to low in the 32-bit VDM words, and zero terminated.
+The following commands are in hex-encoded comma-separated format for easy pasting into [vdmtool](https://github.com/Knix/vdmtool)'s serial console. The protocol makes heavy use of 16-bit data units, packed high to low in the 32-bit VDM words, and zero terminated.
 
 Command replies use the request command ID | 0x40. The reply to command 0x10 is command 0x50, etc.
 

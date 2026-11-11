@@ -8,7 +8,7 @@ This is going over how to install, configure, and manage your own instance of Wi
 Credits to: aykevl and Davide Cavalca
 
 !!! note
-    `dnf install @virtualization` is out of scope for this guide and not supported. It is, as of the writing of this unsupported and broken, as that includes virt-manager, libvirtd, and others. Please refer to https://github.com/AsahiLinux/docs/pull/206#issuecomment-3274648383 for more information. Please proceed with caution if you are experimenting with this. 
+    `dnf install @virtualization` is out of scope for this guide and not supported. It is, as of the writing of this unsupported and broken, as that includes virt-manager, libvirtd, and others. Please refer to https://github.com/Knix/docs/pull/206#issuecomment-3274648383 for more information. Please proceed with caution if you are experimenting with this. 
 ### Steps
 1. Install QEMU, via the command `dnf install qemu`  
 2. Create a new directory on your desktop or wherever, naming it to whatever you want, i.e. let's say, `windows11` using `mkdir windows11` via an appropriate terminal application or right clicking and making a directory on your desktop. 

@@ -2,7 +2,7 @@
 /*
  * NVMe related devices for Apple T602x SoCs.
  *
- * Copyright The Asahi Linux Contributors
+ * Copyright The Knix Contributors
  */
 
 	DIE_NODE(ans_mbox): mbox@347408000 {

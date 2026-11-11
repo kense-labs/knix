@@ -3,7 +3,7 @@
 
 //! Apple AOP driver
 //!
-//! Copyright (C) The Asahi Linux Contributors
+//! Copyright (C) The Knix Contributors
 
 use core::{
     arch::asm,

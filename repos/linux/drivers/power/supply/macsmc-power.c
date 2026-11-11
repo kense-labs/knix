@@ -6,7 +6,7 @@
  * and AC adapter status provided by the Apple SMC (System Management Controller)
  * on Apple Silicon systems.
  *
- * Copyright The Asahi Linux Contributors
+ * Copyright The Knix Contributors
  */
 
 #include <linux/ctype.h>

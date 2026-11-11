@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 /*
- * The sart code is copied from m1n1 (https://github.com/AsahiLinux/m1n1) and
+ * The sart code is copied from m1n1 (https://github.com/Knix/m1n1) and
  * licensed as MIT.
  *
- * (C) Copyright 2022 The Asahi Linux Contributors
+ * (C) Copyright 2022 The Knix Contributors
  */
 
 #include <asm/io.h>

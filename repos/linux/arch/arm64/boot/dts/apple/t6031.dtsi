@@ -2,7 +2,7 @@
 /*
  * Apple T6031 "M3 Max" SoC
  *
- * Copyright The Asahi Linux Contributors
+ * Copyright The Knix Contributors
  */
 
 #include <dt-bindings/gpio/gpio.h>

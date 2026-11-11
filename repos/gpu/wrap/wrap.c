@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2020 Asahi Linux contributors
+ * Copyright (c) 2020 Knix contributors
  * Copyright (c) 1998-2014 Apple Computer, Inc. All rights reserved.
  * Copyright (c) 2005 Apple Computer, Inc. All rights reserved.
  *
  * IOKit prototypes and stub implementations from upstream IOKitLib sources.
  * DYLD_INTERPOSE macro from dyld source code.  All other code in the file is
- * by Asahi Linux contributors.
+ * by Knix contributors.
  *
  * @APPLE_LICENSE_HEADER_START@
  * 

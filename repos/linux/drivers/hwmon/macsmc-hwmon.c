@@ -17,7 +17,7 @@
  *
  * Originally based on a concept by Jean-Francois Bortolotti <jeff@borto.fr>
  *
- * Copyright The Asahi Linux Contributors
+ * Copyright The Knix Contributors
  */
 
 #include <linux/bitfield.h>

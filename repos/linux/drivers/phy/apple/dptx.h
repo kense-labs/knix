@@ -2,7 +2,7 @@
 /*
  * Apple DP TX PHY driver
  *
- * Copyright (C) The Asahi Linux Contributors
+ * Copyright (C) The Knix Contributors
  * Author: Janne Grunau <j@jannau.net>
  */
 

@@ -2,7 +2,7 @@
 /*
  * Driver for TI TPS6598x USB Power Delivery controller family
  *
- * Copyright (C) The Asahi Linux Contributors
+ * Copyright (C) The Knix Contributors
  */
 
 #include <linux/i2c.h>

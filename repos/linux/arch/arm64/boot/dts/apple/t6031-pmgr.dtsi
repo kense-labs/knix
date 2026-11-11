@@ -2,7 +2,7 @@
 /*
  * PMGR Power domains for Apple T6031 "M3 Max/Ultra" SoC
  *
- * Copyright The Asahi Linux Contributors
+ * Copyright The Knix Contributors
  */
 
 &DIE_NODE(pmgr) {

@@ -103,11 +103,11 @@ rm "$PACKAGE/asahi_firmware"
 cp -r "$AFW" "$PACKAGE/"
 if [ -r "$LOGO" ]; then
     cp "$LOGO" "$PACKAGE/logo.icns"
-elif [ ! -r "$ARTWORK/logos/icns/AsahiLinux_logomark.icns" ]; then
+elif [ ! -r "$ARTWORK/logos/icns/Knix_logomark.icns" ]; then
     echo "artwork missing, did you forget to update the submodules?"
     exit 1
 else
-    cp "$ARTWORK/logos/icns/AsahiLinux_logomark.icns" "$PACKAGE/logo.icns"
+    cp "$ARTWORK/logos/icns/Knix_logomark.icns" "$PACKAGE/logo.icns"
 fi
 mkdir -p "$PACKAGE/boot"
 cp "$M1N1_STAGE1" "$PACKAGE/boot/m1n1.bin"

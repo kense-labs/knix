@@ -1,12 +1,12 @@
-# Asahi Linux installer
-The Asahi Linux installer provides a way to install [Asahi Linux](https://asahilinux.org)
-on Apple Silicon Macs. These systems have a bespoke [boot process](https://asahilinux.org/docs/platform/introduction/)
-that requires special considerations to support [alternative operating systems](https://asahilinux.org/docs/platform/open-os-interop/).
+# Knix installer
+The Knix installer provides a way to install [Knix](https://knix.org)
+on Apple Silicon Macs. These systems have a bespoke [boot process](https://knix.org/docs/platform/introduction/)
+that requires special considerations to support [alternative operating systems](https://knix.org/docs/platform/open-os-interop/).
 The Asahi Installer takes care of preparing the system for the installation,
 downloading an image of the distribution to install and laying it on disk.
 
 This repository provides the installer itself, supporting scripts, and the
-`asahi_firmware` Python module (which is also used by [asahi-scripts](https://github.com/AsahiLinux/asahi-scripts)).
+`asahi_firmware` Python module (which is also used by [asahi-scripts](https://github.com/Knix/asahi-scripts)).
 
 ## Building
 Run `./build.sh`, which will produce an installer tree under `releases/`. By
@@ -25,7 +25,7 @@ is deployed from the latest push to `main` by `.github/workflows/release-dev.yam
 The installer is meant to be executed via a bootstrap script. We provide reference
 implementations for [local development](scripts/bootstrap.sh) and for alx.sh
 ([prod](scripts/bootstrap-prod.sh), [dev](scripts/bootstrap-dev.sh)). Following
-our [distribution guidelines](https://asahilinux.org/docs/alt/policy/), downstream
+our [distribution guidelines](https://knix.org/docs/alt/policy/), downstream
 distributions are encouraged to host their own modified copy of these, alongside
 their downstream build of the installer and their installation images. Downstreams
 will also want to customize the variable definitions at the beginning of the script,
@@ -34,7 +34,7 @@ as those will be consumed by the installer and used for its branding. These incl
 * `VERSION_FLAG`: a URI pointing to the `latest` file within the installer tree
 * `INSTALLER_BASE`: a URL pointing to your installer tree
 * `INSTALLER_DATA`: a URI pointing to your installer medatata file (see
-  [asahi-installer-data](https://github.com/AsahiLinux/asahi-installer-data) for
+  [asahi-installer-data](https://github.com/Knix/asahi-installer-data) for
   the one we're using for alx.sh)
 * `INSTALLER_DATA_ALT`: optionally, a URI pointing to an alternative location for
   your installer metadata file; this can be useful in locations where the
@@ -45,9 +45,9 @@ as those will be consumed by the installer and used for its branding. These incl
 * `REPORT_TAG`: a string used to identify your distribution for metrics collection
 
 ## License
-Copyright The Asahi Linux Contributors
+Copyright The Knix Contributors
 
-The Asahi Linux installer is distributed under the MIT license. See LICENSE for the
+The Knix installer is distributed under the MIT license. See LICENSE for the
 license text.
 
 This installer vendors [python-asn1](https://github.com/andrivet/python-asn1), which

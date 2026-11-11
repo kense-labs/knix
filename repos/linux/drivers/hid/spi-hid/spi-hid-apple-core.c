@@ -3,7 +3,7 @@
  *
  * Apple SPI HID transport driver
  *
- * Copyright (C) The Asahi Linux Contributors
+ * Copyright (C) The Knix Contributors
  *
  * Based on: drivers/input/applespi.c
  *

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
-# Copyright (C) 2023 The Asahi Linux Contributors
+# Copyright (C) 2023 The Knix Contributors
 
 PREFIX ?= /usr/
 DATA_DIR ?= $(PREFIX)/share/

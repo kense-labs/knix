@@ -14,7 +14,7 @@ If you are an end user or you would otherwise like to set up a stand-alone insta
 
 So you want to help us bring Linux to M1 Macs? Read on! This guide describes the recommended set-up for developing for Linux on an M1.
 
-This guide is meant for developers who want to hack on Asahi Linux. It is not representative of what the install process for end-users will look like. It is meant for experienced Linux developers who may not know anything about Macs or M1 machines.
+This guide is meant for developers who want to hack on Knix. It is not representative of what the install process for end-users will look like. It is meant for experienced Linux developers who may not know anything about Macs or M1 machines.
 
 It is extremely unlikely that you will damage your computer by following these steps, but we can make no guarantees at this time. Please proceed at your own risk.
 
@@ -232,13 +232,13 @@ The serial port is a UART using 1.2V logic levels, and requires vendor-specific 
 
 ### Using an M1 machine
 
-If you have two M1 boxes, this is the simplest solution. Just grab [macvdmtool](https://github.com/AsahiLinux/macvdmtool/), connect both machines with a standard Type C SuperSpeed cable using the DFU port on *both* machines, and that's it!
+If you have two M1 boxes, this is the simplest solution. Just grab [macvdmtool](https://github.com/Knix/macvdmtool/), connect both machines with a standard Type C SuperSpeed cable using the DFU port on *both* machines, and that's it!
 
 **IMPORTANT NOTE:** The cable needs to be the USB 3 / SuperSpeed type. USB 2 only cables won't work, **the charging cable that comes with the MacBook/MacBook Air will not work** and neither will most other cheap cables or cables marketed for their charging capacity. If it doesn't say "SuperSpeed" or "USB3.0" in the package it almost certainly won't work. If it's thin and bendy it is almost certainly *not* a SuperSpeed cable. Cables that work need to have upwards of **15** wires inside them; if it doesn't feel like it could possibly have that many wires inside, it is not the cable you need. If you are sure your cable is SuperSpeed capable (i.e. devices do enumerate as SuperSpeed through it) and it still doesn't work, then it is non-compliant and the manufacturer deserves to be shamed on their Amazon reviews page, because it means they didn't connect the SBU1/2 pins.
 
 ```shell
 $ xcode-select --install
-$ git clone https://github.com/AsahiLinux/macvdmtool
+$ git clone https://github.com/Knix/macvdmtool
 $ cd macvdmtool
 $ make
 $ sudo ./macvdmtool reboot serial
@@ -277,7 +277,7 @@ You can build a DIY USB-PD interface with the following parts:
 
 Note that most FUSB302 breakout boards will not usefully break out the Type C pins you need, so it's best to use a separate full breakout board.
 
-Go to the [vdmtool](https://github.com/AsahiLinux/vdmtool) repository for more information and a wiring list. Documentation is a bit sparse at the moment. You can ask us on IRC (OFTC/#asahi) if you need help.
+Go to the [vdmtool](https://github.com/Knix/vdmtool) repository for more information and a wiring list. Documentation is a bit sparse at the moment. You can ask us on IRC (OFTC/#asahi) if you need help.
 
 1.2V compatible UART interfaces are relatively rare. 1.8V ones will usually work for input (RX); you can use a resistor divider to step down the TX voltage (`TX -- 470Ω -+- 220Ω -- GND` will step down 1.8V TX to 1.22V at the `+` point).
 
@@ -302,7 +302,7 @@ After booting m1n1, you will now see two CDC-ACM device appear (e.g. as `/dev/tt
 [977821.069287] usb 2-2: New USB device found, idVendor=1209, idProduct=316d, bcdDevice= 1.00
 [977821.069296] usb 2-2: New USB device strings: Mfr=1, Product=2, SerialNumber=3
 [977821.069300] usb 2-2: Product: m1n1 uartproxy da44067
-[977821.069303] usb 2-2: Manufacturer: Asahi Linux
+[977821.069303] usb 2-2: Manufacturer: Knix
 [977821.069305] usb 2-2: SerialNumber: P-0
 [977821.070574] cdc_acm 2-2:1.0: ttyACM0: USB ACM device
 [977821.070825] probe of 2-2:1.0 returned 1 after 323 usecs
@@ -348,7 +348,7 @@ python3.9 -m pip install pyserial construct serial.tool
 You need an `aarch64-linux-gnu-gcc` cross-compiler toolchain (or a native one, if running on ARM64). You also need `dtc` (the devicetree compiler) and `convert` (from ImageMagick) for the boot logos.
 
 ```shell
-$ git clone --recursive https://github.com/AsahiLinux/m1n1.git
+$ git clone --recursive https://github.com/Knix/m1n1.git
 $ cd m1n1
 $ make
 ```
@@ -527,7 +527,7 @@ TTY> sc: Initializing
 TTY> CPU init... CPU: M1 Icestorm
 [...]
 TTY> m1n1 vf14489f
-TTY> Copyright (C) 2021 The Asahi Linux Contributors
+TTY> Copyright (C) 2021 The Knix Contributors
 TTY> Licensed under the MIT license
 [...]
 Proxy is alive again

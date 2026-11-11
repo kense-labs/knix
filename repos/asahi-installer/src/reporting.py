@@ -87,7 +87,7 @@ def report_inner(m, url, tag):
 
     print()
     print()
-    p_question("Help us improve Asahi Linux!")
+    p_question("Help us improve Knix!")
     p_message("We'd love to know how many people are installing Asahi and on what")
     p_message("kind of hardware. Would you mind sending a one-time installation")
     p_message("report to us?")

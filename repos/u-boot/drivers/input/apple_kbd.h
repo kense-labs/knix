@@ -2,7 +2,7 @@
 /*
  * Common code for handling Apple laptop keyboards
  *
- * Copyright The Asahi Linux Contributors
+ * Copyright The Knix Contributors
  */
 
 #ifndef _APPLE_KBD_H

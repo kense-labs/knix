@@ -5,7 +5,7 @@ title: Tethered Boot
 ## Introduction
 This guide will walk you through the steps required to set up your Apple Silicon Mac for booting a Linux kernel in a dual boot environment with macOS.
 
-This guide is intended specifically for kernel developers and advanced users who wish to assist in testing patches in the <a href="https://github.com/AsahiLinux/linux">`asahi`</a> branch. Building a kernel is outside the scope of this guide. If you are here, you should be capable of building an AArch64 kernel by yourself. A somewhat sane `.config` can be found [here](https://github.com/AsahiLinux/PKGBUILDs/blob/main/linux-asahi/config). Keep in mind that m1n1 expects a gzipped kernel image, your target machine's Device Tree, and will also optionally take a gzipped _initramfs_.
+This guide is intended specifically for kernel developers and advanced users who wish to assist in testing patches in the <a href="https://github.com/Knix/linux">`asahi`</a> branch. Building a kernel is outside the scope of this guide. If you are here, you should be capable of building an AArch64 kernel by yourself. A somewhat sane `.config` can be found [here](https://github.com/Knix/PKGBUILDs/blob/main/linux-asahi/config). Keep in mind that m1n1 expects a gzipped kernel image, your target machine's Device Tree, and will also optionally take a gzipped _initramfs_.
 
 ## Hardware Requirements
 
@@ -27,20 +27,20 @@ pip3 install --user pyserial construct serial.tool
 
 Then, clone the `m1n1` git repo and build it.
 ```shell
-git clone --recursive https://github.com/AsahiLinux/m1n1.git
+git clone --recursive https://github.com/Knix/m1n1.git
 cd m1n1
 make
 ```
 
 If you are on a native aarch64 machine, use `make ARCH=` instead.
 
-Install the [udev rules](https://github.com/AsahiLinux/m1n1/blob/main/udev/80-m1n1.rules) into `/etc/udev/rules.d` to get pretty device names for m1n1. You may have to add your user to a specific group (e.g. `uucp`) to get non-root access to the devices, or otherwise modify the udev rules to change the device permissions.
+Install the [udev rules](https://github.com/Knix/m1n1/blob/main/udev/80-m1n1.rules) into `/etc/udev/rules.d` to get pretty device names for m1n1. You may have to add your user to a specific group (e.g. `uucp`) to get non-root access to the devices, or otherwise modify the udev rules to change the device permissions.
 
 We also recommend installing `picocom` for use as a serial terminal, which should be available in your distro's package repository.
 
 ## Installing m1n1 on your Apple Silicon Mac
 
-You can use the public Asahi Linux installer to install it. Open up a macOS terminal and run:
+You can use the public Knix installer to install it. Open up a macOS terminal and run:
 
 ```shell
 curl https://alx.sh | sh
@@ -54,9 +54,9 @@ Alternatively, if you enable expert mode in the installer, you can opt to instal
 
 m1n1 consists of two stages. Stage 1 is installed during the 1TR step of the installation (after the first reboot into macOS recovery) and cannot be modified without a trip through recovery. Stage 2 is loaded from the EFI system partition at `m1n1/boot.bin`, and can be updated by distributions to add new features and hardware support. Release builds of stage 1 have a backdoor proxy mode, which allows for optional tethered boot. This has to be enabled from 1TR, and requires machine authentication for security.
 
-We use the SIP (System Integrity Protection) disable flag applied to the Asahi Linux volume to control this mode. On macOS volumes this normally disables certain kernel security features, while m1n1 uses it to signal that it should enable the backdoor proxy mode if the system is booting in verbose mode. This change is per-OS, so doing it for the Asahi/m1n1 volume will not affect any macOS installs.
+We use the SIP (System Integrity Protection) disable flag applied to the Knix volume to control this mode. On macOS volumes this normally disables certain kernel security features, while m1n1 uses it to signal that it should enable the backdoor proxy mode if the system is booting in verbose mode. This change is per-OS, so doing it for the Asahi/m1n1 volume will not affect any macOS installs.
 
-To enable this mode, first ensure that m1n1 / Asahi Linux is the default boot volume (this will be the case after a fresh install), then boot the machine by holding down the power button from a fully shut down state until "Loading startup options..." appears. Select "Options", enter your macOS machine owner credentials if prompted, then click on the Utilities menu and open a Terminal window.
+To enable this mode, first ensure that m1n1 / Knix is the default boot volume (this will be the case after a fresh install), then boot the machine by holding down the power button from a fully shut down state until "Loading startup options..." appears. Select "Options", enter your macOS machine owner credentials if prompted, then click on the Utilities menu and open a Terminal window.
 
 From there, run:
 
@@ -64,7 +64,7 @@ From there, run:
 csrutil disable && nvram boot-args=-v
 ```
 
-Select your Asahi Linux volume when prompted, and authenticate yourself when prompted. Once this is done, shut down the machine. If you get a pairing error, that means the default boot OS does not match the OS you are making the change for (you can only downgrade the security settings for the default boot OS, as that controls which recoveryOS boots).
+Select your Knix volume when prompted, and authenticate yourself when prompted. Once this is done, shut down the machine. If you get a pairing error, that means the default boot OS does not match the OS you are making the change for (you can only downgrade the security settings for the default boot OS, as that controls which recoveryOS boots).
 
 In this mode, m1n1 will wait for 5 seconds on boot. If a USB connection is detected and the corresponding TTY device (either of the two) is opened in the host machine, it will abort the regular boot process and go into proxy mode. This allows you to boot in tethered mode when needed, while letting the machine boot stand-alone otherwise.
 
@@ -85,7 +85,7 @@ python3 proxyclient/tools/linux.py -b 'earlycon debug rootwait root=/dev/nvme0n1
 ```
 In this example, we pass `m1n1` a gzipped kernel, and the Device Tree for the 14" MacBook Pro with M1 Pro SoC, telling it to mount /dev/nvme0n1p5 as the root filesystem. Keep in mind that the order of arguments you pass to `linux.py` matters -- you must pass it the kernel first, Device Tree second, and optionally an initramfs last. If all goes well, you should see penguins in the framebuffer.
 
-If you are using the Asahi Linux (Arch Linux ARM) rootfs, for tethered boot we recommend a kernel with modules disabled (all built-in). You can ignore the Arch Linux initramfs, but you should instead provide an initramfs with `/lib/firmware/{brcm/apple}` to make sure the built-in modules can find their firmware early. Then, just pass `root=/dev/nvme0n1p5` (substitute whatever your rootfs partition number is; 5 is the typical number for vanilla installs) to boot directly into the system.
+If you are using the Knix (Arch Linux ARM) rootfs, for tethered boot we recommend a kernel with modules disabled (all built-in). You can ignore the Arch Linux initramfs, but you should instead provide an initramfs with `/lib/firmware/{brcm/apple}` to make sure the built-in modules can find their firmware early. Then, just pass `root=/dev/nvme0n1p5` (substitute whatever your rootfs partition number is; 5 is the typical number for vanilla installs) to boot directly into the system.
 
 ## Booting a kernel under the hypervisor
 

@@ -7,7 +7,7 @@ echo "IT WILL INDISCRIMINATELY WIPE A BUNCH OF PARTITIONS"
 echo "THAT MAY OR MAY NOT BE THE ONES YOU WANT TO WIPE."
 echo
 echo "You are much better off reading and understanding this guide:"
-echo "https://github.com/AsahiLinux/docs/wiki/Partitioning-cheatsheet"
+echo "https://github.com/Knix/docs/wiki/Partitioning-cheatsheet"
 echo
 echo "Press enter twice if you really want to continue."
 echo "Press Control-C to exit."

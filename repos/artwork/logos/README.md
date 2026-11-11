@@ -1,10 +1,10 @@
-## Asahi Linux logos
+## Knix logos
 
-This directory contains the logo art for Asahi Linux.
+This directory contains the logo art for Knix.
 
-You may use the logos to reference the Asahi Linux project. Please do not use them to represent other projects, or to imply any association with or endorsement by Asahi Linux.
+You may use the logos to reference the Knix project. Please do not use them to represent other projects, or to imply any association with or endorsement by Knix.
 
-The Asahi Linux logo art is copyright (c) 2021 soundflora* and Hector Martin.
+The Knix logo art is copyright (c) 2021 soundflora* and Hector Martin.
 
 The logo art is licensed under CC BY-SA 4.0. Please see the LICENSE file for the license text.
 
@@ -19,29 +19,29 @@ These images link to the clean SVG versions of the logos. Additional PNG version
 
 ### Logo (color)
 
-[![Foo](png_1x/AsahiLinux_logo.png)](svg/AsahiLinux_logo.svg)
+[![Foo](png_1x/Knix_logo.png)](svg/Knix_logo.svg)
 
 ### Logo (color, for dark backgrounds)
 
-[![Foo](png_1x/AsahiLinux_logo_darkbg.png)](svg/AsahiLinux_logo_darkbg.svg)
+[![Foo](png_1x/Knix_logo_darkbg.png)](svg/Knix_logo_darkbg.svg)
 
 ### Logo (monochrome)
 
-[![Foo](png_1x/AsahiLinux_logo_mono.png)](svg/AsahiLinux_logo_mono.svg)
+[![Foo](png_1x/Knix_logo_mono.png)](svg/Knix_logo_mono.svg)
 
 ### Logomark only (color)
 
-[![Foo](png_1x/AsahiLinux_logomark.png)](svg/AsahiLinux_logomark.svg)
+[![Foo](png_1x/Knix_logomark.png)](svg/Knix_logomark.svg)
 
 ### Logomark (monochrome)
 
-[![Foo](png_1x/AsahiLinux_logomark_mono.png)](svg/AsahiLinux_logomark_mono.svg)
+[![Foo](png_1x/Knix_logomark_mono.png)](svg/Knix_logomark_mono.svg)
 
 ## Logo construction
 
 A geometric reference for how the logo was constructed is available:
 
-[![Foo](AsahiLinux_logo_reference.png)](AsahiLinux_logo_reference.svg)
+[![Foo](Knix_logo_reference.png)](Knix_logo_reference.svg)
 
 Please do not use the SVG data in this file as-is, as the polygons butt up against each other and most SVG renderers do not implement correct anti-aliasing and will produce incorrect output. Use the above SVG versions instead, where the polygons have been overlapped to ensure correct rendering.
 

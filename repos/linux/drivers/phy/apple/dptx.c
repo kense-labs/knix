@@ -2,12 +2,12 @@
 /*
  * Apple dptx PHY driver
  *
- * Copyright (C) The Asahi Linux Contributors
+ * Copyright (C) The Knix Contributors
  * Author: Janne Grunau <j@jannau.net>
  *
  * based on drivers/phy/apple/atc.c
  *
- * Copyright (C) The Asahi Linux Contributors
+ * Copyright (C) The Knix Contributors
  * Author: Sven Peter <sven@svenpeter.dev>
  */
 

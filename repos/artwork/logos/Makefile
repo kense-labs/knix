@@ -48,8 +48,8 @@ png_16/%.png : src/%.svg
 icns/%.icns: png_16/%.png png_32/%.png png_48/%.png png_128/%.png png_256/%.png png_512/%.png
 	png2icns $@ png_{16,32,48,128,256,512}/$(patsubst icns/%.icns,%.png,$@)
 
-boot_logo.ppm: src/AsahiLinux_logomark.svg
-	inkscape src/AsahiLinux_logomark.svg --export-area=24:24:550:550 \
+boot_logo.ppm: src/Knix_logomark.svg
+	inkscape src/Knix_logomark.svg --export-area=24:24:550:550 \
 		--export-width 80 --export-background=black \
 		--export-png=- | \
 		pngtopnm | ppmquant 224 | pnmtoplainpnm > $@

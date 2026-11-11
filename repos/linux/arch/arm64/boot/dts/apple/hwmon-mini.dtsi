@@ -3,7 +3,7 @@
  * hwmon sensors common to the Mac mini desktop
  * models, but not the Studio or Pro.
  *
- * Copyright The Asahi Linux Contributors
+ * Copyright The Knix Contributors
  */
 
 #include "hwmon-fan.dtsi"
