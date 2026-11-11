@@ -1,0 +1,94 @@
+project('avd-fw', 'c',
+    default_options: ['c_std=c11'],
+    license: 'MIT',
+    license_files: 'LICENSE',
+    meson_version: '>=1.4.0',
+    version: run_command('version.sh', 'get-vcs', check: true).stdout().strip(),
+)
+
+# Provide a version for `meson dist` tarballs
+meson.add_dist_script('version.sh', 'set-dist', meson.project_version())
+
+# cross files are needed as those are the only way to set default compiler
+# and specify the host arch
+if not meson.is_cross_build()
+    error('must be invoked with "meson setup --cross-file=./llvm.ini"')
+endif
+
+add_project_arguments(['-nostdlib', '-mcpu=cortex-m3', '-mthumb'], language : 'c')
+add_project_link_arguments('-nostdlib', language : 'c')
+
+# set target for clang build
+if meson.get_compiler('c').get_id() == 'clang'
+    add_project_arguments('--target=arm-none-eabi', language : 'c')
+    add_project_link_arguments('--target=arm-none-eabi', language : 'c')
+endif
+
+install_dir = get_option('prefix') / 'lib' / get_option('firmwaredir') / 'apple'
+
+objcopy = find_program('llvm-objcopy')
+
+sources = files(['src/avd.c', 'src/config.c', 'src/irq.c', 'src/util.c'])
+ld_scripts = files('avd-cm3.ld')
+
+avd_variants = [
+    { 'name': 'avd-fw-v2-t0', 'version': '2', 'tier': '0', 'pad': '0xc000'},
+    { 'name': 'avd-fw-v3-t0', 'version': '3', 'tier': '0', 'pad': '0x10000'},
+    { 'name': 'avd-fw-v3-t1', 'version': '3', 'tier': '1', 'pad': '0x10000'},
+    { 'name': 'avd-fw-v4-t0', 'version': '4', 'tier': '0', 'pad': '0x12000'},
+    { 'name': 'avd-fw-v5-t0', 'version': '5', 'tier': '0', 'pad': '0x10000'},
+    { 'name': 'avd-fw-v5-t1', 'version': '5', 'tier': '1', 'pad': '0x12000'},
+]
+
+conf_data = configuration_data()
+conf_data.set_quoted('AVD_FW_VERSION', meson.project_version())
+conf_data.set_quoted('AVD_FW_LICENSE', meson.project_license())
+
+_codecs = get_option('video-codecs')
+patent_codecs = ['h264', 'h265']
+free_codecs = ['av1', 'vp9']
+all_codecs = patent_codecs + free_codecs
+
+if _codecs.contains('all')
+  _codecs = all_codecs
+elif _codecs.contains('all_free')
+  _codecs += free_codecs
+endif
+
+foreach c : all_codecs
+    conf_data.set10('AVD_ENABLE_CODEC_' + c.to_upper(), _codecs.contains(c))
+endforeach
+
+configure_file(output : 'config.h',
+               configuration : conf_data)
+
+foreach var : avd_variants
+    e = executable(var['name'] + '.elf',
+        sources,
+        c_args: ['-DAVD_VER=' + var['version'],
+                 '-DAVD_TIER=' + var['tier'],
+                 '-DAVD_TARGET="' + var['name'] + '"',
+                ],
+        link_args: ['-T', ld_scripts[0].full_path()],
+        link_depends: ld_scripts,
+    )
+
+    if meson.version().version_compare('>=1.10.0') == true
+        custom_target(
+            output: var['name'] + '.bin',
+            build_subdir: 'apple',
+            input: e,
+            command: [objcopy, '-O', 'binary',  '--strip-debug', '--pad-to=' + var['pad'], '@INPUT0@', '@OUTPUT0@'],
+            install: true,
+            install_dir: install_dir
+        )
+    else
+        custom_target(
+            output: var['name'] + '.bin',
+            input: e,
+            command: [objcopy, '-O', 'binary',  '--strip-debug', '--pad-to=' + var['pad'], '@INPUT0@', '@OUTPUT0@'],
+            install: true,
+            install_dir: install_dir
+        )
+    endif
+endforeach

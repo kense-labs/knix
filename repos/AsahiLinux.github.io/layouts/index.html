@@ -1,0 +1,111 @@
+{{ .Scratch.Set "body_class" "landing" }}
+{{ partial "header.html" . }}
+<section id="eye-catch">
+    <div>
+        <div>
+            <h1>Linux on Apple Silicon</h1>
+            <p>Asahi Linux aims to bring you a polished Linux® experience on Apple Silicon Macs.</p>
+            <a href="/about" class="more">Learn more<i class="fas fa-angle-right more"></i></a>
+            <h2>Install from macOS</h2>
+            <pre><code id="curl">curl https://alx.sh | sh</code> <a id="copy-button" href="#"><i class="fa fa-clipboard"></i></code></a></pre>
+            <h3><a class="more" href="/fedora/#device-support">Device support<i class="fas fa-angle-right more"></i></a></h3>
+        </div>
+        <div>
+            <img class="laptop" src="/img/asahilinux_laptop.svg?{{ slicestr (readFile "static/img/asahilinux_laptop.svg" | md5) 0 8 }}" alt="Asahi Linux on a laptop">
+        </div>
+    </div>
+</section>
+<section id="download">
+    <div class="center-title">
+        <h1><a class="stealth" href="/fedora">Download</a></h1>
+    </div>
+    <div class="download-card center-card">
+        <i class="big-icon fas fa-arrow-down"></i>
+        <p>Fedora Asahi Remix is now released!</p>
+        <a href="/fedora" class="more">Read the announcement<i class="fas fa-angle-right more"></i></a>
+    </div>
+</section>
+<section id="community" class="white-text">
+    <div class="center-title">
+        <h1>Community</h1>
+    </div>
+    <div class="community-links">
+        <div class="community-fedora">
+            <div class="community-card">
+                <div class="community-icons">
+                    <i class="big-icon fab fa-discourse"></i>
+                </div>
+                <div class="community-text">
+                    <p>Ask questions and talk with other users on our little corner of Fedora Discussion!</p>
+                </div>
+            </div>
+            <div class="community-button discourse-button">
+                <a rel="me" href="https://discussion.fedoraproject.org/c/neighbors/asahi/92" class="mastodon-button rounded-button"><i class="fab fa-discourse"></i> Asahi Linux Discussion</a>
+            </div>
+        </div>
+        <div class="community-twitter">
+            <div class="community-card">
+                <div class="community-icons">
+                    <i class="big-icon fab fa-mastodon"></i>
+                </div>
+                <div class="community-text">
+                    <p>Follow us on Mastodon to get announcements and other information.</p>
+                </div>
+            </div>
+            <div class="community-button twitter-buttons">
+                <a rel="me" href="https://social.treehouse.systems/@AsahiLinux" class="mastodon-button rounded-button"><i class="fab fa-mastodon"></i> @AsahiLinux<wbr>@treehouse.systems</a>
+            </div>
+        </div>
+        <div class="community-chat">
+            <div class="community-card">
+                <div class="community-icons">
+                    <i class="big-icon fas fa-hashtag"></i>
+                </div>
+                <div class="community-text">
+                    <p>Our primary communications platform is IRC on OFTC.</p>
+                </div>
+            </div>
+            <div class="community-button chat-button">
+                <a href="/community" class="rounded-button"><i class="fas fa-hashtag"></i> Channel list</a>
+            </div>
+        </div>
+    </div>
+</section>
+<section id="contribute">
+    <div class="center-title">
+        <h1>Contribute</h1>
+    </div>
+    <div class="contribute-card center-card">
+        <i class="big-icon fab fa-github"></i>
+        <p>Asahi Linux and the open source projects it depends on are made possible by communities of volunteers. All contributors are welcome, of any skill level!</p>
+        <a href="/contribute" class="more">How to contribute<i class="fas fa-angle-right more"></i></a>
+    </div>
+</section>
+<section id="documentation">
+    <div class="center-title">
+        <h1>Documentation</h1>
+    </div>
+    <div class="documentation-card center-card">
+        <i class="big-icon fas fa-book-open"></i>
+        <p>We are documenting the Apple Silicon platform on our documentation website.</p>
+        <a href="/docs" class="more">Read the documentation<i class="fas fa-angle-right more"></i></a>
+    </div>
+</section>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    var btn = document.getElementById("copy-button");
+    btn.onmouseover = function(e) {
+        btn.firstChild.classList.remove("fa-check");
+        btn.firstChild.classList.add("fa-clipboard");
+    }
+    btn.onclick = function(e) {
+        var text = document.getElementById("curl");
+        window.getSelection().selectAllChildren(text);
+        navigator.clipboard.writeText(text.textContent);
+        btn.firstChild.classList.add("fa-check");
+        btn.firstChild.classList.remove("fa-clipboard");
+        e.preventDefault();
+    };
+});
+</script>
+{{ partial "footer.html" . }}

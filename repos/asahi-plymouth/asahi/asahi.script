@@ -1,0 +1,101 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
+/* Asahi Linux Plymouth Theme
+ *
+ * This theme emulates the macOS boot splash, with the Asahi logo
+ * replacing the Apple logo.
+ *
+ *
+ *
+ * (C) 2021 The Asahi Linux Contributors
+ */
+
+
+
+
+/* Set up some global stuff everything needs access to
+ *
+ * We position stuff relative to the width and height of the screen,
+ * as well as the position of the logo and spinner, so we need global
+ * access to those "objects".
+ */
+width = Window.GetWidth();
+height = Window.GetHeight();
+logo;
+bar;
+fill;
+slider;
+message;
+
+
+fun show_message(text) {
+    message.text = Image.Text(text, 1, 1, 1, "center");
+    message.sprite = Sprite(message.text);
+    message.sprite.SetImage(message.text);
+    message.x = ((width / 2) - (message.text.GetWidth() / 2));
+    message.y = (bar.y * 1.02);
+
+    /* Display message below progress bar */
+    message.sprite.SetPosition(message.x, message.y, 1005);
+    message.sprite.SetOpacity(1);
+}
+Plymouth.SetDisplayMessageFunction(show_message);
+Plymouth.SetUpdateStatusFunction(show_message);
+
+
+fun set_progress(elapsed, progress){
+    /* Since the slider.x starts as bar.x, we can use the latter
+     * as a reference point to calculate how far along the progress
+     * bar the slider should be at any given moment. This should also
+     * work for update progress, but I haven't figured out how to hook
+     * the progress bar up to that yet, so we still hide it during updates.
+     */
+    slider.x = (bar.x + (slider.image.GetWidth() * progress));
+    slider.sprite.SetX(slider.x);
+}
+Plymouth.SetBootProgressFunction(set_progress);
+
+
+fun init() {
+    /* Set background colour to black */
+    Window.SetBackgroundTopColor(0.0, 0.0, 0.0);
+    Window.SetBackgroundBottomColour(0.0, 0.0, 0.0);
+
+    logo.image = Image("asahi.png");
+    logo.image = logo.image.Scale(logo.image.GetWidth() * 0.5, logo.image.GetHeight() * 0.5);
+    logo.sprite = Sprite(logo.image);
+    logo.x = ((width / 2) - (logo.image.GetWidth() / 2));
+    logo.y = ((height / 2) - (logo.image.GetHeight() / 2));
+    logo.sprite.SetPosition(logo.x, logo.y, 1000);
+    logo.sprite.SetOpacity(1);
+
+    /* We create a rectangular sprite the same colour as the background,
+     * place it over the bar fill but *under* the bar outline, and then
+     * shift it to the right of the screen so that the bar appears to be
+     * filling up.
+     */
+    bar.image = Image("progbar.png");
+    bar.sprite = Sprite(bar.image);
+    bar.x = ((width / 2) - (bar.image.GetWidth() / 2));
+    bar.y = ((0.90 * height) - (bar.image.GetHeight()));
+    bar.sprite.SetPosition(bar.x, bar.y, 1002);
+
+    fill.image = Image("progfill.png");
+    fill.sprite = Sprite(fill.image);
+    fill.sprite.SetPosition(bar.x, bar.y, 1000);
+
+    slider.image = Image("progblack.png");
+    slider.sprite = Sprite(slider.image);
+    slider.x = bar.x; /* We need to move this sprite alone */
+    slider.sprite.SetPosition(bar.x, bar.y, 1001);
+
+    if (Plymouth.GetMode() != "boot") {
+        bar.sprite.SetOpacity(0);
+        slider.sprite.SetOpacity(0);
+        fill.sprite.SetOpacity(0);
+    }
+}
+
+
+// Run the splash screen
+init();

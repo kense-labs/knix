@@ -1,0 +1,9 @@
+[Plymouth Theme]
+Name=asahi
+Description=Plymouth theme for Asahi Linux
+Comment=(C) 2021 The Asahi Linux Contributors
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/asahi
+ScriptFile=/usr/share/plymouth/themes/asahi/asahi.script

@@ -1,0 +1,6 @@
+# knix root ignores. Upstream .gitignore files inside repos/ are part of the snapshot
+# and are deliberately kept; `git add -f repos/` is used when collecting.
+.DS_Store
+*.swp
+__pycache__/
+*.pyc

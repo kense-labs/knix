@@ -1,0 +1,68 @@
+/////
+vim:set ts=4 sw=4 syntax=asciidoc noet:
+/////
+lsinitcpio(1)
+=============
+
+Name
+----
+lsinitcpio - Examine an initramfs
+
+Synopsis
+--------
+'lsinitcpio' [action] [options] 'image'
+
+Description
+-----------
+Examines the contents of an initcpio image. Without any options, 'lsinitcpio'
+simply lists the contents of an image.
+
+Actions
+-------
+*-a, \--analyze*::
+	Analyze the contents of the specified image and print output in human
+	readable form.
+
+*-c, \--config*::
+	Show the configuration file the given image was built with.
+
+*-l, \--list*::
+	List the contents of the archive. This is the default action. Pass the *-v*
+	flag for more detailed results.
+
+*-x, \--extract*::
+	Extract the given image to the current working directory.
+
+Options
+-------
+
+*-h, \--help*::
+	Output a short overview of available command-line switches.
+
+*-n, \--nocolor*::
+	Disable color output.
+
+*-V, \--version*::
+	Display version information.
+
+*-v, \--verbose*::
+	Be more verbose. In particular, show long style output when listing
+	the contents of an image, and show files as they are extracted when
+	the *-x* option is given.
+
+Bugs
+----
+Upon writing this manpage, there were no noticeable bugs present. Please visit
+<http://bugs.archlinux.org/> for an up to date list.
+
+See Also
+--------
+*mkinitcpio*(8)
+
+Authors
+-------
+lsinitcpio was created by Dave Reisner <dreisner@archlinux.org>
+
+Copyright
+---------
+Copyright (c) Arch Linux 2011-2021

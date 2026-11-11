@@ -1,0 +1,146 @@
+<blxml>
+  <enum name="Channel">
+    <value name="R" value="0"/>
+    <value name="G" value="1"/>
+    <value name="B" value="2"/>
+    <value name="A" value="3"/>
+  </enum>
+
+  <enum name="Primitive">
+    <value name="Points" value="0"/>
+    <value name="Lines" value="1"/>
+    <value name="Line strip" value="3"/>
+    <value name="Triangles" value="6"/>
+    <value name="Triangle strip" value="9"/>
+  </enum>
+
+  <struct name="Render Target" size="16">
+    <field name="Unk 0" size="17" start="0" type="hex"/>
+    <field name="Swizzle R" size="2" start="16" type="Channel"/>
+    <field name="Swizzle G" size="2" start="18" type="Channel"/>
+    <field name="Swizzle B" size="2" start="20" type="Channel"/>
+    <field name="Swizzle A" size="2" start="22" type="Channel"/>
+    <field name="Width" size="14" start="24" type="uint" modifier="minus(1)"/>
+    <field name="Height" size="14" start="38" type="uint" modifier="minus(1)"/>
+    <field name="Unk 52" size="1" start="52" type="bool"/>
+    <field name="Rotate 90" size="1" start="53" type="bool" default="false"/>
+    <field name="Flip vertical" size="1" start="54" type="bool" default="false"/>
+    <field name="Unk 55" size="9" start="55" type="hex"/>
+    <field name="Buffer" size="36" start="64" type="address" modifier="shr(4)"/>
+    <field name="Unk 100" size="28" start="100" type="hex"/>
+  </struct>
+
+  <!--- Identified by tag? -->
+  <struct name="Viewport" size="40">
+    <field name="Tag 1" size="32" start="0:0" type="hex" default="0xc00"/>
+    <field name="Tag 2" size="32" start="1:0" type="hex" default="0x18"/>
+    <field name="Tag 3" size="32" start="2:0" type="hex" default="0x12"/>
+    <field name="Tag 4" size="32" start="3:0" type="hex" default="0x0"/>
+    <field name="Translate X" size="32" start="4:0" type="float"/>
+    <field name="Scale X" size="32" start="5:0" type="float"/>
+    <field name="Translate Y" size="32" start="6:0" type="float"/>
+    <field name="Scale Y" size="32" start="7:0" type="float"/>
+    <field name="Near Z" size="32" start="8:0" type="float"/>
+    <field name="Far Z" size="32" start="9:0" type="float"/>
+  </struct>
+
+  <struct name="Linkage" size="16">
+    <field name="Tag" size="32" start="0:0" type="hex" default="0xC020000"/>
+    <field name="Unk 1" size="32" start="1:0" type="hex" default="0x100"/>
+    <field name="Unk 2" size="32" start="2:0" type="hex" default="0x0"/>
+    <field name="Varying count" size="32" start="3:0" type="uint"/>
+  </struct>
+
+  <!--- Commands valid within a pipeline -->
+  <struct name="Bind uniform" size="8">
+    <field name="Tag" size="8" start="0:0" type="hex" default="0x1d"/>
+    <field name="Start (halfs)" size="8" start="0:8" type="uint"/>
+    <field name="Unk" size="4" start="0:16" type="hex" default="0x0"/>
+    <field name="Size (halfs)" size="4" start="0:20" type="uint"/>
+    <field name="Buffer" size="40" start="0:24" type="address"/>
+  </struct>
+
+  <enum name="Preshader mode">
+    <value name="Preshader" value="3"/>
+    <value name="No preshader" value="8"/>
+  </enum>
+
+  <struct name="Set shader" size="24">
+    <field name="Tag" size="8" start="0:0" type="hex" default="0x4d"/>
+    <field name="Unk 1" size="24" start="0:8" type="hex" default="0x90"/>
+    <field name="Unk 2" size="16" start="1:0" type="hex" default="0x40d"/> <!-- TODO differs with stage -->
+    <field name="Code" size="32" start="1:16" type="address"/>
+    <field name="Unk 3" size="8" start="2:16" type="hex" default="0x8d"/>
+    <field name="Register quadwords" size="5" start="2:24" type="uint"/> <!-- 0 for max -->
+    <field name="Unk 3b" size="3" start="2:29" type="hex" default="0x0"/>
+    <field name="Spill size" size="8" start="3:0" type="hex" default="0"/> <!-- TODO: determine relation, see docs/table.py -->
+    <field name="Unk 4" size="12" start="3:8" type="hex" default="0x801"/>
+    <field name="Preshader mode" size="4" start="3:20" type="Preshader mode" default="No preshader"/>
+    <field name="Unk 6" size="8" start="3:24" type="hex" default="0x0"/>
+    <field name="Preshader unk" size="16" start="4:0" type="hex" default="0x0"/>
+    <field name="Preshader code" size="32" start="4:16" type="address"/>
+    <field name="Unk 7" size="16" start="5:16" type="hex" default="0x0"/> <!-- blob is inconsistent -->
+  </struct>
+
+  <struct name="Set shader extended" size="32">
+    <field name="Tag" size="8" start="0:0" type="hex" default="0x4d"/>
+    <field name="Unk 1" size="24" start="0:8" type="hex" default="0x2010bd"/>
+    <field name="Unk 2" size="16" start="1:0" type="hex" default="0x50d"/>
+    <field name="Code" size="32" start="1:16" type="address"/>
+    <field name="Unk 3" size="8" start="2:16" type="hex" default="0x28d"/>
+    <field name="Register quadwords" size="5" start="2:24" type="uint"/> <!-- 0 for max -->
+    <field name="Unk 3b" size="3" start="2:29" type="hex" default="0x0"/>
+    <field name="Frag unk" size="32" start="3:0" type="hex" default="0xf3580100"/>
+    <field name="Spill size" size="8" start="4:0" type="hex" default="0"/> <!-- TODO: determine relation, see docs/table.py -->
+    <field name="Unk 4" size="12" start="4:8" type="hex" default="0x801"/>
+    <field name="Preshader mode" size="4" start="4:20" type="Preshader mode" default="No preshader"/>
+    <field name="Unk 6" size="8" start="4:24" type="hex" default="0x0"/>
+    <field name="Preshader unk" size="16" start="5:0" type="hex" default="0x0"/>
+    <field name="Preshader code" size="32" start="5:16" type="address"/>
+    <field name="Unk 7" size="16" start="6:16" type="hex" default="0x0"/> <!-- blob is inconsistent -->
+    <field name="Unk 8" size="32" start="7:0" type="hex" default="0x0"/> <!-- may not exist -->
+  </struct>
+
+  <!--- Command to bind a vertex pipeline, followed by subcommands. Counts are
+        specified in 32-bit word units. Intepretation per-shader stage. Unknown what
+        output counts mean for fragment yet -->
+  <struct name="Bind pipeline" size="16">
+    <field name="Tag" size="32" start="0:0" type="hex" default="0x4000002e"/>
+    <field name="Unk 1" size="16" start="1:0" type="hex" default="0x1002"/>
+    <field name="Input count" size="8" start="1:16" type="uint" default="0"/>
+    <field name="Padding 1" size="8" start="1:24" type="hex" default="0x0"/>
+    <field name="Pipeline" size="32" start="2:0" type="address"/>
+    <field name="Output count 1" size="8" start="3:0" type="uint" default="0"/>
+    <field name="Output count 2" size="8" start="3:8" type="uint" default="0"/>
+    <field name="Padding 2" size="16" start="3:16" type="hex" default="0x0"/>
+  </struct>
+
+  <!-- Subcommands are packed inside sized records -->
+  <struct name="Record" size="8">
+    <field name="Size (words)" size="8" start="0:0" type="uint"/>
+    <field name="Tag" size="16" start="0:8" type="hex" default="0x0000"/>
+    <field name="Data" size="40" start="0:24" type="address"/>
+  </struct>
+
+  <!--- Command to issue a direct non-indexed draw -->
+  <struct name="Draw" size="15">
+    <field name="Primitive" size="8" start="0:0" type="Primitive"/>
+    <field name="Command" size="16" start="0:8" type="hex" default="0x61c0"/>
+    <field name="Vertex count" size="32" start="0:24" type="uint"/>
+    <field name="Instance count" size="32" start="1:24" type="uint"/> <!-- must be nonzero -->
+    <field name="Vertex start" size="32" start="2:24" type="uint"/>
+  </struct>
+
+  <!--- Command to launch a direct compute kernel -->
+  <struct name="Launch" size="36">
+    <field name="Command" size="32" start="0:0" type="hex" default="0x1002"/>
+    <field name="Pipeline" size="32" start="1:0" type="address"/>
+    <field name="Group count X" size="32" start="2:0" type="uint"/>
+    <field name="Group count Y" size="32" start="3:0" type="uint"/>
+    <field name="Group count Z" size="32" start="4:0" type="uint"/>
+    <field name="Local size X" size="32" start="5:0" type="uint"/>
+    <field name="Local size Y" size="32" start="6:0" type="uint"/>
+    <field name="Local size Z" size="32" start="7:0" type="uint"/>
+    <field name="Unk" size="32" start="8:0" type="hex" default="0x60000160"/>
+  </struct>
+</blxml>

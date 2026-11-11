@@ -1,0 +1,53 @@
+#!/bin/sh
+# SPDX-License-Identifier: MIT
+
+set -eu
+
+unset PYTHON
+
+[ -e /etc/default/asahi-fwupdate ] && . /etc/default/asahi-fwupdate
+
+: "${ASAHIFW:=}"
+: "${VENDORFW:=}"
+: "${VENDORFWTMP:=/run/.vendorfw-tmp}"
+: "${PYTHON:=/usr/bin/python3}"
+
+if [ -e "$(dirname "$0")"/functions.sh ]; then
+    . "$(dirname "$0")"/functions.sh
+else
+    . /usr/share/asahi-scripts/functions.sh
+fi
+
+umount=false
+
+if [ -z "$ASAHIFW" ] && [ -z "$VENDORFW" ]; then
+    mount_sys_esp /run/.system-efi
+    ASAHIFW="/run/.system-efi/asahi/"
+    VENDORFW="/run/.system-efi/vendorfw"
+    umount=true
+fi
+
+if [ ! -e "${ASAHIFW}/all_firmware.tar.gz" ]; then
+    echo "No firmware tarball found, skipping extraction"
+    exit 0
+fi
+
+if [ ! -d "$VENDORFW" ]; then
+  mkdir -p "$VENDORFW"
+fi
+
+if [ ! -d "$VENDORFWTMP" ]; then
+  mkdir -p "$VENDORFWTMP"
+fi
+
+echo "Upgrading vendor firmware package"
+asahi-fwextract "$ASAHIFW" "$VENDORFWTMP"
+rm -rf "$VENDORFW".new
+mv "${VENDORFWTMP}" "$VENDORFW".new
+rm -rf "$VENDORFW"
+mv "$VENDORFW".new "$VENDORFW"
+rm -rf "$VENDORFWTMP"
+echo "Firmware upgraded"
+
+$umount && umount /run/.system-efi
+true

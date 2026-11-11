@@ -1,0 +1,6 @@
+[Unit]
+Description=Store current charge_control_end_threshold value persistently
+
+[Service]
+Type=simple
+ExecStart=sh -c 'echo "CHARGE_CONTROL_END_THRESHOLD=$(cat /sys/class/power_supply/macsmc-battery/charge_control_end_threshold)" > /etc/udev/macsmc-battery.conf'

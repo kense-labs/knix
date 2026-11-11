@@ -1,0 +1,22 @@
+[package]
+name = "binfmt-dispatcher"
+version = "0.1.3"
+authors = ["Davide Cavalca <davide@asahilinux.org>"]
+edition = "2021"
+description = "Smart dispatcher for binfmt_misc"
+repository = "https://github.com/AsahiLinux/binfmt-dispatcher.git"
+homepage = "https://github.com/AsahiLinux/binfmt-dispatcher"
+license = "MIT"
+categories = ["emulators"]
+keywords = ["binfmt_misc", "asahi"]
+
+[dependencies]
+anyhow = "1.0"
+config = "0.13"
+env_logger = "0.11"
+libc = "0.2"
+log = "0.4"
+nix = "0.29"
+serde = { version = "1.0", features = ["derive"] }
+xdg = "2.5"
+zenity-dialog = { version = "0.3.6", default-features = false, features = ["info", "error"] }

@@ -1,0 +1,63 @@
+# Site settings
+title:       pid.codes
+email:       admin@pid.codes
+author:      pid.codes admin team
+description: "Free USB VID and PID codes for open-source projects."
+baseurl:     ""
+url:         "http://pid.codes"
+excerpt_separator: "<!-- more -->"
+
+# Google analytics
+google_analytics: UA-84449-9
+
+# Optional features
+animated:           false
+show_related_posts: false
+show_post_footers:  false
+
+# Disqus post comments
+# (leave blank to disable Disqus)
+disqus_shortname:
+
+# Social icons
+show_social_icons: false
+github_username:
+stackoverflow_id:
+twitter_username:
+google_plus_id:
+linkedin_username:
+bitcoin_url:
+paypal_url:
+flattr_button:
+
+# Post sharing icons
+show_sharing_icons: false
+share_text: 'Share this post!'
+# Change to 'true' to enable individual icons
+share_facebook: false
+share_twitter: false
+share_googleplus: false
+share_linkedin: false
+share_digg: false
+share_tumblr: false
+share_reddit: false
+share_stumbleupon: false
+
+# Build settings
+exclude: [vendor]
+gems:
+ - jekyll-paginate
+liquid:
+  error_mode: strict
+verbose: true
+markdown:     kramdown
+kramdown:
+  auto_ids: true
+  autolink: true
+  input: GFM
+  toc_levels: 1..6
+  smart_quotes: lsquo,rsquo,ldquo,rdquo
+permalink:    pretty
+paginate:     3
+sass:
+  compressed: true

@@ -1,0 +1,50 @@
+#!/bin/bash
+# SPDX-License-Identifier: MIT
+
+build() {
+    local filter
+
+    # For NVMe & SMC
+    add_module apple-mailbox?
+
+    # For NVMe
+    add_module nvme-apple?
+
+    # For USB and HID
+    add_module pinctrl-apple-gpio?
+
+    # SMC core
+    map add_module macsmc? macsmc-rtkit?
+
+    # For USB
+    map add_module i2c-pasemi-platform? tps6598x? sn201202x? apple-dart? dwc3? dwc3-of-simple? \
+        nvmem-apple-efuses? phy-apple-atc? xhci-plat-hcd? xhci-pci? pcie-apple? gpio_macsmc?
+
+    # For HID
+    map add_module spi-apple? spi-hid-apple? spi-hid-apple-of?
+
+    # For RTC
+    map add_module rtc-macsmc? simple-mfd-spmi? spmi-apple-controller? \
+        nvmem_spmi_mfd?
+
+    # For MTP HID
+    map add_module apple-dockchannel? dockchannel-hid? apple-rtkit-helper?
+
+    # Hook dependencies
+    add_full_dir /usr/share/asahi-scripts
+
+    # Firmware update script
+    add_runscript
+    add_dir /lib/firmware
+    add_symlink /lib/firmware/vendor /vendorfw
+}
+
+help() {
+    cat <<HELPEOF
+This hook adds modules necessary for using Linux on Apple Silicon Macs,
+which are not otherwise included by existing hooks due to being soft
+dependencies.
+HELPEOF
+}
+
+# vim: set ft=sh ts=4 sw=4 et:

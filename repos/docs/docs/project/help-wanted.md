@@ -1,0 +1,16 @@
+---
+title: Help Wanted!
+---
+
+This page is a list of miscellaneous tasks that need to be done, but may have been de-prioritised in order to focus on frying bigger fish.
+Most of these tasks will be low stakes and low effort, making them good places to start for newcomers to kernel development or Free Software
+in general.
+
+If you decide to take up any of these tasks, please update the task's status to avoid duplicate work. Reach out on `#asahi-dev` if you have
+any questions or are in need of assistance.
+
+| Task | Status | Description | Contact |
+| ---- | ------ | ----------- | ------- |
+| libgnome-volume-control fixes | Unclaimed | GNOME's volume mixer is implemented in the `libgnome-volume-control` plugin. Unfortunately, this interacts poorly with WirePlumber/Pipewire and does not seem to respect node graph permissions. This leads to the default sink being the "raw" hardware device on GNOME, bypassing our DSP, which is completely unsupported. `libgnome-volume-control` needs to be fixed so that it hides the raw hardware sink and selects the correct default sink. | chadmed |
+| Fix serial port resets | **Unclaimed** | When using the apple silicon debug uart with two connected Apple silicon devices the serial port on the host device (`/dev/ttySAC0`) resets within seconds after `tuxvdmtool reboot serial`. Find the cause for this and fix the issue. This tasks is a little annoying since m1n1's hypervisor clobbers the hardware uart0 for its own use. | janne |
+| Keyboard layout cleanup (XKB/hid_apple) | Unclaimed | Apple keyboard support across the Linux desktop stack has been hit-and-miss, across layouts and hardware keyboards. Since our keyboard drivers are not upstream yet, we have the chance to do some major cleanup. In particular, the keyboards on these machines have a soft *Fn* key that is handled entirely in software. The `hid_apple` driver currently does this in the kernel, but this is the wrong approach. This key should be handled in userspace in XKB/Wayland (Xorg cannot do it, but it's deprecated), so that we can have more comprehensive Fn key mappings including letting users customize the key bindings like they would any other modifier key, or offer special symbols like macOS does. This should probably be done by introducing new XKB keyboard models, which do this mapping in userspace. To test this, use the `fnmode=0` module parameter for `hid_apple` to disable all Fn key processing. We will later want to introduce a new fnmode that *only* does Fn key combination emulation for the edit keys (insert/delete/home/end/pgup/pgdown), which is the minimum required for a usable TTY and Xorg, and leave the rest to XKB, defaulting to this mode on Apple Silicon machines. Besides the Fn story, there are also many regional Mac layouts that need to be fixed in XKB configuration, and everyone with a non-English keyboard is welcome to help out with that effort. [Relevant xkeyboard-config issue](https://gitlab.freedesktop.org/xkeyboard-config/xkeyboard-config/-/issues/379)| janne |

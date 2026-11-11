@@ -1,0 +1,21 @@
+[package]
+name = "hidpipe"
+version = "0.1.1"
+edition = "2021"
+license = "MIT"
+description = "Pass hid devices to micro vms."
+
+[[bin]]
+name = "hidpipe-client"
+path = "src/client.rs"
+
+[[bin]]
+name = "hidpipe-server"
+path = "src/server.rs"
+
+[dependencies]
+udev = "0.9"
+input-linux = "0.7"
+input-linux-sys = "0.9"
+nix = { version = "0.29", features = ["event", "socket", "user"] }
+libc = "0.2"

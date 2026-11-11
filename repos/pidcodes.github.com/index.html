@@ -1,0 +1,33 @@
+---
+layout: default
+---
+
+<div class="home">
+  <div class="posts">
+    {% if paginator.page == 1 %}
+      <div class="post">
+        <article class="post-content">
+          pid.codes is a registry of USB PID codes for open source hardware projects. You can <a href="/pids/">see a list of PID assignments</a>, or learn <a href="/howto/">how to get your own</a>.
+        </article>
+      </div>
+    {% endif %}
+
+    {% for post in paginator.posts %}
+      <div class="post">
+        <a href="{{ post.url | prepend: site.baseurl }}" class="post-link">
+          <p class="post-meta">{{ post.date | date: "%b %-d, %Y" }}</p>
+          <h3 class="h2 post-title">{{ post.title | xml_escape }}</h3>
+        </a>
+        <div class="post-summary">
+          {% if post.summary %}
+            {{ post.summary }}
+          {% else %}
+            {{ post.excerpt }}
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  {% include pagination.html %}
+</div>

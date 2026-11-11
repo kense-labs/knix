@@ -1,0 +1,38 @@
+asahi-va-driver
+===============
+
+A VA-API (libva) backend driver for V4L2 stateless video decoders.
+
+This is a fork of https://xff.cz/git/libva-v4l2_request. This version
+focuses on Apple Silicon.
+
+
+Using
+-----
+
+If libva does not select this driver automatically, set it explicitly:
+
+    export LIBVA_DRIVER_NAME=asahi
+
+Firefox decodes video in its sandboxed RDD process, and the sandbox
+blocks the device access this driver needs. Launch Firefox with:
+
+    export MOZ_DISABLE_RDD_SANDBOX=1
+
+Note that disabling the RDD sandbox trades away some of the protection
+Firefox normally applies to media decoding.
+
+
+Building
+--------
+
+    meson setup build
+    meson install -C build      # installs into the libva driverdir
+
+
+License
+-------
+
+GPL-3.0-or-later, see COPYING.
+
+Copyright (C) 2026 Ondrej Jirman <megi@xff.cz>
