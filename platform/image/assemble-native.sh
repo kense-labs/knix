@@ -162,7 +162,12 @@ printf '/dev/vda1 /efi vfat umask=0077,defaults 0 1\n/dev/vda2 / ext4 rw,relatim
 printf '127.0.0.1 localhost\n::1 localhost ip6-localhost ip6-loopback\n127.0.1.1 knix\n' > "$MOUNT/etc/hosts"
 printf 'nameserver 10.0.2.3\n' > "$MOUNT/etc/resolv.conf"
 install -d -m 0755 "$MOUNT/etc/systemd/network" \
+                   "$MOUNT/etc/modules-load.d" \
                    "$MOUNT/etc/systemd/system/multi-user.target.wants"
+# The DRM and input devices are standard virtio, but explicitly loading their
+# modules keeps /dev/dri and /dev/input deterministic on a cold boot. The
+# compositor and the seat stay inside the guest.
+printf 'virtio-gpu\nvirtio_input\n' > "$MOUNT/etc/modules-load.d/knix-graphics.conf"
 cat > "$MOUNT/etc/systemd/network/20-virtio.network" <<'NET'
 [Match]
 Name=en*

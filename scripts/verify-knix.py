@@ -331,6 +331,7 @@ def main() -> int:
         imgp / "manifest.json", imgp / "build.sh", imgp / "inject-identity.sh",
         imgp / "build-rootfs.sh", imgp / "build-kernel.sh",
         imgp / "assemble-native.sh", imgp / "sign.sh",
+        imgp / "verify-graphics.sh",
         ROOT / "platform" / "backends" / "vm-virt" / "boot-dev.sh",
         ROOT / "platform" / "backends" / "vm-virt" / "boot-native.sh",
     ]
@@ -370,6 +371,16 @@ def main() -> int:
                 identity_errors.append("brand manifest drift: %s" % name)
         if session.get("host_adapters") != "none":
             identity_errors.append("session claims host adapters")
+        if (session.get("output", {}).get("backend") != "drm"
+                or session.get("output", {}).get("owner") != "guest"
+                or session.get("input", {}).get("owner") != "guest"):
+            identity_errors.append("session lost guest-owned DRM/input semantics")
+        gfx = mani.get("graphics", {})
+        if (gfx.get("owner") != "guest" or gfx.get("device") != "virtio-gpu-pci"
+                or gfx.get("compositor") != "sway"):
+            identity_errors.append("image manifest lost the graphics contract")
+        if not (ROOT / gfx.get("verify", "")).is_file():
+            identity_errors.append("graphics verification recipe is missing")
         if "| I15 |" not in readme:
             identity_errors.append("README lost I15")
     require(not identity_errors,

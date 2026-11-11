@@ -18,6 +18,10 @@ export DISK="${DISK:-$DEV/knix.img}"
 # knix has no cloud-init package. A self-booting image must not be handed a
 # host-provided datasource.
 export SEED="${SEED-}"
+# The guest owns the DRM device and its input semantics. Both are standard
+# virtio devices; GPU=none / GPU_INPUT=none keeps the serial+ssh fallback.
+export GPU="${GPU-virtio-gpu-pci}"
+export GPU_INPUT="${GPU_INPUT-virtio-keyboard-pci virtio-tablet-pci}"
 # A fresh EDK2 variable store proves the boot needs no EFI Boot#### entry left
 # by an earlier seed boot: EDK2 falls back to the removable media path
 # EFI/BOOT/BOOTAA64.EFI on the ESP.

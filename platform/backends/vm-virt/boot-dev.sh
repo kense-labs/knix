@@ -25,6 +25,12 @@ MEM="${MEM:-4096}"
 KERNEL="${KERNEL:-}"
 INITRD="${INITRD:-}"
 KERNEL_APPEND="${KERNEL_APPEND:-root=/dev/vda2 rw console=ttyAMA0}"
+# The standard knix launch (boot-native.sh) enables the guest-owned GPU and
+# input devices. The helper/build path leaves them off so the virtio-blk probe
+# order, and therefore /dev/vdc and /dev/vdd, never changes.
+GPU="${GPU-none}"
+GPU_INPUT="${GPU_INPUT-none}"
+DISPLAY_BACKEND="${DISPLAY_BACKEND:-none}"
 EXTRA_DISK="${EXTRA_DISK:-}"
 # Space-separated list for stages that need more than one extra virtio disk
 # (for example a build disk plus a target image being assembled).
@@ -64,13 +70,26 @@ ARGS=(
   -drive "if=virtio,format=qcow2,file=$DISK"
   -device virtio-rng-pci
   -nic "user,model=virtio-net-pci,hostfwd=tcp::$SSH_PORT-:22"
-  -display none -serial "file:$SERIAL" -monitor none
+  -display "$DISPLAY_BACKEND" -serial "file:$SERIAL" -monitor none
   -qmp "unix:$QMP,server=on,wait=off"
   -pidfile "$PIDFILE"
 )
 
 if [ -n "$SEED" ]; then
   ARGS+=( -drive "if=virtio,format=raw,file=$SEED,readonly=on" )
+fi
+
+# Standard virtio devices only. DRM, input and authentication stay inside the
+# guest; no host adapter or private framework is projected into the VM.
+if [ "$GPU" != none ]; then
+  ARGS+=( -device "$GPU" )
+  echo "gpu: $GPU (display=$DISPLAY_BACKEND)"
+fi
+if [ "$GPU_INPUT" != none ]; then
+  for d in $GPU_INPUT; do
+    ARGS+=( -device "$d" )
+  done
+  echo "input: $GPU_INPUT"
 fi
 
 for d in $EXTRA_LIST; do

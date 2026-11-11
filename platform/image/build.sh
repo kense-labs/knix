@@ -7,7 +7,8 @@
 # The kernel and the native rootfs are produced INSIDE the arm64 Linux build
 # guest by build-kernel.sh / build-rootfs.sh, each with a self-describing JSON
 # summary. This script consumes those artifacts, assembles the single image,
-# boots it once and writes a receipt that records every input digest.
+# boots it once, verifies identity, UEFI self-boot and real sway rendering on
+# the guest-owned DRM device, then writes a receipt recording every input digest.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -119,7 +120,10 @@ if [ -f "$IMAGE" ]; then mv -f "$IMAGE" "$IMAGE.prev"; fi
 qemu-img create -f qcow2 "$IMAGE" 8G > /dev/null
 
 echo "=== helper guest with build disk + target ==="
+# GPU=none is explicit here: adding PCI devices to the helper changes the
+# virtio-blk probe order and would move /dev/vdc and /dev/vdd.
 KNIX_DEV_DIR="$DEV" DISK="$HELPER" EXTRA_DISKS="$BUILDDISK $IMAGE" \
+  GPU=none GPU_INPUT=none DISPLAY_BACKEND=none \
   "$BOOT" > "$DEV/boot-build.log" 2>&1 &
 LAUNCH_PID=$!
 wait_ssh || { echo "helper guest never became reachable" >&2; exit 1; }
@@ -164,7 +168,11 @@ stop_guest
 echo "=== cold boot verification (UEFI self-boot) ==="
 # boot-native.sh starts knix.img from its own ESP with no -kernel, no seed ISO
 # and a fresh EDK2 variable store. A reachable ssh proves the image self-boots.
+# The cold boot must exercise the standard graphics path: the guest owns the
+# DRM device and its input, while the display backend stays headless.
 KNIX_DEV_DIR="$DEV" DISK="$IMAGE" \
+  GPU=virtio-gpu-pci GPU_INPUT="virtio-keyboard-pci virtio-tablet-pci" \
+  DISPLAY_BACKEND=none \
   "$NATIVE_BOOT" > "$DEV/boot-verify.log" 2>&1 &
 LAUNCH_PID=$!
 wait_ssh || { echo "knix.img did not self-boot" >&2; exit 1; }
@@ -225,6 +233,16 @@ if $SSH knix@127.0.0.1 'sudo dmesg | grep -qE "failed to load regulatory.db|regu
 else
   echo "REGULATORY DB OK"
 fi
+
+echo "=== graphics verification (guest-owned DRM + sway) ==="
+GRAPHICS_RC=0
+$SSH knix@127.0.0.1 'sudo bash -s' \
+  < "$ROOT/platform/image/verify-graphics.sh" > "$DEV/guest-graphics.log" 2>&1 || GRAPHICS_RC=$?
+cat "$DEV/guest-graphics.log"
+if [ "$GRAPHICS_RC" -ne 0 ] || ! grep -q 'GRAPHICS VERIFY OK' "$DEV/guest-graphics.log"; then
+  echo "GRAPHICS VERIFY FAILED (rc=$GRAPHICS_RC)" >&2
+  exit 1
+fi
 stop_guest
 
 echo "=== receipt ==="
@@ -257,6 +275,14 @@ receipt = {
         "initrd": "EFI/knix/initrd.img-%s-knix" % kernel["kernel_version"],
         "append": "root=/dev/vda2 rw console=ttyAMA0",
         "seed_iso": False,
+    },
+    "graphics": {
+        "device": m["graphics"]["device"],
+        "input": m["graphics"]["input"],
+        "compositor": m["graphics"]["compositor"],
+        "owner": m["graphics"]["owner"],
+        "verify": m["graphics"]["verify"],
+        "verified": True,
     },
     "publish_surface": identity["publish_surface"],
 }

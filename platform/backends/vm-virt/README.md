@@ -12,7 +12,7 @@
 KNIX_DEV_DIR=../knix-m0 platform/backends/vm-virt/boot-dev.sh
 ```
 
-`boot-native.sh` 是唯一镜像 `knix.img` 的 UEFI 自举入口：不挂 `-kernel`、不挂 seed ISO、不用宿主内核或 initrd。
+`boot-native.sh` 是唯一镜像 `knix.img` 的 UEFI 自举入口：不挂 `-kernel`、不挂 seed ISO、不用宿主内核或 initrd，并默认挂上 `virtio-gpu-pci` 与 virtio 键鼠。Guest 内核里的 `virtio-gpu` / `virtio_input` 模块由 `/etc/modules-load.d/knix-graphics.conf` 加载，sway 直接在 guest 自有的 `/dev/dri/card0` 上渲染；宿主只提供标准 virtio 设备，不提供图形能力。`build.sh --build` 的冷启验收用 `platform/image/verify-graphics.sh` 验证 GBM / GL 实际渲染与 Wayland 客户端窗口。设置 `GPU=none GPU_INPUT=none` 可回到纯串口 + SSH 路径；helper / 构建路径显式关闭图形设备，避免 PCI probe 顺序改变构建盘设备名。
 
 ```bash
 KNIX_DEV_DIR=../knix-m0 platform/backends/vm-virt/boot-native.sh
@@ -25,6 +25,9 @@ KNIX_DEV_DIR=../knix-m0 platform/backends/vm-virt/boot-native.sh
 | `KNIX_DEV_DIR` | 仓外同级 `knix-m0/` | 镜像、seed、固件 vars、日志与 pidfile |
 | `DISK` | `$KNIX_DEV_DIR/knix.img` | 根盘；helper 构建时覆盖为 `knix-helper.img` |
 | `CODE` / `VARS` | QEMU 自带 EDK2 / `AAVMF_VARS.fd`；自举路径用 `AAVMF_VARS-selfboot.fd` | UEFI pflash |
+| `GPU` | `none`（`boot-dev.sh`）；`virtio-gpu-pci`（自举路径） | 标准 virtio-gpu；DRM 驱动、合成器与会话都在 Guest |
+| `GPU_INPUT` | `none`（`boot-dev.sh`）；`virtio-keyboard-pci virtio-tablet-pci`（自举路径） | 标准 virtio 输入；空格分隔可给多个 `-device` |
+| `DISPLAY_BACKEND` | `none` | QEMU 显示后端；`cocoa` 可在本机开窗，headless 验收保持 `none` |
 | `SEED` | `$KNIX_DEV_DIR/seed.iso`；自举路径为空 | cloud-init NoCloud 数据源，仅 helper 使用 |
 | `ACCEL` / `CPU` / `GIC` / `SMP` / `MEM` | `hvf` / `host` / `3` / `4` / `4096` | 启动参数 |
 | `KERNEL` / `INITRD` / `KERNEL_APPEND` | 空 | 设置 `KERNEL` 时用 `-kernel` 直启（调试覆盖），不经过 ESP |

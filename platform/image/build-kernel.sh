@@ -25,6 +25,15 @@ FRAGMENT="${KNIX_KERNEL_FRAGMENT:-$SRC/arch/arm64/configs/virt.config}"
 BOOT_DRIVERS=(CONFIG_VIRTIO_BLK CONFIG_VIRTIO_NET CONFIG_VIRTIO_PCI
               CONFIG_EXT4_FS CONFIG_SERIAL_AMBA_PL011 CONFIG_DEVTMPFS)
 
+# The display and input devices are standard virtio. They are modules because
+# udev loads them after the root filesystem is up; the kernel recipe owns them
+# so the guest's Wayland session never depends on a host graphics stack.
+GRAPHICS_CONFIG=(
+  "CONFIG_DRM_VIRTIO_GPU=m"
+  "CONFIG_VIRTIO_INPUT=m"
+)
+GRAPHICS_MODULES=(virtio-gpu virtio_input)
+
 die() { echo "$*" >&2; exit 1; }
 
 [ -f "$SRC/Makefile" ] || die "kernel source missing: $SRC/Makefile"
@@ -52,6 +61,7 @@ if [ "$MODE" = "--check" ]; then
   grep -E '^(VERSION|PATCHLEVEL|SUBLEVEL) =' "$SRC/Makefile" | head -3
   echo "config fragment: $FRAGMENT"
   echo "boot drivers stay built-in: ${BOOT_DRIVERS[*]}"
+  echo "graphics drivers: ${GRAPHICS_CONFIG[*]}"
   echo "kernel config resolves; guest is the build environment"
   exit 0
 fi
@@ -103,23 +113,39 @@ cd "$SRC"
 echo "toolchain: $(make --version | head -1) / $(gcc --version | head -1)"
 make O="$OUT" defconfig
 
-python3 - "$OUT/.config" "$FRAGMENT" <<'PY'
+# defconfig + the snapshot fragment (disabled options only) + the graphics
+# drivers owned by this recipe. The snapshot under repos/ is never edited, so
+# repos.json statistics stay byte-identical.
+python3 - "$OUT/.config" "$FRAGMENT" "${GRAPHICS_CONFIG[@]}" <<'PY'
 import pathlib, re, sys
-cfg = pathlib.Path(sys.argv[1])
-frag = pathlib.Path(sys.argv[2])
+cfg, frag = pathlib.Path(sys.argv[1]), pathlib.Path(sys.argv[2])
+enable = dict(item.split("=", 1) for item in sys.argv[3:])
 off = [re.match(r'# (CONFIG_\w+) is not set', l.strip()).group(1)
        for l in frag.read_text().splitlines()
        if l.startswith('# CONFIG_') and l.strip().endswith('is not set')]
-out, changed = [], []
-for l in cfg.read_text().splitlines():
-    m = re.match(r'^(CONFIG_\w+)=', l)
+out, changed, seen = [], [], set()
+for line in cfg.read_text().splitlines():
+    stripped = line.strip()
+    if line.startswith('# CONFIG_') and stripped.endswith('is not set'):
+        name = stripped.split()[1]
+        if name in enable:
+            continue
+    m = re.match(r'^(CONFIG_\w+)=', line)
     if m and m.group(1) in off:
         out.append('# %s is not set' % m.group(1))
         changed.append(m.group(1))
+    elif m and m.group(1) in enable:
+        name = m.group(1)
+        out.append('%s=%s' % (name, enable[name]))
+        seen.add(name)
     else:
-        out.append(l)
+        out.append(line)
+for name, value in enable.items():
+    if name not in seen:
+        out.append('%s=%s' % (name, value))
 cfg.write_text('\n'.join(out) + '\n')
-print('fragment options: %d, turned off: %d' % (len(off), len(changed)))
+print('fragment options: %d, turned off: %d, enabled: %d' %
+      (len(off), len(changed), len(enable)))
 PY
 
 make O="$OUT" olddefconfig
@@ -129,6 +155,16 @@ for d in "${BOOT_DRIVERS[@]}"; do
   [ "$v" = "${d}=y" ] || die "boot driver is not built in: ${v:-$d is not set}"
   echo "$v"
 done
+echo "=== resolved graphics baseline ==="
+for spec in "${GRAPHICS_CONFIG[@]}"; do
+  name="${spec%%=*}"
+  v="$(grep -E "^${name}=" "$OUT/.config" || true)"
+  [ "$v" = "$spec" ] || die "graphics driver mismatch: expected $spec, got ${v:-unset}"
+  echo "$v"
+done
+grep -q '^CONFIG_DRM_VIRTIO_GPU_KMS=y' "$OUT/.config" \
+  || die "virtio-gpu modesetting is off; sway needs a real DRM device"
+echo "CONFIG_DRM_VIRTIO_GPU_KMS=y"
 grep -q '^CONFIG_ARCH_APPLE=y' "$OUT/.config" && echo "WARN: Apple SoC still enabled" || echo "CONFIG_ARCH_APPLE off"
 
 make -j"$JOBS" O="$OUT" Image.gz modules
@@ -141,6 +177,11 @@ MODDIR="$MODULES/lib/modules/$KVER"
 [ -d "$MODDIR" ] || die "modules_install did not create $MODDIR"
 NKO="$(find "$MODDIR" -type f \( -name '*.ko' -o -name '*.ko.xz' -o -name '*.ko.zst' -o -name '*.ko.gz' \) | wc -l)"
 [ "$NKO" -gt 0 ] || die "no kernel modules were installed into $MODDIR"
+for m in "${GRAPHICS_MODULES[@]}"; do
+  [ -n "$(find "$MODDIR" -type f -name "$m.ko*" -print -quit)" ] \
+    || die "graphics module not installed: $m"
+  echo "graphics module present: $m"
+done
 
 cp "$OUT/arch/arm64/boot/Image.gz" "$ARTIFACT"
 cp "$OUT/arch/arm64/boot/Image" "$IMAGE"
@@ -148,22 +189,26 @@ cp "$OUT/arch/arm64/boot/Image" "$IMAGE"
 [ -s "$IMAGE" ] || die "empty kernel image: $IMAGE"
 gzip -t "$ARTIFACT"
 
-python3 - "$SUMMARY" "$KVER" "$ARTIFACT" "$IMAGE" "$MODDIR" "$NKO" "${BOOT_DRIVERS[*]}" "$OUT/.config" <<'PY'
+python3 - "$SUMMARY" "$KVER" "$ARTIFACT" "$IMAGE" "$MODDIR" "$NKO" \
+        "${BOOT_DRIVERS[*]}" "$OUT/.config" "${GRAPHICS_CONFIG[*]}" \
+        "${GRAPHICS_MODULES[*]}" <<'PY'
 import hashlib, json, pathlib, sys
-out, kver, gz, image, moddir, nko, drivers, cfg = sys.argv[1:]
+out, kver, gz, image, moddir, nko, drivers, cfg, graphics, gmods = sys.argv[1:]
 sha = lambda p: hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
 data = {
     "schema": 1,
     "source": "repos/linux",
     "config_fragment": "arch/arm64/configs/virt.config",
     "config_sha256": sha(cfg),
-    "config_note": "defconfig + virt.config; the regulatory.db variant is selected at assemble time",
+    "config_note": "defconfig + virt.config + graphics drivers owned by build-kernel.sh; the regulatory.db variant is selected at assemble time",
     "kernel_version": kver,
     "image_sha256": sha(image),
     "image_gz_sha256": sha(gz),
     "modules_dir": "modules/lib/modules/" + kver,
     "module_count": int(nko),
     "boot_drivers": drivers.split(),
+    "graphics_drivers": graphics.split(),
+    "graphics_modules": gmods.split(),
 }
 pathlib.Path(out).write_text(json.dumps(data, indent=2) + "\n")
 print(json.dumps(data, indent=2))

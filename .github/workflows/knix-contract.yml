@@ -24,7 +24,7 @@ jobs:
       # The seed qcow2 is pinned by SHA512 but lives outside the repository and
       # is never fetched in CI. build.sh --check validates it on a build host;
       # here we verify every in-repo input and the single-image launch rule.
-      - name: Single-image build contract
+      - name: Single-image, UEFI and graphics build contract
         run: |
           python3 - <<'PY'
           import hashlib, json, pathlib, sys
@@ -71,11 +71,42 @@ jobs:
               bad.append(("boot-native.sh", "self-boot path must not attach a seed ISO"))
           if 'SEED="${SEED-$DEV/seed.iso}"' not in dev:
               bad.append(("boot-dev.sh", "seed ISO is no longer optional"))
+          gfx = m.get("graphics", {})
+          if (gfx.get("owner") != "guest"
+                  or gfx.get("device") != "virtio-gpu-pci"
+                  or gfx.get("compositor") != "sway"):
+              bad.append(("graphics", "guest-owned virtio-gpu/sway contract missing"))
+          verify_rel = gfx.get("verify", "")
+          if not (root / verify_rel).is_file():
+              bad.append(("graphics.verify", verify_rel, "missing"))
+          else:
+              v = (root / verify_rel).read_text()
+              for token in ('GRAPHICS VERIFY OK', '/dev/dri/card0', 'GBM buffer',
+                            'Created GL FBO', '"app_id": "foot"', 'New wlr_surface'):
+                  if token not in v:
+                      bad.append(("verify-graphics.sh", token, "missing"))
+          kernel_recipe = (root / "platform/image/build-kernel.sh").read_text()
+          for token in ("CONFIG_DRM_VIRTIO_GPU=m", "CONFIG_VIRTIO_INPUT=m",
+                        "CONFIG_DRM_VIRTIO_GPU_KMS=y"):
+              if token not in kernel_recipe:
+                  bad.append(("build-kernel.sh", token, "missing"))
+          if "knix-graphics.conf" not in assemble:
+              bad.append(("assemble-native.sh", "graphics modules-load missing"))
+          if "virtio-gpu-pci" not in native or "GPU_INPUT" not in native:
+              bad.append(("boot-native.sh", "graphics devices not enabled"))
+          for token in ('GPU="${GPU-none}"', 'GPU_INPUT="${GPU_INPUT-none}"',
+                        '-display "$DISPLAY_BACKEND"'):
+              if token not in dev:
+                  bad.append(("boot-dev.sh", token, "missing"))
+          build = (root / "platform/image/build.sh").read_text()
+          if ("verify-graphics.sh" not in build
+                  or "GPU=none GPU_INPUT=none" not in build):
+              bad.append(("build.sh", "graphics verification is not wired in"))
           if bad:
               for b in bad:
                   print("CONTRACT DRIFT:", b, file=sys.stderr)
               sys.exit(1)
-          print("CONTRACT OK: %d inputs, one artifact, %d build stages, UEFI self-boot" %
+          print("CONTRACT OK: %d inputs, one artifact, %d build stages, UEFI self-boot + graphics" %
                 (checked, len(m.get("build_stages", []))))
           PY
 

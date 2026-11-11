@@ -10,7 +10,7 @@
     "owner": "platform/image/",
     "location": "$KNIX_DEV_DIR/knix.img",
     "single": true,
-    "role": "GPT disk with a 512 MiB FAT32 EFI system partition and an ext4 root; native rootfs, self-built 7.2.15 kernel, 770 modules, guest-owned initramfs and systemd-boot"
+    "role": "GPT disk with a 512 MiB FAT32 EFI system partition and an ext4 root; native rootfs, self-built 7.2.15 kernel, 773 modules (including virtio-gpu and virtio-input), guest-owned initramfs, systemd-boot and a guest-owned DRM device"
   },
   "inputs": {
     "seed": {
@@ -34,13 +34,20 @@
       "docs/brand/wordmark-light.svg": "f62f6649931f3f125a3b404141462bdfe5ebae668317b2c59d1a2372bdb90610"
     },
     "recipe_sha256": {
-      "repos/linux/arch/arm64/configs/virt.config": "7cd8a9d570fd42fb3fce2724f7293f2f8e4bf24193acf315b5fbd676d1963319"
+      "repos/linux/arch/arm64/configs/virt.config": "7cd8a9d570fd42fb3fce2724f7293f2f8e4bf24193acf315b5fbd676d1963319",
+      "platform/image/build-kernel.sh": "b24314037ad1843e4055b210ad83fb6ad55631b56784a1df4f85acadc086e5f0",
+      "platform/image/build-rootfs.sh": "c3b13db82500a8618cec0ac9d021735ba4a6542f1807c380532816ee8a2351ff",
+      "platform/image/assemble-native.sh": "57b2892177bc06801a2431bf3a907f4a5ca1d21b306b6252beb7c0ecf2293bf6",
+      "platform/image/build.sh": "dee5cccc85fef21817d73483a47c062b9196811a99b31e473284531816deac42"
+    },
+    "verification_sha256": {
+      "platform/image/verify-graphics.sh": "d1461547c575b8fba088ffbdf8e3ed0d94b26712c84353982ed67ad6893d50d8"
     }
   },
   "build_stages": [
     "platform/image/build-kernel.sh --apply (inside the arm64 Linux build guest)",
     "platform/image/build-rootfs.sh --apply (inside the arm64 Linux build guest)",
-    "platform/image/build.sh --build (on the host; assembles, boots, verifies, writes the receipt)"
+    "platform/image/build.sh --build (on the host; assembles, UEFI cold-boots, verifies identity/brand/graphics, writes the receipt)"
   ],
   "verification": [
     "uname -m is aarch64 and uname -r is 7.2.15",
@@ -53,7 +60,13 @@
     "no cloud-init state, no seed bootloader, no failed units",
     "boots from its own EFI system partition with no -kernel, no seed ISO and no EFI boot variables",
     "/efi/EFI/BOOT/BOOTAA64.EFI, /efi/loader/entries/knix.conf, vmlinuz and initrd are present",
-    "identity survives a cold boot; serial console and ssh remain available without a GPU"
+    "cfg80211 loads the upstream-signed regulatory.db without a rejection in dmesg",
+    "/dev/dri/card0 and renderD128 are guest-owned DRM nodes bound to virtio_gpu",
+    "card0-Virtual-1 exposes a 1280x800 mode and guest virtio keyboard/pointer nodes exist",
+    "sway 1.10.1 starts on the DRM backend; swaymsg reports Virtual-1 active",
+    "the sway log shows an allocated GBM buffer and a created GL FBO",
+    "foot connects as a Wayland client, appears in get_tree and commits wlr_surfaces",
+    "serial console and ssh remain available with GPU=none on boot-dev.sh"
   ],
   "boot": {
     "method": "UEFI self-boot",
@@ -62,6 +75,16 @@
     "root": "/dev/vda2 ext4",
     "append": "root=/dev/vda2 rw console=ttyAMA0"
   },
-  "receipt": "platform/image/build.sh writes $KNIX_DEV_DIR/BUILD-RECEIPT.json with the artifact sha256 and every build input digest",
+  "graphics": {
+    "device": "virtio-gpu-pci",
+    "input": ["virtio-keyboard-pci", "virtio-tablet-pci"],
+    "compositor": "sway",
+    "session": "platform/identity/session.json",
+    "owner": "guest",
+    "verify": "platform/image/verify-graphics.sh",
+    "fallback": "GPU=none on boot-dev.sh keeps the serial console and ssh",
+    "known_limitation": "the headless verification runs sway as root without a logind seat, so swaymsg -t get_inputs is empty; the guest kernel owns the virtio input nodes and a real seatd/logind session takes them over"
+  },
+  "receipt": "platform/image/build.sh writes $KNIX_DEV_DIR/BUILD-RECEIPT.json with the artifact sha256, graphics verification result and every build input digest",
   "publish_surface": ["knix.img", "origin/main"]
 }

@@ -16,10 +16,11 @@ identity, the build recipe and the verification gate that reproduce it.
 | 契约校验 | `python3 scripts/verify-knix.py` | 无 |
 
 `build.sh --build` creates a blank qcow2, assembles the native rootfs, the
-self-built kernel and its matching modules inside the helper guest, cold-boots
-the result once, verifies identity, brand bytes, module loading and failed
-units, then writes the receipt. The seed is never the source of the image
-contents.
+self-built kernel and its matching 773 modules inside the helper guest,
+cold-boots the result through its own ESP, then verifies identity, brand bytes,
+module loading, failed units, the upstream-signed regulatory.db and real sway
+rendering on the guest-owned DRM device (`GRAPHICS VERIFY OK`). Only then does it
+write the receipt. The seed is never the source of the image contents.
 
 ## Verify a release
 
@@ -46,9 +47,11 @@ openssl dgst -sha256 -verify knix-release.pub \
   -signature BUILD-RECEIPT.json.sig BUILD-RECEIPT.json
 ```
 
-The receipt's `sha256` must equal `knix.img`. Its `kernel`, `rootfs` and `inputs`
-sections record every digest used by the build; a mismatch there means the image
-was assembled from drifted inputs. `.sha256` covers the receipt, not the image.
+The receipt's `sha256` must equal `knix.img`. Its `kernel`, `rootfs`, `inputs`,
+`boot` and `graphics` sections record every digest used by the build, the UEFI
+self-boot method and the fact that real Wayland rendering was verified; a
+mismatch there means the image was assembled from drifted inputs or skipped a
+verification stage. `.sha256` covers the receipt, not the image.
 A release key is never stored in the repository; `KNIX_SIGNING_KEY` selects one
 at signing time, and the matching public key is distributed out of band.
 
@@ -69,6 +72,22 @@ and an ext4 root (`/dev/vda2`). The ESP carries the whole boot chain:
 neither a host kernel nor an EFI Boot#### entry. A `KERNEL` override on
 `boot-dev.sh` remains available for debugging. The receipt records the boot
 method, the ESP path and the `root=` append.
+
+## Graphics
+
+`boot-native.sh` exposes standard `virtio-gpu-pci`, `virtio-keyboard-pci` and
+`virtio-tablet-pci` devices. The guest kernel loads its own `virtio-gpu` and
+`virtio_input` modules and owns `/dev/dri/card0`, `renderD128` and the
+`Virtual-1` connector; the compositor, session file and input semantics all
+live inside the image. `platform/image/verify-graphics.sh` runs as root inside
+the cold-booted guest and requires sway 1.10.1 to allocate a GBM buffer and a
+GL FBO, report an active 1280x800 output, and give `foot` a real Wayland window
+that commits `wlr_surface` surfaces. It is a hard gate of `build.sh --build`.
+
+The headless verification starts sway as root without a logind seat, so
+`swaymsg -t get_inputs` is empty. The virtio input nodes are still owned by the
+guest kernel; a real seatd/logind session takes them over. `GPU=none` on
+`boot-dev.sh` keeps the serial console and ssh as the full fallback path.
 
 ## Identity ownership
 

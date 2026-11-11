@@ -99,6 +99,7 @@ platform/image/build-kernel.sh --apply
 platform/image/build-rootfs.sh --check
 platform/image/build-rootfs.sh --apply
 platform/image/assemble-native.sh     # requires root
+platform/image/verify-graphics.sh     # inside a booted guest, requires root
 
 # launch paths on the host
 platform/backends/vm-virt/boot-dev.sh
@@ -137,14 +138,15 @@ python3 scripts/verify-knix.py && git add -A && git commit -m "chore: refresh sn
 - `repos/mesa-nightly/mesa` 为未拉取的 submodule，用户态图形栈源码不在快照内。
 - `vm-virt` 已跑通 QEMU/HVF 启动、单镜像构建与 UEFI 自举冷启复验；`native-apple` 仍只有契约定义。
 - 内核在 Linux guest 内原生编译；macOS 宿主只提供标准 virtio，构建工具、源码副本与产物都在仓外构建盘中。
-- `knix.img` 是唯一发布产物：`build.sh --build` 在 guest 内把原生 rootfs、自编译 7.2.15 内核、770 个模块、身份与品牌装进新建空白 GPT 盘，seed 只作一次性包源与 helper 引导。receipt 记录镜像 sha256 与内核、rootfs、身份、品牌、`virt.config` 的全部输入摘要。
+- `knix.img` 是唯一发布产物：`build.sh --build` 在 guest 内把原生 rootfs、自编译 7.2.15 内核、773 个模块、身份与品牌装进新建空白 GPT 盘，seed 只作一次性包源与 helper 引导。receipt 记录镜像 sha256 与内核、rootfs、身份、品牌、`virt.config`、组装脚本与验证脚本的全部输入摘要。
 - `knix.img` 自引导：GPT 双分区（512 MiB FAT32 ESP `/dev/vda1` + ext4 root `/dev/vda2），ESP 上 `EFI/BOOT/BOOTAA64.EFI` 是 systemd-boot、`EFI/knix/` 放自编译内核与 guest 内生成的 initramfs，`loader/entries/knix.conf` 提供 `root=/dev/vda2 rw console=ttyAMA0`。`boot-native.sh` 用干净 EDK2 变量副本、不挂 `-kernel` 与 seed ISO，冷启复验通过。
 - `knix-native.img` 是 P0 阶段的开发验证盘，已退役，不是发布面；当前启动入口只指向 `knix.img`。
-- 构建盘的 `out/vmlinux.o` 曾被早期 VM 强停截断；`build-kernel.sh` 现用 ELF section header 检测并清空重建，已产出 770 个 `.ko` 与 `modules.dep`。启动所需的 virtio、ext4、PL011 与 devtmpfs 仍全部编入内核，挂载根分区不依赖可加载模块。
+- 构建盘的 `out/vmlinux.o` 曾被早期 VM 强停截断；`build-kernel.sh` 现用 ELF section header 检测并清空重建，已产出 773 个 `.ko` 与 `modules.dep`。启动所需的 virtio、ext4、PL011 与 devtmpfs 仍全部编入内核，挂载根分区不依赖可加载模块。
 - `wireless-regdb` 默认指向发行版签名的 `regulatory.db`，与内核内置的上游密钥不匹配；`assemble-native.sh` 把 alternative 切到 `-upstream` 变体，冷启日志已无 `cfg80211` 告警。
-- Wayland / sway 在 headless 验证环境只校验包集与会话文件；virtio-gpu 实际渲染未验证。
-- CI 只校验仓内输入与契约；seed qcow2、QEMU/HVF 启动与镜像构建在本机执行。
-- Deferred：能力协商清单、宿主适配器参考实现、统计与清单生成器入库、定期重采调度、增量 diff 报告、GPU 图形路径。
+- 图形栈已在 guest 内实测：`boot-native.sh` 默认提供 `virtio-gpu-pci` 与 virtio 键鼠，`build-kernel.sh` 额外编入 `virtio-gpu` / `virtio_input` 模块，`assemble-native.sh` 写 `modules-load.d/knix-graphics.conf`。冷启后 `/dev/dri/card0`、`renderD128`、`card0-Virtual-1` 均由 guest 内核拥有；`platform/image/verify-graphics.sh` 在 guest 内以 root 启动 sway 1.10.1，验证 `Virtual-1` 1280×800 active、GBM buffer 与 GL FBO 分配、`foot` 拿到 Wayland 窗口并提交 `wlr_surface`。`build.sh --build` 把该脚本作为冷启验收的硬门槛，receipt 记录 `graphics.verified`。
+- headless 验证会话以 root 启动 sway，没有 logind seat，`swaymsg -t get_inputs` 为空；virtio 输入节点由 guest 内核拥有，正式会话由 seatd / logind 接管。`GPU=none` 时串口与 SSH 仍是完整降级路径。
+- CI 只校验仓内输入与契约；seed qcow2、QEMU/HVF 启动、镜像构建与 sway 实际渲染在本机执行。
+- Deferred：能力协商清单、宿主适配器参考实现、统计与清单生成器入库、定期重采调度、增量 diff 报告、包版本锁定与 CI 内完整构建。
 
 ## Scale and status
 
@@ -178,7 +180,7 @@ knix/
 │   ├── CONTRACT.md
 │   ├── contract.json
 │   ├── identity/                     # identity.json · os-release · packages.json · session.json
-│   ├── image/                        # build.sh · build-kernel.sh · build-rootfs.sh · assemble-native.sh · inject-identity.sh · sign.sh · RELEASE.md
+│   ├── image/                        # build.sh · build-kernel.sh · build-rootfs.sh · assemble-native.sh · verify-graphics.sh · inject-identity.sh · sign.sh · RELEASE.md
 │   ├── backends/
 │   │   ├── native-apple/
 │   │   └── vm-virt/                  # boot-dev.sh · boot-native.sh
