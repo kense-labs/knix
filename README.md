@@ -93,11 +93,11 @@ platform/image/build.sh --check
 platform/image/build.sh --build
 platform/image/sign.sh
 
-# inside the arm64 Linux build guest
+# inside the arm64 Linux build guest; scripts are streamed over ssh
 platform/image/build-kernel.sh
 platform/image/build-rootfs.sh --check
 platform/image/build-rootfs.sh --apply
-platform/image/assemble-native.sh
+platform/image/assemble-native.sh     # requires root
 
 # launch paths on the host
 platform/backends/vm-virt/boot-dev.sh
