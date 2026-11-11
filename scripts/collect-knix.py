@@ -13,7 +13,7 @@ For each repo in repos.json:
 Usage:
     python3 scripts/collect-knix.py                 # refresh all snapshots
     python3 scripts/collect-knix.py --jobs 4       # limit concurrency
-    python3 scripts/collect-knix.py --list         # refresh repo list via gh api
+    python3 scripts/collect-knix.py --list         # refresh metadata; names stay pinned
     python3 scripts/collect-knix.py --only linux,m1n1
 
 Requires: git, network access to github.com. `--list` additionally requires
@@ -66,6 +66,17 @@ def refresh_list(manifest):
         obj, i = decoder.raw_decode(text, i)
         found.append(obj)
     old = {e["name"]: e for e in manifest["repositories"]}
+    # The archived baseline owns its identity fields. A refresh against a
+    # different upstream org must never silently undo the unified names,
+    # local_path values, URLs or default-branch labels in repos.json.
+    pinned = set(old)
+    incoming = {o["name"] for o in found}
+    if pinned and incoming != pinned:
+        raise RuntimeError(
+            "--list would replace pinned identity fields: upstream returned "
+            "%d names that do not match the %d names in repos.json. "
+            "Use --only to refresh snapshots without renaming the baseline."
+            % (len(incoming), len(pinned)))
     entries = []
     for o in found:
         e = old.get(o["name"], {})

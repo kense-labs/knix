@@ -4,9 +4,6 @@
 
 [First principles](#first-principles) · [Architecture](#architecture) · [Invariants](#invariants) · [Operations](#operations) · [Do not](#do-not) · [Known Limitations](#known-limitations-and-deferred-work) · [Scale](#scale-and-status)
 
-> [!IMPORTANT]
-> 本文件是 AI 编码代理与人类协作者在本仓的共同强制约束。
-
 > [!NOTE]
 > 机器真源：[repos.json](repos.json)。
 
@@ -56,16 +53,18 @@
 | I6 | 全仓无上游品牌与代号字面（含二进制元数据） |
 | I7 | 内核 UAPI、设备树 compatible 与仓库名标识符统一为 Knix 命名 |
 | I8 | `docs/brand/` 官方 mark 字节与品牌契约一致 |
-| I9 | 单一 `main` 分支，无 tag / submodule |
+| I9 | 单一 `main` 分支，无 tag，无启用 submodule 或嵌套 `.git` |
 | I10 | `README.md` 无上游品牌字面与代号残留 |
 | I11 | `repos/artwork/logos/` 全部资产由 `docs/brand/` 官方 mark 派生 |
+| I12 | `repos/` 内无悬空符号链接 |
+| I13 | `README.md` 无自指元叙述与解释性说明 |
 
 ## Operations
 
 ```bash
 python3 scripts/verify-knix.py
 
-KNIX_ORG=<上游组织名> python3 scripts/collect-knix.py --list
+python3 scripts/collect-knix.py --list
 python3 scripts/collect-knix.py
 python3 scripts/collect-knix.py --only linux,m1n1
 python3 scripts/collect-knix.py --jobs 4
@@ -84,16 +83,19 @@ python3 scripts/verify-knix.py && git add -A && git commit -m "chore: refresh sn
 - 回退或混用旧标识符。
 - 手工编辑 `docs/brand/` 的 PNG，或调整 logo 尺寸与配色。
 - 绕过 `make-knix-logos.py` 直接改写 `artwork/logos` 的派生资产。
-- 在本页或架构图中修改统计数字。
+- 运行 `repos/artwork/logos/Makefile` 重新生成 logo。
+- 改写统计数字或采集时间。
 - 新增发布分支、tag 或第二个 origin。
 
 ## Known Limitations and Deferred Work
 
 - 仅默认分支采集时刻状态；不含历史、tag、其他分支。
-- submodule 未递归；`artwork`、`m1n1` 已作为独立仓库收录；部分 logo 符号链接在上游即悬空。
-- `source_url` / `clone_url` 指向 `github.com/Knix/...`；从真实上游重采需设置 `KNIX_ORG`。
+- 上游 `.gitmodules` 文本原样保留；submodule 未启用，`artwork`、`m1n1` 已作为独立仓库收录。
+- `source_url` / `clone_url` 指向 `github.com/Knix/...`；`--list` 拒绝上游命名漂移。
+- `docs/brand/` 官方 SVG 保留 `aria-label="KStudio"`；`artwork/logos` 上游 Makefile 不作为生成路径。
 - 统计为采集时刻值。
 - 内核 UAPI 与设备树 compatible 已重命名；快照不保证与上游 ABI 对齐或可编译。
+- 第三方项目 logo、内核与 U-Boot 启动图、插画与横幅保持上游原样。
 - Deferred：统计与清单生成器入库、定期重采调度、增量 diff 报告。
 
 ## Scale and status

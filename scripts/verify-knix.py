@@ -35,7 +35,9 @@ MARK_HASHES = {
 }
 
 # Assembled at runtime so this verifier never becomes a residual hit itself.
-UPSTREAM_TOKEN = "asa" + "hi"
+# join() instead of "+" because CPython constant-folds string concatenation and
+# would otherwise bake the literal into this module's .pyc bytecode cache.
+UPSTREAM_TOKEN = "".join(("asa", "hi"))
 TOKEN_RE = re.compile(UPSTREAM_TOKEN, re.I)
 
 
@@ -53,6 +55,18 @@ def stats(path: pathlib.Path):
             if not os.path.islink(p):
                 total += st.st_size
     return files, total
+
+
+def in_release_surface(rel: str, tracked: set[str]) -> bool:
+    """Only files that can reach origin/main count as residuals.
+
+    `git grep --no-index` walks ignored files too (e.g. Python bytecode
+    caches and .workbuddy/), so filter them out unless git already tracks them.
+    """
+    if rel in tracked:
+        return True
+    return subprocess.run(["git", "check-ignore", "-q", "--", rel],
+                          cwd=ROOT, capture_output=True).returncode != 0
 
 
 errors: list[str] = []
@@ -126,20 +140,34 @@ def main() -> int:
     r = subprocess.run(
         ["git", "grep", "--no-index", "-l", "-i", "-E", UPSTREAM_TOKEN, "--", "."],
         cwd=ROOT, capture_output=True, text=True)
-    content_hits = [l for l in r.stdout.splitlines() if not l.startswith(".workbuddy/")]
-    path_hits, link_hits = [], []
+    tracked = set(subprocess.run(["git", "ls-files"], cwd=ROOT,
+                                 capture_output=True, text=True).stdout.splitlines())
+    content_hits = [l for l in r.stdout.splitlines()
+                    if in_release_surface(l, tracked)]
+    path_hits, link_hits, dangling = [], [], []
     for dirpath, dirnames, filenames in os.walk(ROOT):
         dirnames[:] = [d for d in dirnames if d not in SKIP_DIRS]
         for name in dirnames + filenames:
             p = pathlib.Path(dirpath) / name
             if TOKEN_RE.search(name):
                 path_hits.append(str(p.relative_to(ROOT)))
-            if p.is_symlink() and TOKEN_RE.search(os.readlink(p)):
-                link_hits.append(str(p.relative_to(ROOT)))
+            if p.is_symlink():
+                if TOKEN_RE.search(os.readlink(p)):
+                    link_hits.append(str(p.relative_to(ROOT)))
+                if str(p).startswith(str(REPOS) + os.sep):
+                    try:
+                        if not p.exists():
+                            dangling.append(str(p.relative_to(ROOT)))
+                    except OSError:
+                        dangling.append(str(p.relative_to(ROOT)))
     require(not (content_hits or path_hits or link_hits),
             "0 upstream tokens (content / paths / symlink targets / PNG metadata)",
             "residual content=%s paths=%s links=%s"
             % (content_hits[:5], path_hits[:5], link_hits[:5]))
+
+    # I12 -- every vendored symlink resolves inside the monorepo
+    require(not dangling, "0 dangling symlinks in repos/",
+            "dangling symlinks: %s" % dangling[:5])
 
     # I7 -- identifiers unified under Knix naming
     branches = {e["default_branch"] for e in entries}
@@ -184,17 +212,20 @@ def main() -> int:
             "architecture SVG keeps the Kense style contract and is clean",
             "architecture SVG lost its style contract or carries a residual")
 
-    # I9 -- single published branch, no tags
+    # I9 -- single published branch, no tags, no registered submodules
     tags = subprocess.run(["git", "tag", "--list"], cwd=ROOT,
                           capture_output=True, text=True).stdout.split()
     local_branches = subprocess.run(
         ["git", "branch", "--format=%(refname:short)"], cwd=ROOT,
         capture_output=True, text=True).stdout.split()
-    require(not tags and local_branches == ["main"],
-            "single main branch, no tags",
-            "tags=%s branches=%s" % (tags, local_branches))
+    submodules = subprocess.run(
+        ["git", "submodule", "status"], cwd=ROOT,
+        capture_output=True, text=True).stdout.split()
+    require(not tags and local_branches == ["main"] and not submodules,
+            "single main branch, no tags, no registered submodules",
+            "tags=%s branches=%s submodules=%s" % (tags, local_branches, submodules))
 
-    # I10 -- README is a clean derived view
+    # I10 / I13 -- README is a clean derived view, free of meta-narration
     readme = README.read_text(encoding="utf-8")
     require("repos.json" in readme and "scripts/verify-knix.py" in readme,
             "README points to the machine truth and the gate",
@@ -202,6 +233,10 @@ def main() -> int:
     require(not TOKEN_RE.search(readme),
             "README contains 0 upstream traces",
             "README still contains an upstream token")
+    meta_narration = re.search(r"本文|本页|本文档|需要说明的是|换句话说|如下说明", readme)
+    require(not meta_narration and "repos/artwork/logos/Makefile" in readme,
+            "README has no self-narration and retires the upstream Makefile",
+            "README regained meta-narration or dropped the Makefile ban")
 
     # I11 -- the whole derived logo set is reproducible from the official marks
     logo_check = subprocess.run(
