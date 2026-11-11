@@ -142,6 +142,7 @@ knix/
 ├── repos.json
 ├── scripts/
 │   ├── collect-knix.py
+│   ├── make-knix-architecture.py
 │   ├── make-knix-logos.py
 │   └── verify-knix.py
 ├── platform/
