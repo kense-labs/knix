@@ -327,6 +327,32 @@ fi
 echo "DIAGNOSTICS EVENTS: $DIAG_EVENTS"
 echo "DIAGNOSTICS VERIFY OK: guest systemd reported $DIAG_EVENTS crashes to $DIAG_REPORT (final state failed, one failed unit, ssh + serial intact)"
 
+echo "=== guest-owned persistent crash archive ==="
+# /run is a tmpfs, so a report that only lives there disappears at reboot. The
+# guest's own OnFailure= script mirrors the snapshot and appends one
+# boot-stamped event per failure to an archive on the persistent root
+# filesystem. Nothing here is written, collected or replayed by the host.
+DIAG_PDIR=/var/lib/knix
+DIAG_ARCHIVE="$DIAG_PDIR/session-failure.log"
+DIAG_SNAPSHOT="$DIAG_PDIR/session-failure.txt"
+DIAG_JOURNAL_CONF=/etc/systemd/journald.conf.d/knix-persistence.conf
+[ -d "$DIAG_PDIR" ] || fail "missing guest-owned persistent diagnostics directory"
+[ -s "$DIAG_ARCHIVE" ] || fail "guest systemd wrote no persistent crash archive"
+[ -s "$DIAG_SNAPSHOT" ] || fail "guest systemd wrote no persistent failure snapshot"
+[ -f "$DIAG_JOURNAL_CONF" ] || fail "missing guest-owned journald persistence config"
+grep -q '^Storage=persistent$' "$DIAG_JOURNAL_CONF" \
+  || fail "journald storage is not pinned to persistent"
+grep -q '^boot=' "$DIAG_SNAPSHOT" \
+  || fail "the persistent snapshot has no guest boot id"
+grep -q '^active_state=failed$' "$DIAG_SNAPSHOT" \
+  || fail "the persistent snapshot does not describe the terminal failed state"
+grep -q 'active_state=failed' "$DIAG_ARCHIVE" \
+  || fail "the persistent archive lost the terminal failed state"
+ARCHIVE_EVENTS="$(grep -c 'active_state=' "$DIAG_ARCHIVE" || true)"
+[ -n "$ARCHIVE_EVENTS" ] && [ "$ARCHIVE_EVENTS" -ge 2 ] \
+  || fail "only ${ARCHIVE_EVENTS:-0} crash events are in the persistent archive"
+echo "PERSISTENCE VERIFY OK: guest archive holds $ARCHIVE_EVENTS boot-stamped events on the root filesystem"
+
 # Cleaning up the test is NOT the recovery proof: P9's SIGKILL segment above is.
 # reset-failed clears the start-rate counter; removing stale IPC sockets first
 # is essential or the checks below connect to a dead compositor's socket.

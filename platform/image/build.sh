@@ -306,9 +306,10 @@ if [ "$GRAPHICS_RC" -ne 0 ] \
    || ! grep -q 'RESILIENCE VERIFY OK' "$DEV/guest-graphics.log" \
    || ! grep -q 'LIMIT VERIFY OK' "$DEV/guest-graphics.log" \
    || ! grep -q 'DIAGNOSTICS VERIFY OK' "$DEV/guest-graphics.log" \
+   || ! grep -q 'PERSISTENCE VERIFY OK' "$DEV/guest-graphics.log" \
    || ! grep -q 'SESSION VERIFY OK' "$DEV/guest-graphics.log" \
    || ! grep -q 'GRAPHICS VERIFY OK' "$DEV/guest-graphics.log"; then
-  echo "AUTOSTART/RESILIENCE/LIMIT/DIAGNOSTICS/SESSION/GRAPHICS VERIFY FAILED (rc=$GRAPHICS_RC)" >&2
+  echo "AUTOSTART/RESILIENCE/LIMIT/DIAGNOSTICS/PERSISTENCE/SESSION/GRAPHICS VERIFY FAILED (rc=$GRAPHICS_RC)" >&2
   exit 1
 fi
 
@@ -329,6 +330,65 @@ if [ "$FRAMEBUFFER_RC" -ne 0 ] \
 fi
 stop_guest
 
+echo "=== reboot verification (guest-owned crash archive survives a restart) ==="
+# Relaunch the SAME disk with its EFI variable store kept: no rebuild, no seed
+# ISO and no host-written state. The guest must still hold the crash archive it
+# wrote during the cold-boot verification, while the /run tmpfs is brand new.
+# The receipt is written only after this second clean power-off, so its sha256
+# still describes exactly the bytes that ship.
+KNIX_DEV_DIR="$DEV" DISK="$IMAGE" QMP="$DEV/qmp-persistence.sock" \
+  SERIAL="$DEV/serial-persistence.log" KNIX_KEEP_VARS=1 \
+  GPU=virtio-gpu-pci GPU_INPUT="virtio-keyboard-pci virtio-tablet-pci" \
+  DISPLAY_BACKEND=none \
+  "$NATIVE_BOOT" > "$DEV/boot-persistence.log" 2>&1 &
+LAUNCH_PID=$!
+wait_ssh || { echo "knix.img did not re-boot for persistence verification" >&2; exit 1; }
+
+PERSIST_RC=0
+$SSH knix@127.0.0.1 'sudo bash -s' > "$DEV/guest-persistence.log" 2>&1 <<'PERSIST' || PERSIST_RC=$?
+set -e
+PDIR=/var/lib/knix
+ARCHIVE="$PDIR/session-failure.log"
+SNAPSHOT="$PDIR/session-failure.txt"
+test -d "$PDIR"
+[ -s "$ARCHIVE" ]
+[ -s "$SNAPSHOT" ]
+# A fresh /run tmpfs proves these are not leftovers of an in-memory snapshot.
+if [ -e /run/knix/session-failure.history ]; then
+  echo "runtime crash history survived a reboot" >&2; exit 1
+fi
+if [ -e /run/knix/session-failure.txt ]; then
+  echo "runtime failure snapshot survived a reboot" >&2; exit 1
+fi
+grep -q '^boot=' "$SNAPSHOT"
+grep -q '^active_state=failed$' "$SNAPSHOT"
+grep -q 'active_state=failed' "$ARCHIVE"
+EVENTS="$(grep -c 'active_state=' "$ARCHIVE")"
+[ "$EVENTS" -ge 2 ]
+CURRENT_BOOT="$(cat /proc/sys/kernel/random/boot_id)"
+STORED_BOOT="$(sed -n 's/^boot=//p' "$SNAPSHOT" | head -1)"
+[ -n "$STORED_BOOT" ]
+if [ "$STORED_BOOT" = "$CURRENT_BOOT" ]; then
+  echo "the archive was written in this boot, not the previous one" >&2; exit 1
+fi
+BOOTS="$(journalctl --list-boots --no-pager 2>/dev/null | grep -cE '^[[:space:]]*-?[0-9]+[[:space:]]+[0-9a-f]{32}' || true)"
+[ "$BOOTS" -ge 2 ] || { echo "journal lost the previous boot" >&2; exit 1; }
+[ "$(systemctl --failed --no-legend | wc -l)" -eq 0 ]
+systemctl is-active ssh.service | grep -qx active
+systemctl is-active knix-session.service | grep -qx active
+[ -c /dev/ttyAMA0 ]
+echo "PERSISTENCE EVENTS: $EVENTS"
+echo "DIAGNOSTICS PERSISTENCE VERIFY OK: guest archive survived reboot ($EVENTS events, boot $STORED_BOOT != $CURRENT_BOOT, $BOOTS boots in the journal)"
+PERSIST
+cat "$DEV/guest-persistence.log"
+if [ "$PERSIST_RC" -ne 0 ] \
+   || ! grep -q 'DIAGNOSTICS PERSISTENCE VERIFY OK' "$DEV/guest-persistence.log" \
+   || ! grep -q '^PERSISTENCE EVENTS: ' "$DEV/guest-persistence.log"; then
+  echo "DIAGNOSTICS PERSISTENCE VERIFY FAILED (rc=$PERSIST_RC)" >&2
+  exit 1
+fi
+stop_guest
+
 echo "=== receipt ==="
 IMG_SHA="$(sha256 "$IMAGE")"
 python3 - "$DEV" "$IMG_SHA" "$ROOT" <<'PY'
@@ -341,6 +401,14 @@ diag_match = re.search(r"^DIAGNOSTICS EVENTS: (\d+)$", guest_log, re.M)
 if not diag_match or int(diag_match.group(1)) < 2:
     sys.exit("DIAGNOSTICS DRIFT: guest systemd did not report its crash timeline")
 diag_events = int(diag_match.group(1))
+# The reboot verification must also have succeeded, otherwise the crash
+# timeline is only a /run snapshot that would vanish on the next boot.
+persist_log = (dev / "guest-persistence.log").read_text()
+persist_match = re.search(r"^PERSISTENCE EVENTS: (\d+)$", persist_log, re.M)
+if (not persist_match or int(persist_match.group(1)) < 2
+        or "DIAGNOSTICS PERSISTENCE VERIFY OK" not in persist_log):
+    sys.exit("PERSISTENCE DRIFT: the guest crash archive did not survive a reboot")
+persist_events = int(persist_match.group(1))
 identity = json.loads((root / "platform/identity/identity.json").read_text())
 m = json.loads((root / "platform/image/manifest.json").read_text())
 kernel = json.loads((dev / "kernel-build.json").read_text())
@@ -431,6 +499,16 @@ receipt = {
                 "history": m["graphics"]["diagnostics"]["history"],
                 "events": diag_events,
                 "verified": True,
+                "persistence": {
+                    "owner": m["graphics"]["diagnostics"]["persistence"]["owner"],
+                    "manager": m["graphics"]["diagnostics"]["persistence"]["manager"],
+                    "log": m["graphics"]["diagnostics"]["persistence"]["log"],
+                    "snapshot": m["graphics"]["diagnostics"]["persistence"]["snapshot"],
+                    "journal": m["graphics"]["diagnostics"]["persistence"]["journal"],
+                    "events": persist_events,
+                    "survives_reboot": True,
+                    "verified": True,
+                },
             },
         },
     },

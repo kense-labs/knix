@@ -61,7 +61,20 @@
     "format": "key=value lines in the report, one line per reported failure in the history",
     "rule": "every failed state of the compositor is reported by the guest's own systemd; the report is derived only from guest unit state, the guest journal and local device nodes, never from host input",
     "verification": "build.sh --build requires DIAGNOSTICS VERIFY OK: the guest-written report must describe the final failed state and the history must contain more than one reported crash",
-    "fallback": "the journal is the durable record; /run/knix is a runtime snapshot; GPU=none never produces a failure and keeps the serial console and ssh as the full fallback path"
+    "persistence": {
+      "owner": "guest",
+      "manager": "systemd-journald",
+      "directory": "/var/lib/knix",
+      "log": "/var/lib/knix/session-failure.log",
+      "snapshot": "/var/lib/knix/session-failure.txt",
+      "journal": "/var/log/journal",
+      "journal_storage": "persistent",
+      "min_reported_events": 2,
+      "rule": "every OnFailure= report is appended by the guest itself to an archive on the persistent root filesystem, with the boot id and all report fields; /run/knix stays only a runtime snapshot",
+      "verification": "build.sh --build stops and relaunches the same knix.img with its EFI variable store kept, then requires the archive to still hold the terminal failed state while /run/knix is gone, the stored boot id differs from the current one and journalctl still lists the previous boot",
+      "fallback": "GPU=none produces no failure and therefore writes no archive entry; the serial console and ssh remain the full fallback path"
+    },
+    "fallback": "the guest-owned archive and the persistent journal keep the durable record; /run/knix is a runtime snapshot; GPU=none never produces a failure and keeps the serial console and ssh as the full fallback path"
   },
   "input": { "backend": "libinput", "owner": "guest" },
   "output": { "backend": "drm", "device": "virtio-gpu", "owner": "guest" },

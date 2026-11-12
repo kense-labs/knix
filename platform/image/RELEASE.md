@@ -51,15 +51,16 @@ python3 scripts/verify-release.py \
 python3 scripts/verify-release.py --json
 ```
 
-It refuses the release unless all 14 checks in `manifest.json.release.checks`
+It refuses the release unless all 15 checks in `manifest.json.release.checks`
 pass: image bytes and sha256 equal the receipt; the `.sha256` openssl digest
 covers the exact receipt file; every pinned input group and `seed_sha512`
 equals `manifest.json.inputs`; `baseline.sha256` is the sha256 of the canonical
 `build_baseline` object; the kernel and rootfs summaries carry every locked
 field; the boot chain is UEFI self-boot with no seed ISO; `graphics` and its
-`session`, `autostart`, `resilience`, `crash_loop`, `diagnostics` and
-`framebuffer` sections are all verified (at least 2 guest-reported diagnostics
-events, 9/9 framebuffer samples plus swaybar pixels); and the publish surface is
+`session`, `autostart`, `resilience`, `crash_loop`, `diagnostics`,
+`diagnostics.persistence` and `framebuffer` sections are all verified (at least
+2 guest-reported diagnostics events, a reboot-surviving guest-owned archive,
+9/9 framebuffer samples plus swaybar pixels); and the publish surface is
 exactly `knix.img` plus `origin/main`.
 
 A successful run prints `RELEASE VERIFY OK`; any drift prints one
@@ -72,10 +73,10 @@ mismatch means the image was assembled from drifted inputs or skipped a
 verification stage.
 
 `--self-test` builds a policy-consistent synthetic receipt in a temporary
-directory and refuses 30 tampered variants (image swap, edited receipt, stale or
-missing checksum, input and baseline drift, missing evidence, extra publish
-surface) without QEMU or a build artifact; CI runs it as the
-`Release verification gate` step. `scripts/verify-repro.py`, I25 and the CI
+directory and refuses 34 tampered variants (image swap, edited receipt, stale or
+missing checksum, input and baseline drift, missing evidence, a host-owned or
+non-reboot-proof crash archive, extra publish surface) without QEMU or a build
+artifact; CI runs it as the `Release verification gate` step. `scripts/verify-repro.py`, I25 and the CI
 single-image contract block keep the policy itself from drifting.
 
 For a signed release the detached signature is still checked out of band:
@@ -206,9 +207,47 @@ and `DIAGNOSTICS EVENTS: N`; `build.sh --build` parses that event count and
 refuses a receipt without it. The receipt records
 `graphics.session.diagnostics` with the guest-reported event count.
 
-`/run` is a tmpfs runtime snapshot; the guest journal keeps the durable record.
-On the `GPU=none` path the DRM condition is unmet, no failure is produced and
-the serial console and ssh remain the full fallback path.
+`/run` is a tmpfs runtime snapshot; the persistent journal and the guest-owned
+archive keep the durable record. On the `GPU=none` path the DRM condition is
+unmet, no failure is produced and the serial console and ssh remain the full
+fallback path.
+
+## Persistent crash archive
+
+P12's report lived only in `/run`: after a reboot the journal still showed that
+systemd had invoked the reporter, but the report contents and the crash
+timeline were gone. P14 makes the guest archive its own evidence.
+
+`assemble-native.sh` writes
+`/etc/systemd/journald.conf.d/knix-persistence.conf` with
+`Storage=persistent`, creates `/var/lib/knix` on the root filesystem and keeps
+`/var/log/journal`. The guest-owned `OnFailure=` script mirrors the runtime
+snapshot to `/var/lib/knix/session-failure.txt` and appends one boot-stamped
+line per event to `/var/lib/knix/session-failure.log`, carrying the boot id,
+timestamp and every report field. It still always exits 0 so it never becomes a
+second failed unit. Nothing is written, collected or replayed by the host.
+
+After the cold-boot verification, the QMP framebuffer capture and a clean
+power-off, `build.sh --build` relaunches the **same** `knix.img` with its EFI
+variable store kept. On that second boot it requires:
+
+- the archive and snapshot still exist and contain `active_state=failed` plus at
+  least two events;
+- `/run/knix/session-failure.*` is gone, proving the archive is not an
+  in-memory leftover;
+- the snapshot's `boot=` id differs from the current boot id;
+- `journalctl --list-boots` still lists the previous boot;
+- zero failed units, active ssh, an active knix-owned sway session and the
+  serial console.
+
+Only then does it emit `DIAGNOSTICS PERSISTENCE VERIFY OK` and parse
+`PERSISTENCE EVENTS: N`. A second clean power-off follows, **then** the image
+sha256 is computed and the receipt is written, so the published bytes still
+correspond exactly to what ships. The receipt records
+`graphics.session.diagnostics.persistence` (owner, manager, paths, event count,
+`survives_reboot` and `verified`), and `verify-release.py` refuses any receipt
+missing that proof. On `GPU=none` no failure is produced, so no archive entry
+is written and the serial console plus ssh remain the full fallback path.
 
 ## Framebuffer pixel proof
 

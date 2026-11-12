@@ -226,17 +226,29 @@ UNIT
 # Crash diagnostics are a guest capability, not a host-side report. systemd
 # invokes this oneshot on every failed state of the session unit. The script
 # reads only guest unit state, the guest journal and local device nodes; it
-# always succeeds so it never becomes a second failed unit. /run is a tmpfs:
-# the journal keeps the durable record across boots.
-mkdir -p "$MOUNT/usr/lib/knix"
+# always succeeds so it never becomes a second failed unit. /run is a tmpfs,
+# so the guest also appends every report to an archive on the persistent root
+# filesystem and pins journald to persistent storage: a reboot must not erase
+# the crash timeline. Nothing here is written or collected by the host.
+mkdir -p "$MOUNT/usr/lib/knix" "$MOUNT/etc/systemd/journald.conf.d" \
+         "$MOUNT/var/lib/knix" "$MOUNT/var/log/journal"
+chmod 0750 "$MOUNT/var/lib/knix"
+chmod 2755 "$MOUNT/var/log/journal"
+cat > "$MOUNT/etc/systemd/journald.conf.d/knix-persistence.conf" <<'JOURNAL'
+[Journal]
+Storage=persistent
+SystemMaxUse=128M
+JOURNAL
 cat > "$MOUNT/usr/lib/knix/session-failure-report.sh" <<'REPORT'
 #!/bin/bash
 # Guest-owned crash diagnostics, invoked by knix-session.service OnFailure=.
 set -u
 UNIT=knix-session.service
 DIR=/run/knix
-mkdir -p "$DIR" || exit 0
+PDIR=/var/lib/knix
+mkdir -p "$DIR" "$PDIR" || exit 0
 TIMESTAMP="$(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || echo unknown)"
+BOOT_ID="$(cat /proc/sys/kernel/random/boot_id 2>/dev/null || echo unknown)"
 ACTIVE_STATE="$(systemctl show -p ActiveState --value "$UNIT" 2>/dev/null || echo unknown)"
 RESULT="$(systemctl show -p Result --value "$UNIT" 2>/dev/null || echo unknown)"
 EXEC_STATUS="$(systemctl show -p ExecMainStatus --value "$UNIT" 2>/dev/null || echo unknown)"
@@ -252,6 +264,7 @@ LIMIT_LINES="$(journalctl -u "$UNIT" --no-pager -n 40 2>/dev/null | grep -c 'Sta
   echo "owner=guest"
   echo "manager=systemd"
   echo "timestamp=$TIMESTAMP"
+  echo "boot=$BOOT_ID"
   echo "active_state=$ACTIVE_STATE"
   echo "result=$RESULT"
   echo "exec_main_status=$EXEC_STATUS"
@@ -262,6 +275,11 @@ LIMIT_LINES="$(journalctl -u "$UNIT" --no-pager -n 40 2>/dev/null | grep -c 'Sta
   echo "serial=$SERIAL_STATE"
   echo "start_limit_lines=${LIMIT_LINES:-0}"
 } > "$DIR/session-failure.txt" || exit 0
+# The runtime snapshot is a tmpfs and disappears on reboot. Mirror it and append
+# one boot-stamped line per event to the guest-owned archive on the root disk.
+cp "$DIR/session-failure.txt" "$PDIR/session-failure.txt" || true
+echo "boot=$BOOT_ID timestamp=$TIMESTAMP unit=$UNIT owner=guest manager=systemd restarts=$RESTARTS result=$RESULT active_state=$ACTIVE_STATE exec_main_status=$EXEC_STATUS failed_units=$FAILED_UNITS sway_processes=${SWAY_PROCS:-0} ssh=$SSH_STATE serial=$SERIAL_STATE start_limit_lines=${LIMIT_LINES:-0}" \
+  >> "$PDIR/session-failure.log" || true
 echo "$TIMESTAMP unit=$UNIT restarts=$RESTARTS result=$RESULT active_state=$ACTIVE_STATE failed_units=$FAILED_UNITS" \
   >> "$DIR/session-failure.history" || true
 exit 0
@@ -352,12 +370,23 @@ grep -q '^OnFailure=knix-session-failure.service$' "$UNIT_FILE" \
   || { echo "session unit lost its guest-owned OnFailure= trigger" >&2; exit 1; }
 grep -q '^ExecStart=/bin/bash /usr/lib/knix/session-failure-report.sh$' "$DIAG_UNIT_FILE" \
   || { echo "failure diagnostics unit does not invoke the guest script" >&2; exit 1; }
-for token in 'session-failure.txt' 'session-failure.history' 'owner=guest' \
-             'manager=systemd' 'active_state=' 'failed_units=' 'exit 0'; do
+for token in 'session-failure.txt' 'session-failure.history' \
+             'session-failure.log' 'PDIR=/var/lib/knix' 'boot=' \
+             'owner=guest' 'manager=systemd' 'active_state=' \
+             'failed_units=' 'exit 0'; do
   grep -q "$token" "$DIAG_SCRIPT" \
     || { echo "diagnostics script lost: $token" >&2; exit 1; }
 done
-echo "diagnostics: guest-owned OnFailure= report + crash history (systemd)"
+PERSIST_CONF="$MOUNT/etc/systemd/journald.conf.d/knix-persistence.conf"
+test -f "$PERSIST_CONF" \
+  || { echo "missing guest-owned journald persistence config" >&2; exit 1; }
+grep -q '^Storage=persistent$' "$PERSIST_CONF" \
+  || { echo "journald storage is not pinned to persistent" >&2; exit 1; }
+test -d "$MOUNT/var/lib/knix" \
+  || { echo "missing guest-owned persistent diagnostics directory" >&2; exit 1; }
+test -d "$MOUNT/var/log/journal" \
+  || { echo "missing persistent journal directory" >&2; exit 1; }
+echo "diagnostics: guest-owned OnFailure= report + crash history + persistent archive (systemd + journald)"
 echo "seat: seatd + drm,libinput + guest udev rule (autostart enabled)"
 echo -n "brand assets: "; ls -1 "$MOUNT/usr/share/knix/brand" | wc -l
 ls -lh "$MOUNT/boot/vmlinuz-$KVER-knix"

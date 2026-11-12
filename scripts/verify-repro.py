@@ -271,6 +271,39 @@ def main() -> int:
             or sd.get("report") != "/run/knix/session-failure.txt"):
         errors.append("session.json diagnostics contract drifted")
 
+    # 5e. the crash timeline is archived by the guest on its own root disk and
+    # survives a real reboot; /run/knix remains only a runtime snapshot.
+    dp = gfx.get("diagnostics", {}).get("persistence", {})
+    if (dp.get("owner") != "guest" or dp.get("manager") != "systemd-journald"
+            or dp.get("log") != "/var/lib/knix/session-failure.log"
+            or dp.get("snapshot") != "/var/lib/knix/session-failure.txt"
+            or dp.get("journal") != "/var/log/journal"
+            or dp.get("journal_storage") != "persistent"
+            or dp.get("min_reported_events") != 2
+            or dp.get("survives_reboot") is not True):
+        errors.append("graphics.diagnostics.persistence contract drifted")
+    sp = sd.get("persistence", {})
+    if (sp.get("owner") != "guest" or sp.get("manager") != "systemd-journald"
+            or sp.get("log") != "/var/lib/knix/session-failure.log"
+            or sp.get("journal_storage") != "persistent"):
+        errors.append("session.json diagnostics.persistence drifted")
+    for token in ("knix-persistence.conf", "Storage=persistent",
+                  "PDIR=/var/lib/knix", "session-failure.log", "boot=$BOOT_ID"):
+        if token not in asm:
+            errors.append("assemble-native.sh lost persistence token: %s" % token)
+    for token in ("PERSISTENCE VERIFY OK", "ARCHIVE_EVENTS",
+                  "session-failure.log", "Storage=persistent"):
+        if token not in vg_diag:
+            errors.append("verify-graphics.sh lost persistence token: %s" % token)
+    for token in ("DIAGNOSTICS PERSISTENCE VERIFY OK", "PERSISTENCE DRIFT",
+                  "PERSISTENCE EVENTS:", "KNIX_KEEP_VARS=1",
+                  "guest-persistence.log", '"persistence": {'):
+        if token not in build_text:
+            errors.append("build.sh lost persistence gate: %s" % token)
+    rg_text = (ROOT / "scripts/verify-release.py").read_text(encoding="utf-8")
+    if "diagnostics_persistence_verified" not in rg_text:
+        errors.append("release gate lost the persistence acceptance check")
+
     # 6. the receipt records the same baseline the build verifies
     build = (ROOT / "platform/image/build.sh").read_text(encoding="utf-8")
     for token in ("build_baseline", "BASELINE DRIFT", "package-versions.txt",
@@ -312,7 +345,8 @@ def main() -> int:
     if (rel.get("tool") != "scripts/verify-release.py"
             or rel.get("read_only") is not True
             or rel.get("schema") != 3
-            or len(rel.get("checks", [])) != 14
+            or len(rel.get("checks", [])) != 15
+            or "diagnostics_persistence_verified" not in rel.get("checks", [])
             or rel.get("min_diagnostics_events") != 2
             or rel.get("framebuffer_samples") != 9
             or rel.get("publish_surface") != ["knix.img", "origin/main"]):
@@ -331,7 +365,8 @@ def main() -> int:
         for token in ("--self-test", "RELEASE VERIFY OK", "RELEASE FAILED",
                       "receipt checksum drift", "image sha256 drift",
                       "baseline sha256 drift", "inputs drift",
-                      "publish_surface drift", "canonical_sha"):
+                      "publish_surface drift", "canonical_sha",
+                      "diagnostics persistence drift"):
             if token not in rg:
                 errors.append("verify-release.py lost %s" % token)
     for group, entries in m.get("inputs", {}).items():

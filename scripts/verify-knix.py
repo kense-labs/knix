@@ -750,11 +750,12 @@ def main() -> int:
                 or "not_a_build_input" not in rel):
             release_errors.append("manifest release policy drifted")
         checks = rel.get("checks", [])
-        if (len(checks) != 14
+        if (len(checks) != 15
                 or "image_sha256_and_bytes_match_receipt" not in checks
                 or "receipt_checksum_matches" not in checks
                 or "baseline_matches_manifest" not in checks
                 or "session_diagnostics_verified" not in checks
+                or "diagnostics_persistence_verified" not in checks
                 or "framebuffer_pixels_verified" not in checks
                 or "single_publish_surface" not in checks):
             release_errors.append("release policy lost an acceptance check")
@@ -792,6 +793,71 @@ def main() -> int:
     require(not release_errors,
             "a release is accepted by a read-only host-side gate",
             "release contract: %s" % release_errors[:4])
+
+    # I26 -- a crash report that only lives in /run disappears at reboot. The
+    # guest must own a persistent archive and the build must prove it survives
+    # an actual relaunch of the same disk, with no host-written diagnostics.
+    persistence_errors = []
+    try:
+        pm = json.loads((ROOT / "platform/image/manifest.json").read_text(
+            encoding="utf-8"))
+        pd = pm.get("graphics", {}).get("diagnostics", {}).get("persistence", {})
+        if (pd.get("owner") != "guest" or pd.get("manager") != "systemd-journald"
+                or pd.get("directory") != "/var/lib/knix"
+                or pd.get("log") != "/var/lib/knix/session-failure.log"
+                or pd.get("snapshot") != "/var/lib/knix/session-failure.txt"
+                or pd.get("journal") != "/var/log/journal"
+                or pd.get("journal_storage") != "persistent"
+                or pd.get("min_reported_events") != 2
+                or pd.get("survives_reboot") is not True):
+            persistence_errors.append("manifest graphics.diagnostics.persistence drifted")
+        ps = json.loads((ROOT / "platform/identity/session.json").read_text(
+            encoding="utf-8")).get("diagnostics", {}).get("persistence", {})
+        if (ps.get("owner") != "guest" or ps.get("manager") != "systemd-journald"
+                or ps.get("directory") != "/var/lib/knix"
+                or ps.get("log") != "/var/lib/knix/session-failure.log"
+                or ps.get("journal_storage") != "persistent"
+                or ps.get("min_reported_events") != 2):
+            persistence_errors.append("session.json diagnostics.persistence drifted")
+        pasm = (ROOT / "platform/image/assemble-native.sh").read_text(
+            encoding="utf-8")
+        for token in ("knix-persistence.conf", "Storage=persistent",
+                      "PDIR=/var/lib/knix", "session-failure.log",
+                      "boot=$BOOT_ID", "/var/log/journal"):
+            if token not in pasm:
+                persistence_errors.append("assemble-native.sh lost %s" % token)
+        pvg = (ROOT / "platform/image/verify-graphics.sh").read_text(
+            encoding="utf-8")
+        for token in ("PERSISTENCE VERIFY OK", "ARCHIVE_EVENTS",
+                      "session-failure.log", "Storage=persistent", "DIAG_ARCHIVE"):
+            if token not in pvg:
+                persistence_errors.append("verify-graphics.sh lost %s" % token)
+        pbs = (ROOT / "platform/image/build.sh").read_text(encoding="utf-8")
+        for token in ("DIAGNOSTICS PERSISTENCE VERIFY OK", "PERSISTENCE DRIFT",
+                      "PERSISTENCE EVENTS:", "KNIX_KEEP_VARS=1",
+                      "reboot verification", '"persistence": {',
+                      "guest-persistence.log",
+                      "/run/knix/session-failure.history"):
+            if token not in pbs:
+                persistence_errors.append("build.sh lost %s" % token)
+        prg = (ROOT / "scripts/verify-release.py").read_text(encoding="utf-8")
+        if ("diagnostics_persistence_verified" not in prg
+                or "diagnostics persistence drift" not in prg):
+            persistence_errors.append("release gate lost the persistence check")
+        pchecks = pm.get("release", {}).get("checks", [])
+        if len(pchecks) != 15 or "diagnostics_persistence_verified" not in pchecks:
+            persistence_errors.append("release policy lost the persistence check")
+        pworkflow = (ROOT / ".github/workflows/knix-contract.yml").read_text(
+            encoding="utf-8")
+        if "diagnostics.persistence" not in pworkflow:
+            persistence_errors.append("CI contract lost the persistence check")
+    except (OSError, ValueError) as exc:
+        persistence_errors.append("unreadable persistence contract: %s" % exc)
+    if "| I26 |" not in readme:
+        persistence_errors.append("README lost I26")
+    require(not persistence_errors,
+            "guest crash diagnostics survive a reboot on the guest's own disk",
+            "persistence contract: %s" % persistence_errors[:4])
 
     # the only collection mechanism still parses
     try:

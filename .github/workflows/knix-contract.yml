@@ -82,7 +82,8 @@ jobs:
           if (rel.get("tool") != "scripts/verify-release.py"
                   or rel.get("read_only") is not True
                   or rel.get("schema") != 3
-                  or len(rel.get("checks", [])) != 14
+                  or len(rel.get("checks", [])) != 15
+                  or "diagnostics_persistence_verified" not in rel.get("checks", [])
                   or rel.get("min_diagnostics_events") != 2
                   or rel.get("framebuffer_samples") != 9
                   or rel.get("publish_surface") != ["knix.img", "origin/main"]):
@@ -94,7 +95,9 @@ jobs:
               gate = gate_path.read_text()
               for token in ("RELEASE VERIFY OK", "RELEASE FAILED", "--self-test",
                             "receipt checksum drift", "image sha256 drift",
-                            "baseline sha256 drift", "publish_surface drift"):
+                            "baseline sha256 drift", "publish_surface drift",
+                            "diagnostics persistence drift",
+                            "diagnostics_persistence_verified"):
                   if token not in gate:
                       bad.append(("verify-release.py", token, "missing"))
           for group, entries in m["inputs"].items():
@@ -206,6 +209,36 @@ jobs:
                   or sd.get("report") != "/run/knix/session-failure.txt"
                   or sd.get("history") != "/run/knix/session-failure.history"):
               bad.append(("session.json", "diagnostics contract drifted"))
+          dp = dg.get("persistence", {})
+          if (dp.get("owner") != "guest" or dp.get("manager") != "systemd-journald"
+                  or dp.get("log") != "/var/lib/knix/session-failure.log"
+                  or dp.get("snapshot") != "/var/lib/knix/session-failure.txt"
+                  or dp.get("journal_storage") != "persistent"
+                  or dp.get("min_reported_events") != 2
+                  or dp.get("survives_reboot") is not True):
+              bad.append(("graphics.diagnostics.persistence", "guest crash archive missing"))
+          sp = sd.get("persistence", {})
+          if (sp.get("owner") != "guest" or sp.get("manager") != "systemd-journald"
+                  or sp.get("log") != "/var/lib/knix/session-failure.log"
+                  or sp.get("journal_storage") != "persistent"):
+              bad.append(("session.json", "diagnostics.persistence drifted"))
+          pasm = (root / "platform/image/assemble-native.sh").read_text()
+          for token in ("knix-persistence.conf", "Storage=persistent",
+                        "PDIR=/var/lib/knix", "session-failure.log",
+                        "boot=$BOOT_ID"):
+              if token not in pasm:
+                  bad.append(("assemble-native.sh", token, "missing"))
+          pbuild = (root / "platform/image/build.sh").read_text()
+          for token in ("DIAGNOSTICS PERSISTENCE VERIFY OK", "PERSISTENCE DRIFT",
+                        "PERSISTENCE EVENTS:", "KNIX_KEEP_VARS=1",
+                        "reboot verification", '"persistence": {'):
+              if token not in pbuild:
+                  bad.append(("build.sh", token, "missing"))
+          pvg = (root / "platform/image/verify-graphics.sh").read_text()
+          for token in ("PERSISTENCE VERIFY OK", "ARCHIVE_EVENTS",
+                        "Storage=persistent", "session-failure.log"):
+              if token not in pvg:
+                  bad.append(("verify-graphics.sh", token, "missing"))
           verify_rel = gfx.get("verify", "")
           if not (root / verify_rel).is_file():
               bad.append(("graphics.verify", verify_rel, "missing"))
@@ -304,7 +337,7 @@ jobs:
                   print("CONTRACT DRIFT:", b, file=sys.stderr)
               sys.exit(1)
           print("CONTRACT OK: %d inputs, locked kernel/rootfs baseline, one artifact, "
-                "%d build stages, UEFI self-boot + graphics + framebuffer + crash loop + diagnostics + release gate" %
+                "%d build stages, UEFI self-boot + graphics + framebuffer + crash loop + diagnostics + persistence + release gate" %
                 (checked, len(m.get("build_stages", []))))
           PY
 

@@ -49,4 +49,6 @@ KNIX_DEV_DIR=../knix-m0 platform/backends/vm-virt/boot-native.sh
 
 发布产物由仓内 `scripts/verify-release.py` 只读验收，与本后端的启动路径无关：切换后端不改变 18 个锁定输入、`build_baseline` 或 receipt，因此后端真源始终不在 `manifest.json.inputs` 里。该验收只判定已构建的字节与证据链，不启动本后端的 VM，也不改写 `knix.img`。
 
+P14 的重启复验也走本后端：`build.sh --build` 在第一次 clean power-off 之后用 `KNIX_KEEP_VARS=1` 保留 EFI 变量、用**同一张** `knix.img` 再启动一次，验证 guest 自有的持久崩溃档案跨 boot 保留；串行日志与 QMP socket 使用独立文件，避免覆盖冷启证据。镜像 sha256 在第二次 power-off 之后才计算，因此 receipt 仍对应最终发布字节。切换后端不改变这条验收链，后端真源始终不在 `manifest.json.inputs` 里。
+
 Deferred：能力协商清单与 `knix check` 后端探测。

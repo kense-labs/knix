@@ -53,6 +53,7 @@ CHECKS = (
     "session_resilience_verified",
     "session_crash_loop_verified",
     "session_diagnostics_verified",
+    "diagnostics_persistence_verified",
     "framebuffer_pixels_verified",
     "single_publish_surface",
 )
@@ -215,6 +216,18 @@ def check(image: pathlib.Path, receipt: pathlib.Path, checksum: pathlib.Path,
         errors.append("diagnostics events drift: guest crash timeline is missing")
     if diag.get("owner") != "guest" or diag.get("manager") != "systemd":
         errors.append("diagnostics ownership drift")
+    mp = mg.get("diagnostics", {}).get("persistence", {})
+    persist = diag.get("persistence", {})
+    if (persist.get("owner") != "guest"
+            or persist.get("manager") != "systemd-journald"
+            or persist.get("survives_reboot") is not True
+            or persist.get("verified") is not True
+            or persist.get("log") != mp.get("log")
+            or persist.get("snapshot") != mp.get("snapshot")
+            or persist.get("journal") != mp.get("journal")
+            or not isinstance(persist.get("events"), int)
+            or persist["events"] < minimum):
+        errors.append("diagnostics persistence drift: the crash archive did not survive a reboot")
 
     fb = gfx.get("framebuffer", {})
     mfb = mg.get("framebuffer", {})
@@ -312,7 +325,17 @@ def synthetic_receipt(m: dict, identity: dict, image_bytes: bytes) -> dict:
                                 "report": mg["diagnostics"]["report"],
                                 "history": mg["diagnostics"]["history"],
                                 "events": m["release"]["min_diagnostics_events"],
-                                "verified": True},
+                                "verified": True,
+                                "persistence": {
+                                    "owner": "guest",
+                                    "manager": "systemd-journald",
+                                    "log": mg["diagnostics"]["persistence"]["log"],
+                                    "snapshot": mg["diagnostics"]["persistence"]["snapshot"],
+                                    "journal": mg["diagnostics"]["persistence"]["journal"],
+                                    "events": m["release"]["min_diagnostics_events"],
+                                    "survives_reboot": True,
+                                    "verified": True,
+                                }},
             },
         },
         "baseline": {"sha256": canonical_sha(baseline),
@@ -396,6 +419,18 @@ def self_test(m: dict, identity: dict) -> int:
     case("diagnostics host-owned",
          nested("graphics", "session", "diagnostics", "owner")("host"),
          "diagnostics ownership drift")
+    case("persistent archive missing",
+         lambda r, i, c: r["graphics"]["session"]["diagnostics"].pop(
+             "persistence", None), "diagnostics persistence drift")
+    case("persistent archive host-owned",
+         nested("graphics", "session", "diagnostics", "persistence", "owner")("host"),
+         "diagnostics persistence drift")
+    case("persistent archive not reboot-proof",
+         nested("graphics", "session", "diagnostics", "persistence",
+                "survives_reboot")(False), "diagnostics persistence drift")
+    case("persistent archive events too few",
+         nested("graphics", "session", "diagnostics", "persistence", "events")(1),
+         "diagnostics persistence drift")
     case("framebuffer samples",
          nested("graphics", "framebuffer", "matching_samples")(8),
          "framebuffer pixel proof drift")

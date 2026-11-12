@@ -24,7 +24,7 @@
       "platform/identity/knix-release": "6f0d9eb37a09f1bbf9bb51241c9aa713b3f18566761b24dcd922fb1341c06535",
       "platform/identity/identity.json": "c216c0805f0dc4dd0976de4161786d4c3e16184fa4e63d24a0bab8e81659369b",
       "platform/identity/packages.json": "bb7996b818eda8521ab69b499037f6e63a20497cc737ecbcc328c60add389a2d",
-      "platform/identity/session.json": "b75ddc38c81e35231b8d685cc9b358ed6e0d8cd450208f26a2a63328cb86893d",
+      "platform/identity/session.json": "6beaf8d97ac3b32b43c6fa6ab6a46439285d6f3b4e291c0c96f5e148c1f6dcca",
       "platform/identity/brand.manifest.json": "a6a3dbea169c6217d763ad9cf0898ca76425168994e9112982e8090de6c4db6f"
     },
     "brand_sha256": {
@@ -37,11 +37,11 @@
       "repos/linux/arch/arm64/configs/virt.config": "7cd8a9d570fd42fb3fce2724f7293f2f8e4bf24193acf315b5fbd676d1963319",
       "platform/image/build-kernel.sh": "b24314037ad1843e4055b210ad83fb6ad55631b56784a1df4f85acadc086e5f0",
       "platform/image/build-rootfs.sh": "1559ba0d87811baa4038e3a5ecadfa26b75e08603242ca76ec787328c92d0b94",
-      "platform/image/assemble-native.sh": "02adadf8e5600e462ab990725c62551d11928492da330b0ca4031511456d17b0",
-      "platform/image/build.sh": "126effa2a76abe926d8e9a64246c8f457057ecf258e2cc9cea81742208928ab4"
+      "platform/image/assemble-native.sh": "3aa5301036930c81feeb8c52d32b1ad2adfed6484cb64a0b735a6ac16f2ff0dc",
+      "platform/image/build.sh": "a7baf23129730d8def07b4ed055a949530a188473485a46f03ccfec9b6c7a089"
     },
     "verification_sha256": {
-      "platform/image/verify-graphics.sh": "de7474a761dd169ea11620c4c605b27d8ac5d5986d3046791df81c252c6ca464",
+      "platform/image/verify-graphics.sh": "08a29c2d35cf4f32e7902285b414127e4304a4b277bdb486a674aebe726d0073",
       "platform/image/verify-framebuffer.py": "ba40bede3ed7ceac7dccffa14ee9f23472625c052d531ae9774b8effec4fe1d2"
     },
     "baseline_sha256": {
@@ -61,8 +61,8 @@
       "graphics_modules": ["virtio-gpu", "virtio_input"]
     },
     "rootfs": {
-      "tarball_sha256": "3bdf5381f81b6ec3bf5b04835645b8bf4a4a60b29ab9b1862e9a5acb793bed0f",
-      "tarball_bytes": 226795266,
+      "tarball_sha256": "5eff28e767a7a7e2d91f3eb2cf307d7a421b89bfdfa81aa823a6c3230847dbe7",
+      "tarball_bytes": 226782994,
       "package_set_sha256": "bb7996b818eda8521ab69b499037f6e63a20497cc737ecbcc328c60add389a2d",
       "package_count": 39,
       "package_versions_sha256": "11417d90b6bfa1d8ad5e35e170fde4a4f5ec8c0a79c576bbabb617d37480e5bf",
@@ -168,7 +168,21 @@
       "format": "key=value lines in the report, one line per reported failure in the history",
       "min_reported_events": 2,
       "rule": "verify-graphics.sh requires DIAGNOSTICS VERIFY OK: the guest-written report must describe the final failed state (active_state=failed, result=signal, exec_main_status=9, failed_units=1, zero sway processes, ssh and serial intact) and the history must record more than one crash",
-      "fallback": "the journal is the durable record and /run/knix is a runtime snapshot; GPU=none produces no failure and keeps the serial console and ssh as the full fallback path"
+      "persistence": {
+        "owner": "guest",
+        "manager": "systemd-journald",
+        "directory": "/var/lib/knix",
+        "log": "/var/lib/knix/session-failure.log",
+        "snapshot": "/var/lib/knix/session-failure.txt",
+        "journal": "/var/log/journal",
+        "journal_storage": "persistent",
+        "min_reported_events": 2,
+        "survives_reboot": true,
+        "rule": "assemble-native.sh pins Storage=persistent and the guest OnFailure= script appends every report to a boot-stamped archive on the root filesystem; the host never writes or collects diagnostics",
+        "verification": "build.sh --build relaunches the same disk after the cold-boot verification and requires DIAGNOSTICS PERSISTENCE VERIFY OK: the archive still holds the terminal failed state, /run/knix is gone, the stored boot id is from the previous boot and journalctl still lists that boot",
+        "fallback": "GPU=none produces no failed state, so no archive entry is written; the serial console and ssh remain the full fallback path"
+      },
+      "fallback": "the guest-owned archive and the persistent journal keep the durable record; /run/knix is only a runtime snapshot; GPU=none produces no failure and keeps the serial console and ssh as the full fallback path"
     }
   },
   "baseline_refresh": {
@@ -202,6 +216,7 @@
       "session_resilience_verified",
       "session_crash_loop_verified",
       "session_diagnostics_verified",
+      "diagnostics_persistence_verified",
       "framebuffer_pixels_verified",
       "single_publish_surface"
     ],
