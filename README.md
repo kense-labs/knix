@@ -78,11 +78,13 @@
 | I13 | `README.md` 无自指元叙述与解释性说明 |
 | I14 | 运行后端不越产品边界；宿主适配器不进入镜像与发布清单 |
 | I15 | 身份、镜像清单与品牌哈希与全部构建输入一致 |
+| I16 | 内核与 rootfs 的构建基线锁定在仓内；`verify-repro.py` 可解析，仓内无二进制构建产物 |
 
 ## Operations
 
 ```bash
 python3 scripts/verify-knix.py
+python3 scripts/verify-repro.py
 
 python3 scripts/collect-knix.py --list
 python3 scripts/collect-knix.py
@@ -145,8 +147,10 @@ python3 scripts/verify-knix.py && git add -A && git commit -m "chore: refresh sn
 - `wireless-regdb` 默认指向发行版签名的 `regulatory.db`，与内核内置的上游密钥不匹配；`assemble-native.sh` 把 alternative 切到 `-upstream` 变体，冷启日志已无 `cfg80211` 告警。
 - 图形栈已在 guest 内实测：`boot-native.sh` 默认提供 `virtio-gpu-pci` 与 virtio 键鼠，`build-kernel.sh` 额外编入 `virtio-gpu` / `virtio_input` 模块，`assemble-native.sh` 写 `modules-load.d/knix-graphics.conf`。冷启后 `/dev/dri/card0`、`renderD128`、`card0-Virtual-1` 均由 guest 内核拥有；`platform/image/verify-graphics.sh` 在 guest 内以 root 启动 sway 1.10.1，验证 `Virtual-1` 1280×800 active、GBM buffer 与 GL FBO 分配、`foot` 拿到 Wayland 窗口并提交 `wlr_surface`。`build.sh --build` 把该脚本作为冷启验收的硬门槛，receipt 记录 `graphics.verified`。
 - headless 验证会话以 root 启动 sway，没有 logind seat，`swaymsg -t get_inputs` 为空；virtio 输入节点由 guest 内核拥有，正式会话由 seatd / logind 接管。`GPU=none` 时串口与 SSH 仍是完整降级路径。
-- CI 只校验仓内输入与契约；seed qcow2、QEMU/HVF 启动、镜像构建与 sway 实际渲染在本机执行。
-- Deferred：能力协商清单、宿主适配器参考实现、统计与清单生成器入库、定期重采调度、增量 diff 报告、包版本锁定与 CI 内完整构建。
+- `manifest.json` 的 `build_baseline` 锁定 guest 侧内核与 rootfs 的全部摘要；`platform/image/package-versions.txt` 是 388 个已安装包的版本锁定清单，属于构建输入而非构建产物。`build.sh --build` 在组装前逐字段比对两份摘要与 lockfile 字节，任一漂移即中止并提示刷新基线；receipt 记录 `baseline.sha256` 与 `baseline.verified`。
+- `scripts/verify-repro.py` 是仓内可复现性门禁：校验全部 17 个输入哈希、基线字段完整性、lockfile 排序与唯一性、构建阶段脚本可执行、UEFI / 图形契约、receipt 字段，以及 `platform/` / `scripts/` / `docs/` / `.github/` 内没有 `.img` / `.qcow2` / `.zst` 等二进制构建产物。
+- CI 校验仓内契约、输入哈希、锁定基线与脚本语法；seed qcow2、QEMU/HVF 启动、镜像组装、UEFI 冷启与 sway 实际渲染仍在本机执行，CI 不跑完整构建。
+- Deferred：能力协商清单、宿主适配器参考实现、统计与清单生成器入库、定期重采调度、增量 diff 报告、CI 内完整构建与基线自动刷新。
 
 ## Scale and status
 
@@ -175,12 +179,13 @@ knix/
 │   ├── collect-knix.py
 │   ├── make-knix-architecture.py
 │   ├── make-knix-logos.py
-│   └── verify-knix.py
+│   ├── verify-knix.py
+│   └── verify-repro.py
 ├── platform/
 │   ├── CONTRACT.md
 │   ├── contract.json
 │   ├── identity/                     # identity.json · os-release · packages.json · session.json
-│   ├── image/                        # build.sh · build-kernel.sh · build-rootfs.sh · assemble-native.sh · verify-graphics.sh · inject-identity.sh · sign.sh · RELEASE.md
+│   ├── image/                        # build.sh · build-kernel.sh · build-rootfs.sh · assemble-native.sh · verify-graphics.sh · package-versions.txt（锁定基线）· inject-identity.sh · sign.sh · RELEASE.md
 │   ├── backends/
 │   │   ├── native-apple/
 │   │   └── vm-virt/                  # boot-dev.sh · boot-native.sh

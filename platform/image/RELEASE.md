@@ -14,13 +14,17 @@ identity, the build recipe and the verification gate that reproduce it.
 | 镜像构建 | `platform/image/build.sh --build`（host） | `$KNIX_DEV_DIR/knix.img` |
 | 摘要与签名 | `platform/image/sign.sh` | `BUILD-RECEIPT.json` + `.sha256`（+ 可选 `.sig`） |
 | 契约校验 | `python3 scripts/verify-knix.py` | 无 |
+| 可复现基线 | `python3 scripts/verify-repro.py` | 无 |
 
 `build.sh --build` creates a blank qcow2, assembles the native rootfs, the
 self-built kernel and its matching 773 modules inside the helper guest,
 cold-boots the result through its own ESP, then verifies identity, brand bytes,
 module loading, failed units, the upstream-signed regulatory.db and real sway
 rendering on the guest-owned DRM device (`GRAPHICS VERIFY OK`). Only then does it
-write the receipt. The seed is never the source of the image contents.
+write the receipt. Before assembling, it refuses any kernel/rootfs summary that
+differs from the locked `build_baseline` or a `package-versions.txt` that is not
+byte-identical to the committed lockfile. The seed is never the source of the
+image contents.
 
 ## Verify a release
 
@@ -48,10 +52,26 @@ openssl dgst -sha256 -verify knix-release.pub \
 ```
 
 The receipt's `sha256` must equal `knix.img`. Its `kernel`, `rootfs`, `inputs`,
-`boot` and `graphics` sections record every digest used by the build, the UEFI
-self-boot method and the fact that real Wayland rendering was verified; a
-mismatch there means the image was assembled from drifted inputs or skipped a
-verification stage. `.sha256` covers the receipt, not the image.
+`boot`, `graphics` and `baseline` sections record every digest used by the
+build, the locked kernel/rootfs baseline, the UEFI self-boot method and the fact
+that real Wayland rendering was verified; a mismatch there means the image was
+assembled from drifted inputs or skipped a verification stage. `.sha256` covers
+the receipt, not the image.
+
+`baseline.sha256` is the digest of the canonical `build_baseline` object in
+`platform/image/manifest.json`. Compare it against the committed manifest to
+prove which locked baseline produced this image:
+
+```bash
+python3 - <<'PY'
+import hashlib, json, pathlib
+m = json.loads(pathlib.Path("platform/image/manifest.json").read_text())
+r = json.loads(pathlib.Path("BUILD-RECEIPT.json").read_text())
+canonical = json.dumps(m["build_baseline"], sort_keys=True, separators=(",", ":"))
+print("MATCH" if hashlib.sha256(canonical.encode()).hexdigest() == r["baseline"]["sha256"]
+      else "BASELINE DRIFT")
+PY
+```
 A release key is never stored in the repository; `KNIX_SIGNING_KEY` selects one
 at signing time, and the matching public key is distributed out of band.
 
@@ -88,6 +108,32 @@ The headless verification starts sway as root without a logind seat, so
 `swaymsg -t get_inputs` is empty. The virtio input nodes are still owned by the
 guest kernel; a real seatd/logind session takes them over. `GPU=none` on
 `boot-dev.sh` keeps the serial console and ssh as the full fallback path.
+
+## Reproducibility baseline
+
+The kernel and rootfs are built inside an arm64 Linux guest, so their summaries
+are not in-repo files. `platform/image/manifest.json` owns `build_baseline`,
+which pins every field of `kernel-build.json` and `rootfs-build.json`: kernel
+version, config/image digests, 773 modules, graphics drivers, the rootfs
+tarball digest and byte count, the package-set digest and 388 installed package
+versions. `platform/image/package-versions.txt` is the text lockfile produced
+by `dpkg-query` and sorted with `LC_ALL=C`; it is a build input, not a binary
+build artifact.
+
+`build.sh --build` fetches both summaries and the guest lockfile, compares every
+field against `build_baseline` and compares the two lockfiles byte-for-byte. Any
+drift aborts the build with a `BASELINE DRIFT` message and a refresh hint. A
+deliberately refreshed Debian mirror therefore cannot silently change what
+ships in `knix.img`. The receipt carries `baseline.sha256`,
+`baseline.kernel`, `baseline.rootfs`, `baseline.package_lock` and
+`baseline.verified`.
+
+`scripts/verify-repro.py` is the read-only CI gate: all 17 pinned inputs, the
+baseline structure, lockfile ordering and uniqueness, executable build stages,
+the receipt contract and the absence of binary artifacts under `platform/`,
+`scripts/`, `docs/` and `.github/`. It needs no seed image and no VM. Running a
+full QEMU/HVF build in CI remains out of scope: the seed is not in the
+repository and HVF only exists on macOS.
 
 ## Identity ownership
 

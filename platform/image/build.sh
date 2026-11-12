@@ -6,9 +6,10 @@
 #
 # The kernel and the native rootfs are produced INSIDE the arm64 Linux build
 # guest by build-kernel.sh / build-rootfs.sh, each with a self-describing JSON
-# summary. This script consumes those artifacts, assembles the single image,
-# boots it once, verifies identity, UEFI self-boot and real sway rendering on
-# the guest-owned DRM device, then writes a receipt recording every input digest.
+# summary. This script consumes those artifacts and assembles the single image.
+# It refuses to assemble anything that differs from the kernel/rootfs baseline
+# locked in manifest.json, boots once, verifies identity, UEFI self-boot and
+# real sway rendering on the guest-owned DRM device, then writes the receipt.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -67,7 +68,8 @@ PY
 if [ "$MODE" = "--check" ]; then
   check_inputs
   python3 -m json.tool "$MANIFEST" > /dev/null
-  echo "CHECK OK: manifest inputs are reproducible"
+  python3 "$ROOT/scripts/verify-repro.py"
+  echo "CHECK OK: manifest inputs and locked baseline are reproducible"
   exit 0
 fi
 if [ "$MODE" != "--build" ]; then
@@ -139,6 +141,7 @@ fetch() {
 fetch /mnt/knix-build/kernel-build.json "$DEV/kernel-build.json"
 fetch /mnt/knix-build/rootfs-build.json "$DEV/rootfs-build.json"
 fetch /mnt/knix-build/knix-Image "$KERNEL"
+fetch /mnt/knix-build/package-versions.txt "$DEV/package-versions.txt"
 
 python3 - "$DEV/kernel-build.json" "$DEV/rootfs-build.json" "$KERNEL" <<'PY'
 import hashlib, json, pathlib, sys
@@ -156,6 +159,51 @@ print("summaries OK: kernel %s, %d modules; rootfs %s" %
 PY
 KVER="$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["kernel_version"])' "$DEV/kernel-build.json")"
 NKO="$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["module_count"])' "$DEV/kernel-build.json")"
+
+echo "=== verify locked build baseline ==="
+# The summaries are produced inside the guest. Without an in-repo lock, a
+# silently refreshed Debian mirror could ship a different rootfs with a valid
+# receipt. Every field must equal manifest.json's build_baseline, and the
+# guest lockfile must be byte-identical to the one committed in the tree.
+python3 - "$MANIFEST" "$DEV/kernel-build.json" "$DEV/rootfs-build.json" \
+           "$ROOT/platform/image/package-versions.txt" "$DEV/package-versions.txt" <<'PY'
+import hashlib, json, pathlib, sys
+mani, ks, rs, lock_repo, lock_guest = (pathlib.Path(p) for p in sys.argv[1:6])
+m = json.loads(mani.read_text())
+k, r = json.loads(ks.read_text()), json.loads(rs.read_text())
+b = m.get("build_baseline")
+if not isinstance(b, dict):
+    sys.exit("BASELINE DRIFT: manifest.json has no build_baseline lock")
+bk, br = b.get("kernel", {}), b.get("rootfs", {})
+bad = []
+kernel_fields = ("kernel_version", "config_sha256", "image_sha256",
+                 "image_gz_sha256", "module_count",
+                 "graphics_drivers", "graphics_modules")
+rootfs_fields = ("tarball_sha256", "tarball_bytes", "package_set_sha256",
+                 "package_count", "package_versions_sha256",
+                 "package_versions_count")
+for f in kernel_fields:
+    if k.get(f) != bk.get(f):
+        bad.append("kernel.%s: guest=%r locked=%r" % (f, k.get(f), bk.get(f)))
+for f in rootfs_fields:
+    if r.get(f) != br.get(f):
+        bad.append("rootfs.%s: guest=%r locked=%r" % (f, r.get(f), br.get(f)))
+repo_bytes = lock_repo.read_bytes() if lock_repo.is_file() else b""
+guest_bytes = lock_guest.read_bytes()
+if repo_bytes != guest_bytes:
+    bad.append("package-versions.txt differs between the repository and the guest")
+if hashlib.sha256(guest_bytes).hexdigest() != br.get("package_versions_sha256"):
+    bad.append("guest package lockfile sha256 does not match the baseline")
+if bad:
+    for line in bad:
+        print("BASELINE DRIFT:", line, file=sys.stderr)
+    print("Refresh with build-rootfs.sh --apply, copy package-versions.txt into",
+          "platform/image/, then update manifest.json and all input digests.",
+          file=sys.stderr)
+    sys.exit(1)
+print("BASELINE OK: kernel %s/%d modules, rootfs %d package versions locked" %
+      (k["kernel_version"], k["module_count"], r["package_versions_count"]))
+PY
 
 echo "=== assemble knix.img ==="
 $SSH knix@127.0.0.1 'sudo env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin bash -s' \
@@ -248,14 +296,18 @@ stop_guest
 echo "=== receipt ==="
 IMG_SHA="$(sha256 "$IMAGE")"
 python3 - "$DEV" "$IMG_SHA" "$ROOT" <<'PY'
-import datetime, json, pathlib, sys
+import datetime, hashlib, json, pathlib, sys
 dev, img_sha, root = pathlib.Path(sys.argv[1]), sys.argv[2], pathlib.Path(sys.argv[3])
 identity = json.loads((root / "platform/identity/identity.json").read_text())
 m = json.loads((root / "platform/image/manifest.json").read_text())
 kernel = json.loads((dev / "kernel-build.json").read_text())
 rootfs = json.loads((dev / "rootfs-build.json").read_text())
+baseline = m["build_baseline"]
+baseline_sha = hashlib.sha256(
+    json.dumps(baseline, sort_keys=True, separators=(",", ":")).encode()
+).hexdigest()
 receipt = {
-    "schema": 2,
+    "schema": 3,
     "product": "knix",
     "version": identity["version"],
     "stage": identity["stage"],
@@ -282,6 +334,13 @@ receipt = {
         "compositor": m["graphics"]["compositor"],
         "owner": m["graphics"]["owner"],
         "verify": m["graphics"]["verify"],
+        "verified": True,
+    },
+    "baseline": {
+        "sha256": baseline_sha,
+        "kernel": baseline["kernel"],
+        "rootfs": baseline["rootfs"],
+        "package_lock": "platform/image/package-versions.txt",
         "verified": True,
     },
     "publish_surface": identity["publish_surface"],

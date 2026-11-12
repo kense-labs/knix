@@ -1,5 +1,5 @@
 {
-  "schema": 2,
+  "schema": 3,
   "product": "knix",
   "version": "0.1",
   "stage": "dev-preview",
@@ -36,18 +36,42 @@
     "recipe_sha256": {
       "repos/linux/arch/arm64/configs/virt.config": "7cd8a9d570fd42fb3fce2724f7293f2f8e4bf24193acf315b5fbd676d1963319",
       "platform/image/build-kernel.sh": "b24314037ad1843e4055b210ad83fb6ad55631b56784a1df4f85acadc086e5f0",
-      "platform/image/build-rootfs.sh": "c3b13db82500a8618cec0ac9d021735ba4a6542f1807c380532816ee8a2351ff",
+      "platform/image/build-rootfs.sh": "1559ba0d87811baa4038e3a5ecadfa26b75e08603242ca76ec787328c92d0b94",
       "platform/image/assemble-native.sh": "57b2892177bc06801a2431bf3a907f4a5ca1d21b306b6252beb7c0ecf2293bf6",
-      "platform/image/build.sh": "dee5cccc85fef21817d73483a47c062b9196811a99b31e473284531816deac42"
+      "platform/image/build.sh": "d2793c9d65b7bb684747c2b63bce69a50ad11a0456d7da0fdeabee8b1f3ad916"
     },
     "verification_sha256": {
       "platform/image/verify-graphics.sh": "d1461547c575b8fba088ffbdf8e3ed0d94b26712c84353982ed67ad6893d50d8"
+    },
+    "baseline_sha256": {
+      "platform/image/package-versions.txt": "11417d90b6bfa1d8ad5e35e170fde4a4f5ec8c0a79c576bbabb617d37480e5bf"
+    }
+  },
+  "build_baseline": {
+    "owner": "platform/image/manifest.json",
+    "rule": "build.sh --build refuses to assemble when any guest-produced summary or the package lockfile differs from these locked values",
+    "kernel": {
+      "kernel_version": "7.2.15",
+      "config_sha256": "f1d48d9ac2875e3901f3b39961881c5206c69fb5c80140c0118f498e920fd356",
+      "image_sha256": "12a1ccc17535208cdc8e82f740a6c22f7272ad9b3b6db8a688132ef6a11bb6b4",
+      "image_gz_sha256": "a6ed68eb8de3c9c873d37e42fdeb27b09a8ea76817e2f152d8c9444f10cc8d96",
+      "module_count": 773,
+      "graphics_drivers": ["CONFIG_DRM_VIRTIO_GPU=m", "CONFIG_VIRTIO_INPUT=m"],
+      "graphics_modules": ["virtio-gpu", "virtio_input"]
+    },
+    "rootfs": {
+      "tarball_sha256": "96c54a3b0a802d5c43005dc62efc96372fbfa1d1a98148d9983f55c9f16abb89",
+      "tarball_bytes": 226808969,
+      "package_set_sha256": "bb7996b818eda8521ab69b499037f6e63a20497cc737ecbcc328c60add389a2d",
+      "package_count": 39,
+      "package_versions_sha256": "11417d90b6bfa1d8ad5e35e170fde4a4f5ec8c0a79c576bbabb617d37480e5bf",
+      "package_versions_count": 388
     }
   },
   "build_stages": [
     "platform/image/build-kernel.sh --apply (inside the arm64 Linux build guest)",
-    "platform/image/build-rootfs.sh --apply (inside the arm64 Linux build guest)",
-    "platform/image/build.sh --build (on the host; assembles, UEFI cold-boots, verifies identity/brand/graphics, writes the receipt)"
+    "platform/image/build-rootfs.sh --apply (inside the arm64 Linux build guest; also writes package-versions.txt)",
+    "platform/image/build.sh --build (on the host; verifies the locked baseline, assembles, UEFI cold-boots, verifies identity/brand/graphics, writes the receipt)"
   ],
   "verification": [
     "uname -m is aarch64 and uname -r is 7.2.15",
@@ -66,7 +90,9 @@
     "sway 1.10.1 starts on the DRM backend; swaymsg reports Virtual-1 active",
     "the sway log shows an allocated GBM buffer and a created GL FBO",
     "foot connects as a Wayland client, appears in get_tree and commits wlr_surfaces",
-    "serial console and ssh remain available with GPU=none on boot-dev.sh"
+    "serial console and ssh remain available with GPU=none on boot-dev.sh",
+    "build.sh compares every kernel/rootfs summary field and both lockfiles against build_baseline before assembling",
+    "scripts/verify-repro.py checks all pinned inputs, the lockfile and the absence of binary build artifacts"
   ],
   "boot": {
     "method": "UEFI self-boot",
@@ -85,6 +111,6 @@
     "fallback": "GPU=none on boot-dev.sh keeps the serial console and ssh",
     "known_limitation": "the headless verification runs sway as root without a logind seat, so swaymsg -t get_inputs is empty; the guest kernel owns the virtio input nodes and a real seatd/logind session takes them over"
   },
-  "receipt": "platform/image/build.sh writes $KNIX_DEV_DIR/BUILD-RECEIPT.json with the artifact sha256, graphics verification result and every build input digest",
+  "receipt": "platform/image/build.sh writes $KNIX_DEV_DIR/BUILD-RECEIPT.json (schema 3) with the artifact sha256, the canonical build_baseline sha256, graphics verification result and every build input digest",
   "publish_surface": ["knix.img", "origin/main"]
 }

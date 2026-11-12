@@ -4,10 +4,11 @@
 
 | 文件 | 角色 |
 | --- | --- |
-| `manifest.json` | 构建配方：seed SHA512、6 份身份文件、4 个品牌资产、5 份构建配方脚本与 `verify-graphics.sh` 的 sha256，三阶段构建顺序、UEFI / 图形契约与发布面 |
-| `build.sh` | 顶层编排；`--check` 校验全部输入哈希，`--build` 建空白盘 → guest 内组装 → 冷启复验 → 写含全部输入摘要的 receipt |
+| `manifest.json` | 构建配方：seed SHA512、17 个输入哈希（6 身份 / 4 品牌 / 5 配方 / 1 图形验证 / 1 锁定基线）、`build_baseline` 内核与 rootfs 锁定值，三阶段构建顺序、UEFI / 图形契约与发布面 |
+| `package-versions.txt` | 388 个已安装包的版本锁定清单（`dpkg-query` + `LC_ALL=C sort`），文本构建输入，不是二进制产物 |
+| `build.sh` | 顶层编排；`--check` 校验全部输入哈希并运行 `verify-repro.py`，`--build` 建空白盘 → 逐字段校验锁定基线 → guest 内组装 → 冷启复验 → 写含 `baseline` 段的 receipt |
 | `inject-identity.sh` | 把身份与品牌字节原样装进运行中的 guest |
-| `build-rootfs.sh` | 在 guest 内用 `packages.json` 生成原生 rootfs、tarball 与 `rootfs-build.json` |
+| `build-rootfs.sh` | 在 guest 内用 `packages.json` 生成原生 rootfs、tarball、`rootfs-build.json`（schema 2）与 `package-versions.txt` 版本锁定清单 |
 | `build-kernel.sh` | 在 guest 内原生编译 `repos/linux`：`--check` 校验 fragment 与内置启动驱动，`--apply` 产出 `Image.gz`、`knix-Image`、`modules/lib/modules/7.2.15` 与 `kernel-build.json`；检测到截断的构建树会自动清空重编 |
 | `assemble-native.sh` | 在 guest 内建 ESP + root 双分区 GPT 盘，装原生 rootfs、自编译内核与 773 个模块，生成自有 initramfs 并把 systemd-boot / 内核 / initrd / loader entry 写入 ESP，写 `fstab` / 用户 / SSH / 网络与图形模块加载配置，供 UEFI 自举 |
 | `verify-graphics.sh` | 在冷启后的 guest 内以 root 验证 virtio-gpu DRM 节点、virtio 输入、sway 的 GBM / GL 实际渲染与 `foot` Wayland 窗口；纯 shell，不依赖 guest 内的 python3 / jq |
@@ -18,6 +19,8 @@
 
 `kernel-build.json` 还记录最终 `.config` 的 `config_sha256`；`assemble-native.sh` 把 `wireless-regdb` 的 alternative 切到上游签名变体，使 `cfg80211` 能用内核内置密钥验证 `regulatory.db`。`packages.json` 的 `boot` 集合提供 `systemd-boot-efi`（EFI 二进制）、`dosfstools`（ESP 格式化）与 `initramfs-tools`（生成 initrd），三者由 `build-rootfs.sh` 装进原生 rootfs；`KNIX_SETS` 默认包含该集合。
 
+`build-rootfs.sh --apply` 在打包后用 `chroot dpkg-query` 导出 `package-versions.txt`（388 行，`Package\tVersion\tArchitecture`，`LC_ALL=C sort`），`rootfs-build.json` 记录它的 sha256 与行数。`build.sh --build` 把两份摘要和 lockfile 一起取回 host，与 `manifest.json` 的 `build_baseline` **逐字段**比对：内核版本、`config_sha256`、两个内核镜像 hash、模块数、图形驱动与模块名，rootfs tarball hash / 字节数 / 包集 hash / 包数 / 版本清单 hash / 版本行数，以及 guest lockfile 与仓内 `platform/image/package-versions.txt` 是否逐字节相同。任一漂移输出 `BASELINE DRIFT` 并中止，提示先重跑 `build-rootfs.sh --apply`、复制新 lockfile、刷新 manifest 与全部输入哈希。receipt 的 `baseline` 段记录 `build_baseline` 的规范化 sha256、内核/rootfs 锁定值、`package_lock` 路径与 `verified`，因此外部可以证明这张镜像来自哪一份锁定基线。
+
 `build.sh --build` 先把旧 `knix.img` 移到 `.prev`，`qemu-img create` 一张 8 GiB 空白 qcow2，再以 `DISK=knix-helper.img EXTRA_DISKS="build-disk.qcow2 knix.img"` 启动 helper guest，把 `kernel-build.json` / `rootfs-build.json` / `knix-Image` 取回 host 后交给 `assemble-native.sh` 组装到 `/dev/vdd`。组装脚本逐项比对两份摘要与模块数量，输入漂移即失败。随后 `sync` + guest 内 poweroff，`boot-native.sh` 用干净 EDK2 变量存储做一次 **UEFI 自举冷启**（不传 `-kernel`、不挂 seed ISO，显式挂 `virtio-gpu-pci` 与 virtio 键鼠），复验身份、内核版本、模块数量、`modprobe`、品牌字节、零失败单元、cloud-init 残留、`cfg80211` 告警，以及 `/proc/cmdline` 的 `root=/dev/vda2`、ESP 上的 `BOOTAA64.EFI` / loader entry 与自有 initrd；随后把 `verify-graphics.sh` 以 root 流式送进 guest，验证实际渲染并输出 `GRAPHICS VERIFY OK`。任一步失败都中止构建，guest 侧打印诊断。最后才写 receipt，其中 `graphics` 段记录设备、验证脚本与 `verified`。guest 页缓存未 flush 会让写入随 VM 停止丢失，所有写入脚本都内置 `sync`。helper 启动显式 `GPU=none GPU_INPUT=none`，避免新增 PCI 设备改变 virtio-blk probe 顺序、挪动 `/dev/vdc` / `/dev/vdd`。
 
 `build-rootfs.sh` 的覆盖变量：`KNIX_SETS`（默认全集）、`KNIX_VARIANT`（默认 `minbase`，包集由 `packages.json` 决定）、`KNIX_MIRROR`（默认 `http://deb.debian.org/debian`，QEMU slirp 下 HTTPS 并发下载会挂住）、`KNIX_DEB_CACHE`（默认关闭；仅用于本地复用已下载的 `.deb`，不是构建输入）。
@@ -26,7 +29,7 @@
 
 `verify-graphics.sh` 只检查 guest 自有的东西：`/dev/dri/card0` 与 `renderD128`、`/sys/module/virtio_gpu` 与 `virtio_input`、`card0-Virtual-1` 的 1280×800 mode、`/dev/input/by-path` 的 virtio 键盘与指针、`knix.desktop` 的 `Exec=sway`；再以 `XDG_RUNTIME_DIR=/run/user/0 WLR_BACKENDS=drm` 启动 sway 1.10.1，**不能**设置 `LIBGL_ALWAYS_SOFTWARE=1`（显式硬件 EGL device 与该变量冲突会让 Mesa segfault）。随后用 `swaymsg` 确认 `Virtual-1` active、日志里出现 `Allocated ... GBM buffer` / `Created GL FBO`，并 `swaymsg exec /usr/bin/foot` 让一个真实 Wayland 客户端出现在 `get_tree` 且提交 `New wlr_surface`。脚本以 `trap` 收掉 sway，输出 `GRAPHICS VERIFY OK`。headless 验证会话以 root 启动、没有 logind seat，`swaymsg -t get_inputs` 为空；virtio 输入节点仍由 guest 内核拥有，正式会话由 seatd / logind 接管。`GPU=none` 时串口与 SSH 保持可用。
 
-`.github/workflows/knix-contract.yml` 在 Linux CI 上校验仓内契约、全部输入哈希、UEFI 自举与 guest-owned DRM 契约、脚本语法；seed qcow2、QEMU/HVF 启动与 sway 实际渲染只在本地构建机执行，CI 不下载它们。
+`.github/workflows/knix-contract.yml` 在 Linux CI 上跑 8 个步骤：协作门禁（`verify-knix.py`，含 I16）、可复现性门禁（`scripts/verify-repro.py`）、单镜像 / UEFI / 图形 / 锁定基线契约、shell 与 Python 脚本语法、内核 fragment 与包集解析。`verify-repro.py` 还检查 `platform/` / `scripts/` / `docs/` / `.github/` 内没有 `.img` / `.qcow2` / `.zst` / `.fd` 等二进制构建产物。seed qcow2、QEMU/HVF 启动、镜像组装、UEFI 冷启与 sway 实际渲染只在本地构建机执行，CI 不下载它们，也不跑完整构建（seed 不入库、HVF 只在 macOS 可用）。
 
 镜像与 receipt 落在 `$KNIX_DEV_DIR`（默认仓外同级 `knix-m0/`），不入库。仓内只有可复现的定义与哈希；`origin/main` 是唯一发布面。
 

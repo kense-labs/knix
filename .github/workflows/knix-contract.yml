@@ -21,9 +21,13 @@ jobs:
       - name: Collaboration invariants
         run: python3 scripts/verify-knix.py
 
+      - name: Reproducibility gate
+        run: python3 scripts/verify-repro.py
+
       # The seed qcow2 is pinned by SHA512 but lives outside the repository and
       # is never fetched in CI. build.sh --check validates it on a build host;
-      # here we verify every in-repo input and the single-image launch rule.
+      # here we verify every in-repo input, the locked kernel/rootfs baseline
+      # and the single-image launch rule.
       - name: Single-image, UEFI and graphics build contract
         run: |
           python3 - <<'PY'
@@ -45,6 +49,10 @@ jobs:
           art = m.get("artifact", {})
           if art.get("name") != "knix.img" or art.get("single") is not True:
               bad.append(("artifact", "expected exactly one knix.img"))
+          b = m.get("build_baseline", {})
+          if (not isinstance(b, dict) or not b.get("kernel")
+                  or not b.get("rootfs")):
+              bad.append(("build_baseline", "kernel/rootfs lock missing"))
           if m.get("publish_surface") != ["knix.img", "origin/main"]:
               bad.append(("publish_surface", "drifted"))
           boot = m.get("boot", {})
@@ -106,7 +114,8 @@ jobs:
               for b in bad:
                   print("CONTRACT DRIFT:", b, file=sys.stderr)
               sys.exit(1)
-          print("CONTRACT OK: %d inputs, one artifact, %d build stages, UEFI self-boot + graphics" %
+          print("CONTRACT OK: %d inputs, locked kernel/rootfs baseline, one artifact, "
+                "%d build stages, UEFI self-boot + graphics" %
                 (checked, len(m.get("build_stages", []))))
           PY
 

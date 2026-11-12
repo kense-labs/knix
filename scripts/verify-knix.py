@@ -387,6 +387,31 @@ def main() -> int:
             "identity and image manifest agree with every build input",
             "identity/image contract: %s" % identity_errors[:4])
 
+    # I16 -- the guest-produced kernel/rootfs baseline is locked in the tree;
+    # scripts/verify-repro.py performs the full read-only reproducibility gate.
+    repro_errors = []
+    repro = ROOT / "scripts" / "verify-repro.py"
+    if repro.is_file():
+        try:
+            ast.parse(repro.read_text(encoding="utf-8"))
+        except SyntaxError as exc:
+            repro_errors.append("verify-repro.py does not parse: %s" % exc)
+    else:
+        repro_errors.append("missing scripts/verify-repro.py")
+    if not (ROOT / "platform/image/package-versions.txt").is_file():
+        repro_errors.append("missing locked package versions")
+    try:
+        repro_mani = json.loads((imgp / "manifest.json").read_text(encoding="utf-8"))
+        if not isinstance(repro_mani.get("build_baseline"), dict):
+            repro_errors.append("manifest lost build_baseline")
+    except (OSError, ValueError) as exc:
+        repro_errors.append("unreadable manifest: %s" % exc)
+    if "| I16 |" not in readme:
+        repro_errors.append("README lost I16")
+    require(not repro_errors,
+            "locked build baseline is present and the repro gate parses",
+            "repro contract: %s" % repro_errors[:4])
+
     # the only collection mechanism still parses
     try:
         ast.parse((ROOT / "scripts" / "collect-knix.py").read_text(encoding="utf-8"))

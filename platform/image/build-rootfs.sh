@@ -120,22 +120,33 @@ echo "rootfs tarball: $TARBALL"
 ls -lh "$TARBALL"
 sha256sum "$TARBALL"
 
-# Record every input that produced this tarball. build.sh copies the summary
-# back to the host so the release receipt can be audited without mounting the
-# qcow2 build disk.
 SUMMARY="${KNIX_ROOTFS_SUMMARY:-$(dirname "$TARBALL")/rootfs-build.json}"
+# A lockfile is a build input, not a build artifact: record the exact dpkg
+# versions that produced this rootfs so build.sh can refuse an image assembled
+# from a silently refreshed Debian mirror.
+LOCKFILE="${KNIX_PACKAGE_LOCK:-$(dirname "$SUMMARY")/package-versions.txt}"
+sudo chroot "$ROOTFS" /usr/bin/dpkg-query \
+  -W -f='${Package}\t${Version}\t${Architecture}\n' \
+  | LC_ALL=C sort | sudo tee "$LOCKFILE" > /dev/null
+sudo sync
+echo "package lock: $LOCKFILE ($(wc -l < "$LOCKFILE") installed packages)"
+
+# Record every input that produced this tarball. build.sh copies the summary
+# and the lockfile back to the host so the release receipt can be audited
+# without mounting the qcow2 build disk.
 sudo python3 - "$SUMMARY" "$TARBALL" "$IDENTITY_DIR/packages.json" \
-                 "$SUITE" "$VARIANT" "$ARCH" "$INCLUDE_SPEC" <<'PY'
+                 "$SUITE" "$VARIANT" "$ARCH" "$INCLUDE_SPEC" "$LOCKFILE" <<'PY'
 import hashlib, json, pathlib, sys
-out, tarball, pkgset, suite, variant, arch, include = sys.argv[1:]
+out, tarball, pkgset, suite, variant, arch, include, lock = sys.argv[1:]
 def digest(p):
     h = hashlib.sha256()
     with open(p, "rb") as fh:
         for chunk in iter(lambda: fh.read(1 << 20), b""):
             h.update(chunk)
     return h.hexdigest()
+lock_bytes = pathlib.Path(lock).read_bytes()
 data = {
-    "schema": 1,
+    "schema": 2,
     "generator": "mmdebstrap",
     "suite": suite,
     "variant": variant,
@@ -145,6 +156,9 @@ data = {
     "tarball_bytes": pathlib.Path(tarball).stat().st_size,
     "package_set_sha256": digest(pkgset),
     "package_count": len([p for p in include.split(",") if p and not p.endswith("-")]),
+    "package_lock": pathlib.Path(lock).name,
+    "package_versions_sha256": hashlib.sha256(lock_bytes).hexdigest(),
+    "package_versions_count": len(lock_bytes.splitlines()),
 }
 pathlib.Path(out).write_text(json.dumps(data, indent=2) + "\n")
 print(json.dumps(data, indent=2))
