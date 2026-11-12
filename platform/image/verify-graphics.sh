@@ -353,6 +353,88 @@ ARCHIVE_EVENTS="$(grep -c 'active_state=' "$DIAG_ARCHIVE" || true)"
   || fail "only ${ARCHIVE_EVENTS:-0} crash events are in the persistent archive"
 echo "PERSISTENCE VERIFY OK: guest archive holds $ARCHIVE_EVENTS boot-stamped events on the root filesystem"
 
+echo "=== guest-owned diagnostics operations ==="
+# P14 made the archive durable; P15 makes it operable. The SAME guest
+# OnFailure= script bounds and rotates its archive, recomputes cross-boot
+# statistics and raises a local err-priority journal alert that interactive
+# logins can see. No host process writes, rotates or forwards anything here.
+OPS_PDIR=/var/lib/knix
+OPS_STATS="$OPS_PDIR/session-failure.stats"
+OPS_ALERT="$OPS_PDIR/session-failure.alert"
+OPS_RUNTIME_ALERT=/run/knix/session-failure.alert
+OPS_NOTICE=/etc/profile.d/10-knix-session-alert.sh
+OPS_SCRIPT=/usr/lib/knix/session-failure-report.sh
+[ -s "$OPS_STATS" ] || fail "guest wrote no cross-boot crash statistics"
+for kv in 'owner=guest' 'manager=systemd' 'archive_limit_bytes=8192' 'generations=3'; do
+  grep -q "^$kv\$" "$OPS_STATS" \
+    || fail "guest statistics missing: $kv"
+done
+OPS_EVENTS="$(sed -n 's/^total_events=//p' "$OPS_STATS" | head -1)"
+OPS_BOOTS="$(sed -n 's/^boots_seen=//p' "$OPS_STATS" | head -1)"
+[ -n "$OPS_EVENTS" ] && [ "$OPS_EVENTS" -ge "$ARCHIVE_EVENTS" ] \
+  || fail "guest statistics undercount the archive (${OPS_EVENTS:-none} < $ARCHIVE_EVENTS)"
+[ -n "$OPS_BOOTS" ] && [ "$OPS_BOOTS" -ge 1 ] \
+  || fail "guest statistics lost the boot set"
+grep -q "^last_boot=$(cat /proc/sys/kernel/random/boot_id)\$" "$OPS_STATS" \
+  || fail "guest statistics were not written by this guest boot"
+grep -q '^terminal_active_state=failed$' "$OPS_STATS" \
+  || fail "guest statistics do not record the terminal failed state"
+[ -s "$OPS_ALERT" ] || fail "guest wrote no persistent failure alert"
+[ -s "$OPS_RUNTIME_ALERT" ] || fail "guest wrote no runtime failure alert"
+grep -q 'active_state=failed' "$OPS_ALERT" \
+  || fail "the persistent alert does not describe the failed state"
+[ -f "$OPS_NOTICE" ] || fail "missing guest-owned login-visible notice"
+grep -q 'session-failure.alert' "$OPS_NOTICE" \
+  || fail "the login notice lost the guest alert path"
+NOTICE_OUT="$(bash "$OPS_NOTICE" 2>/dev/null || true)"
+echo "$NOTICE_OUT" | grep -q 'Knix: session failure reported during this boot' \
+  || fail "the login-visible notice did not report this boot's failure"
+journalctl -t knix-diagnostics -p err --no-pager -n 40 2>/dev/null \
+  | grep -q 'knix session failure' \
+  || fail "guest systemd raised no err-priority diagnostic alert"
+echo "DIAGNOSTICS OPS VERIFY OK: guest stats ($OPS_EVENTS events, $OPS_BOOTS boots), persistent alert, login notice and err-priority journal message"
+
+echo "=== guest-owned archive rotation drill (isolated /run) ==="
+# Rotating the shipped archive from a verification step would destroy the P14
+# proof, so the drill redirects the guest script into /run/knix. The script is
+# still the guest's own OnFailure= script; only its output directory changes.
+DRILL=/run/knix/rotation-drill
+rm -rf "$DRILL"
+mkdir -p "$DRILL" || fail "could not create the isolated rotation drill directory"
+for _ in $(seq 1 160); do
+  KNIX_DIAG_DRILL_DIR="$DRILL" "$OPS_SCRIPT" \
+    || fail "guest rotation drill script failed"
+done
+DLOG="$DRILL/var/session-failure.log"
+[ -f "$DLOG.1" ] || fail "guest script never rotated its archive"
+[ -f "$DLOG.2" ] || fail "guest script did not keep a second generation"
+[ -f "$DLOG.3" ] || fail "guest script did not keep a third generation"
+DROTS="$(cat "$DRILL/var/session-failure.rotations" 2>/dev/null || true)"
+[ -n "$DROTS" ] && [ "$DROTS" -ge 3 ] \
+  || fail "only ${DROTS:-0} rotations happened in the drill"
+DSIZE="$(wc -c < "$DLOG")"
+[ "$DSIZE" -le 8192 ] \
+  || fail "the rotated archive exceeds its bound ($DSIZE bytes)"
+DSTATS="$DRILL/var/session-failure.stats"
+grep -q '^owner=guest$' "$DSTATS" \
+  || fail "drill statistics are not guest-owned"
+DTOTAL="$(sed -n 's/^total_events=//p' "$DSTATS" | head -1)"
+DRECOUNT=0
+for f in "$DLOG" "$DLOG".1 "$DLOG".2 "$DLOG".3; do
+  [ -f "$f" ] || continue
+  N="$(grep -c 'active_state=' "$f" 2>/dev/null || true)"
+  DRECOUNT=$((DRECOUNT + ${N:-0}))
+done
+[ -n "$DTOTAL" ] && [ "$DTOTAL" = "$DRECOUNT" ] \
+  || fail "drill statistics do not match the archive family ($DTOTAL != $DRECOUNT)"
+[ "$DRECOUNT" -gt 60 ] \
+  || fail "the drill produced too few events to prove rotation"
+grep -q 'active_state=failed' "$DIAG_ARCHIVE" \
+  || fail "the rotation drill touched the production crash archive"
+grep -q "^last_boot=$(cat /proc/sys/kernel/random/boot_id)\$" "$OPS_STATS" \
+  || fail "the rotation drill rewrote the production statistics"
+echo "ROTATION VERIFY OK: $DROTS rotations, 3 generations, main archive $DSIZE bytes, $DRECOUNT events kept (isolated /run drill)"
+
 # Cleaning up the test is NOT the recovery proof: P9's SIGKILL segment above is.
 # reset-failed clears the start-rate counter; removing stale IPC sockets first
 # is essential or the checks below connect to a dead compositor's socket.

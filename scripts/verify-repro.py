@@ -304,6 +304,63 @@ def main() -> int:
     if "diagnostics_persistence_verified" not in rg_text:
         errors.append("release gate lost the persistence acceptance check")
 
+    # 5f. diagnostics.operations: the guest bounds and rotates its archive,
+    # recombines cross-boot statistics and raises a local err-priority alert.
+    # A verification drill is confined to /run/knix so the shipped archive is
+    # never rotated by a verification step.
+    op = gfx.get("diagnostics", {}).get("operations", {})
+    if (op.get("owner") != "guest" or op.get("manager") != "systemd"
+            or op.get("archive_limit_bytes") != 8192
+            or op.get("generations") != 3
+            or op.get("statistics") != "/var/lib/knix/session-failure.stats"
+            or op.get("alert") != "/var/lib/knix/session-failure.alert"
+            or op.get("journal_tag") != "knix-diagnostics"
+            or op.get("journal_priority") != "err"
+            or op.get("login_notice") != "/etc/profile.d/10-knix-session-alert.sh"
+            or op.get("drill_directory") != "/run/knix/rotation-drill"
+            or op.get("min_boots_seen") != 2):
+        errors.append("graphics.diagnostics.operations contract drifted")
+    so = sd.get("operations", {})
+    if (so.get("owner") != "guest" or so.get("archive_limit_bytes") != 8192
+            or so.get("generations") != 3
+            or so.get("statistics") != "/var/lib/knix/session-failure.stats"
+            or so.get("alert") != "/var/lib/knix/session-failure.alert"
+            or so.get("journal_tag") != "knix-diagnostics"
+            or so.get("journal_priority") != "err"
+            or so.get("login_notice") != "/etc/profile.d/10-knix-session-alert.sh"
+            or so.get("drill_directory") != "/run/knix/rotation-drill"
+            or so.get("min_boots_seen") != 2):
+        errors.append("session.json diagnostics.operations drifted")
+    # Token checks must inspect the real heredocs. The same literals are also
+    # listed in the validation loops below them, so a whole-file `in` check can
+    # pass even after the guest script itself was neutered.
+    report = asm.split("<<'REPORT'\n", 1)[-1].split("\nREPORT\n", 1)[0]
+    for token in ("LIMIT=8192", "session-failure.stats", "session-failure.rotations",
+                  "KNIX_DIAG_DRILL_DIR", "systemd-cat -p err",
+                  "total_events=", "boots_seen="):
+        if token not in report:
+            errors.append("assemble-native.sh REPORT lost operations token: %s" % token)
+    if "10-knix-session-alert.sh" not in asm:
+        errors.append("assemble-native.sh lost the login-visible notice")
+    for token in ("DIAGNOSTICS OPS VERIFY OK", "ROTATION VERIFY OK",
+                  "rotation-drill", "session-failure.stats", "knix-diagnostics"):
+        if token not in vg_diag:
+            errors.append("verify-graphics.sh lost operations token: %s" % token)
+    persist = build_text.split("<<'PERSIST'", 1)[-1].split("\nPERSIST\n", 1)[0]
+    for token in ("DIAGNOSTICS OPS PERSISTENCE VERIFY OK", "OPS EVENTS:", "OPS BOOTS:"):
+        if token not in persist:
+            errors.append("build.sh PERSIST lost operations gate: %s" % token)
+    for token in ("OPS DRIFT", '"operations": {'):
+        if token not in build_text:
+            errors.append("build.sh lost operations gate: %s" % token)
+    # Count the complete refusal statements, not the bare literal: renaming a
+    # message to "NO OPS DRIFT" would keep the substring and fool a raw count.
+    if build_text.count('sys.exit("OPS DRIFT') < 2:
+        errors.append("build.sh receipt block lost an OPS DRIFT refusal")
+    if ("diagnostics_operations_verified" not in rg_text
+            or "diagnostics operations drift" not in rg_text):
+        errors.append("release gate lost the operations acceptance check")
+
     # 6. the receipt records the same baseline the build verifies
     build = (ROOT / "platform/image/build.sh").read_text(encoding="utf-8")
     for token in ("build_baseline", "BASELINE DRIFT", "package-versions.txt",
@@ -345,9 +402,11 @@ def main() -> int:
     if (rel.get("tool") != "scripts/verify-release.py"
             or rel.get("read_only") is not True
             or rel.get("schema") != 3
-            or len(rel.get("checks", [])) != 15
+            or len(rel.get("checks", [])) != 16
             or "diagnostics_persistence_verified" not in rel.get("checks", [])
+            or "diagnostics_operations_verified" not in rel.get("checks", [])
             or rel.get("min_diagnostics_events") != 2
+            or rel.get("min_boots_seen") != 2
             or rel.get("framebuffer_samples") != 9
             or rel.get("publish_surface") != ["knix.img", "origin/main"]):
         errors.append("manifest.release acceptance policy drifted")
@@ -366,7 +425,9 @@ def main() -> int:
                       "receipt checksum drift", "image sha256 drift",
                       "baseline sha256 drift", "inputs drift",
                       "publish_surface drift", "canonical_sha",
-                      "diagnostics persistence drift"):
+                      "diagnostics persistence drift",
+                      "diagnostics operations drift",
+                      "diagnostics_operations_verified"):
             if token not in rg:
                 errors.append("verify-release.py lost %s" % token)
     for group, entries in m.get("inputs", {}).items():

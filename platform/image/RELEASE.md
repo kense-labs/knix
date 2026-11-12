@@ -51,17 +51,19 @@ python3 scripts/verify-release.py \
 python3 scripts/verify-release.py --json
 ```
 
-It refuses the release unless all 15 checks in `manifest.json.release.checks`
+It refuses the release unless all 16 checks in `manifest.json.release.checks`
 pass: image bytes and sha256 equal the receipt; the `.sha256` openssl digest
 covers the exact receipt file; every pinned input group and `seed_sha512`
 equals `manifest.json.inputs`; `baseline.sha256` is the sha256 of the canonical
 `build_baseline` object; the kernel and rootfs summaries carry every locked
 field; the boot chain is UEFI self-boot with no seed ISO; `graphics` and its
 `session`, `autostart`, `resilience`, `crash_loop`, `diagnostics`,
-`diagnostics.persistence` and `framebuffer` sections are all verified (at least
-2 guest-reported diagnostics events, a reboot-surviving guest-owned archive,
-9/9 framebuffer samples plus swaybar pixels); and the publish surface is
-exactly `knix.img` plus `origin/main`.
+`diagnostics.persistence`, `diagnostics.operations` and `framebuffer` sections
+are all verified (at least 2 guest-reported diagnostics events, a
+reboot-surviving guest-owned archive, a bounded rotation drill plus a
+cross-boot statistics proof over 2 boots, and 9/9 framebuffer samples plus
+swaybar pixels); and the publish surface is exactly `knix.img` plus
+`origin/main`.
 
 A successful run prints `RELEASE VERIFY OK`; any drift prints one
 `RELEASE FAILED:` line per reason and exits 1. The gate is deliberately absent
@@ -248,6 +250,44 @@ correspond exactly to what ships. The receipt records
 `survives_reboot` and `verified`), and `verify-release.py` refuses any receipt
 missing that proof. On `GPU=none` no failure is produced, so no archive entry
 is written and the serial console plus ssh remain the full fallback path.
+
+## Diagnostics operations
+
+A durable archive is not yet an operable one: an unbounded log, no cumulative
+count and no visible alert would still leave an operator blind. P15 keeps all
+three duties inside the same guest-owned `OnFailure=` script.
+
+- **Bounded rotation.** The active archive is capped at 8192 bytes with three
+  retained generations (`.1`..`.3`), oldest dropped first. The production
+  archive is never rotated by a verification step: `verify-graphics.sh` runs a
+  160-iteration drill with `KNIX_DIAG_DRILL_DIR=/run/knix/rotation-drill`,
+  which redirects both the runtime and archive directories into an isolated
+  tmpfs. The drill requires three generations, at least three rotations, a main
+  archive under the cap and statistics that exactly equal the event count of
+  the whole archive family; it then re-checks that the production archive and
+  statistics are byte-for-byte untouched.
+- **Cross-boot statistics.** Every report recomputes
+  `/var/lib/knix/session-failure.stats` from the whole archive family:
+  `total_events`, `boots_seen`, `rotations`, `last_boot`, `last_event` and
+  `terminal_active_state`. On the second boot, the host asks guest systemd to
+  signal its own compositor; the guest `OnFailure=` unit writes one new event
+  with the new boot id. The build requires `total_events` to grow, `boots_seen`
+  to reach 2, both boot ids to remain in the archive, and guest systemd to
+  restore a `knix`-owned session with zero failed units before the receipt is
+  written.
+- **Local alert.** The guest writes a persistent alert to
+  `/var/lib/knix/session-failure.alert`, emits an `err`-priority journal
+  message tagged `knix-diagnostics` through `systemd-cat`, and installs a
+  login-visible notice that only fires when the alert's boot id matches the
+  current boot, so a healthy reboot never repeats an old failure. There is no
+  network channel, no host collector and no external service.
+
+`DIAGNOSTICS OPS VERIFY OK`, `ROTATION VERIFY OK` and
+`DIAGNOSTICS OPS PERSISTENCE VERIFY OK` are all build-time hard gates. The
+receipt records `graphics.session.diagnostics.operations`; `verify-release.py`
+refuses a release without the rotation drill, the cross-boot proof and the
+guest ownership fields. `GPU=none` produces no failed state and therefore no
+alert or archive entry.
 
 ## Framebuffer pixel proof
 

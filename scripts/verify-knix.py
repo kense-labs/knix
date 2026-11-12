@@ -750,12 +750,13 @@ def main() -> int:
                 or "not_a_build_input" not in rel):
             release_errors.append("manifest release policy drifted")
         checks = rel.get("checks", [])
-        if (len(checks) != 15
+        if (len(checks) != 16
                 or "image_sha256_and_bytes_match_receipt" not in checks
                 or "receipt_checksum_matches" not in checks
                 or "baseline_matches_manifest" not in checks
                 or "session_diagnostics_verified" not in checks
                 or "diagnostics_persistence_verified" not in checks
+                or "diagnostics_operations_verified" not in checks
                 or "framebuffer_pixels_verified" not in checks
                 or "single_publish_surface" not in checks):
             release_errors.append("release policy lost an acceptance check")
@@ -845,7 +846,7 @@ def main() -> int:
                 or "diagnostics persistence drift" not in prg):
             persistence_errors.append("release gate lost the persistence check")
         pchecks = pm.get("release", {}).get("checks", [])
-        if len(pchecks) != 15 or "diagnostics_persistence_verified" not in pchecks:
+        if len(pchecks) != 16 or "diagnostics_persistence_verified" not in pchecks:
             persistence_errors.append("release policy lost the persistence check")
         pworkflow = (ROOT / ".github/workflows/knix-contract.yml").read_text(
             encoding="utf-8")
@@ -858,6 +859,92 @@ def main() -> int:
     require(not persistence_errors,
             "guest crash diagnostics survive a reboot on the guest's own disk",
             "persistence contract: %s" % persistence_errors[:4])
+
+    # I27 -- diagnostics must be operable, not merely durable. The guest owns a
+    # bounded rotating archive, cross-boot statistics and a local err-priority
+    # alert; a second boot must advance the statistics before a receipt exists.
+    ops_errors = []
+    try:
+        om = json.loads((ROOT / "platform/image/manifest.json").read_text(
+            encoding="utf-8"))
+        od = om.get("graphics", {}).get("diagnostics", {}).get("operations", {})
+        if (od.get("owner") != "guest" or od.get("manager") != "systemd"
+                or od.get("archive_limit_bytes") != 8192
+                or od.get("generations") != 3
+                or od.get("statistics") != "/var/lib/knix/session-failure.stats"
+                or od.get("alert") != "/var/lib/knix/session-failure.alert"
+                or od.get("runtime_alert") != "/run/knix/session-failure.alert"
+                or od.get("journal_tag") != "knix-diagnostics"
+                or od.get("journal_priority") != "err"
+                or od.get("login_notice") != "/etc/profile.d/10-knix-session-alert.sh"
+                or od.get("drill_directory") != "/run/knix/rotation-drill"
+                or od.get("min_boots_seen") != 2):
+            ops_errors.append("manifest graphics.diagnostics.operations drifted")
+        so = json.loads((ROOT / "platform/identity/session.json").read_text(
+            encoding="utf-8")).get("diagnostics", {}).get("operations", {})
+        if (so.get("owner") != "guest" or so.get("archive_limit_bytes") != 8192
+                or so.get("generations") != 3 or so.get("min_boots_seen") != 2
+                or so.get("statistics") != "/var/lib/knix/session-failure.stats"
+                or so.get("alert") != "/var/lib/knix/session-failure.alert"
+                or so.get("journal_tag") != "knix-diagnostics"
+                or so.get("journal_priority") != "err"
+                or so.get("login_notice") != "/etc/profile.d/10-knix-session-alert.sh"
+                or so.get("drill_directory") != "/run/knix/rotation-drill"):
+            ops_errors.append("session.json diagnostics.operations drifted")
+        oasm = (ROOT / "platform/image/assemble-native.sh").read_text(
+            encoding="utf-8")
+        # Inspect the real REPORT heredoc: these literals also appear in the
+        # assembly validation loop, where they cannot prove the guest script.
+        report = oasm.split("<<'REPORT'\n", 1)[-1].split("\nREPORT\n", 1)[0]
+        for token in ("LIMIT=8192", "session-failure.stats",
+                      "session-failure.rotations", "KNIX_DIAG_DRILL_DIR",
+                      "systemd-cat -p err", "total_events=", "boots_seen="):
+            if token not in report:
+                ops_errors.append("assemble-native.sh REPORT lost %s" % token)
+        if "10-knix-session-alert.sh" not in oasm:
+            ops_errors.append("assemble-native.sh lost the login notice")
+        ovg = (ROOT / "platform/image/verify-graphics.sh").read_text(
+            encoding="utf-8")
+        for token in ("DIAGNOSTICS OPS VERIFY OK", "ROTATION VERIFY OK",
+                      "rotation-drill", "session-failure.stats",
+                      "knix-diagnostics"):
+            if token not in ovg:
+                ops_errors.append("verify-graphics.sh lost %s" % token)
+        obs = (ROOT / "platform/image/build.sh").read_text(encoding="utf-8")
+        persist = obs.split("<<'PERSIST'", 1)[-1].split("\nPERSIST\n", 1)[0]
+        for token in ("DIAGNOSTICS OPS PERSISTENCE VERIFY OK", "OPS EVENTS:",
+                      "OPS BOOTS:"):
+            if token not in persist:
+                ops_errors.append("build.sh PERSIST lost %s" % token)
+        for token in ("OPS DRIFT", '"operations": {'):
+            if token not in obs:
+                ops_errors.append("build.sh lost %s" % token)
+        if obs.count('sys.exit("OPS DRIFT') < 2:
+            ops_errors.append("build.sh receipt block lost an OPS DRIFT refusal")
+        org = (ROOT / "scripts/verify-release.py").read_text(encoding="utf-8")
+        if ("diagnostics_operations_verified" not in org
+                or "diagnostics operations drift" not in org):
+            ops_errors.append("release gate lost the operations check")
+        orp = (ROOT / "scripts/verify-repro.py").read_text(encoding="utf-8")
+        if ("op = gfx.get(" not in orp
+                or "session.json diagnostics.operations drifted" not in orp
+                or "assemble-native.sh REPORT lost operations token" not in orp):
+            ops_errors.append("repro gate lost the operations check")
+        owf = (ROOT / ".github/workflows/knix-contract.yml").read_text(
+            encoding="utf-8")
+        if ("dop = dg.get(" not in owf
+                or "sop = sd.get(" not in owf
+                or "assemble-native.sh REPORT" not in owf):
+            ops_errors.append("CI contract lost the operations check")
+        if om.get("release", {}).get("min_boots_seen") != 2:
+            ops_errors.append("release policy lost min_boots_seen")
+    except (OSError, ValueError) as exc:
+        ops_errors.append("unreadable operations contract: %s" % exc)
+    if "| I27 |" not in readme:
+        ops_errors.append("README lost I27")
+    require(not ops_errors,
+            "guest diagnostics are bounded, counted across boots and locally alerted",
+            "operations contract: %s" % ops_errors[:4])
 
     # the only collection mechanism still parses
     try:

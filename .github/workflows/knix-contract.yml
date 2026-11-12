@@ -82,9 +82,11 @@ jobs:
           if (rel.get("tool") != "scripts/verify-release.py"
                   or rel.get("read_only") is not True
                   or rel.get("schema") != 3
-                  or len(rel.get("checks", [])) != 15
+                  or len(rel.get("checks", [])) != 16
                   or "diagnostics_persistence_verified" not in rel.get("checks", [])
+                  or "diagnostics_operations_verified" not in rel.get("checks", [])
                   or rel.get("min_diagnostics_events") != 2
+                  or rel.get("min_boots_seen") != 2
                   or rel.get("framebuffer_samples") != 9
                   or rel.get("publish_surface") != ["knix.img", "origin/main"]):
               bad.append(("manifest.release", "acceptance policy drifted"))
@@ -97,7 +99,9 @@ jobs:
                             "receipt checksum drift", "image sha256 drift",
                             "baseline sha256 drift", "publish_surface drift",
                             "diagnostics persistence drift",
-                            "diagnostics_persistence_verified"):
+                            "diagnostics_persistence_verified",
+                            "diagnostics operations drift",
+                            "diagnostics_operations_verified"):
                   if token not in gate:
                       bad.append(("verify-release.py", token, "missing"))
           for group, entries in m["inputs"].items():
@@ -239,6 +243,57 @@ jobs:
                         "Storage=persistent", "session-failure.log"):
               if token not in pvg:
                   bad.append(("verify-graphics.sh", token, "missing"))
+          # diagnostics.operations: the guest bounds and rotates its own
+          # archive, keeps cross-boot statistics and raises a local err-priority
+          # alert. A second boot must advance the statistics before a receipt.
+          dop = dg.get("operations", {})
+          if (dop.get("owner") != "guest" or dop.get("manager") != "systemd"
+                  or dop.get("archive_limit_bytes") != 8192
+                  or dop.get("generations") != 3
+                  or dop.get("statistics") != "/var/lib/knix/session-failure.stats"
+                  or dop.get("alert") != "/var/lib/knix/session-failure.alert"
+                  or dop.get("journal_tag") != "knix-diagnostics"
+                  or dop.get("journal_priority") != "err"
+                  or dop.get("login_notice") != "/etc/profile.d/10-knix-session-alert.sh"
+                  or dop.get("drill_directory") != "/run/knix/rotation-drill"
+                  or dop.get("min_boots_seen") != 2):
+              bad.append(("graphics.diagnostics.operations", "guest operations missing"))
+          sop = sd.get("operations", {})
+          if (sop.get("owner") != "guest" or sop.get("archive_limit_bytes") != 8192
+                  or sop.get("generations") != 3
+                  or sop.get("statistics") != "/var/lib/knix/session-failure.stats"
+                  or sop.get("alert") != "/var/lib/knix/session-failure.alert"
+                  or sop.get("journal_tag") != "knix-diagnostics"
+                  or sop.get("journal_priority") != "err"
+                  or sop.get("login_notice") != "/etc/profile.d/10-knix-session-alert.sh"
+                  or sop.get("drill_directory") != "/run/knix/rotation-drill"
+                  or sop.get("min_boots_seen") != 2):
+              bad.append(("session.json", "diagnostics.operations drifted"))
+          # Inspect the real heredocs: the same literals also appear in the
+          # validation loops, so a whole-file check can be fooled.
+          report = pasm.split("<<'REPORT'\n", 1)[-1].split("\nREPORT\n", 1)[0]
+          for token in ("LIMIT=8192", "session-failure.stats",
+                        "session-failure.rotations", "KNIX_DIAG_DRILL_DIR",
+                        "systemd-cat -p err", "total_events=", "boots_seen="):
+              if token not in report:
+                  bad.append(("assemble-native.sh REPORT", token, "missing"))
+          if "10-knix-session-alert.sh" not in pasm:
+              bad.append(("assemble-native.sh", "login notice", "missing"))
+          persist = pbuild.split("<<'PERSIST'", 1)[-1].split("\nPERSIST\n", 1)[0]
+          for token in ("DIAGNOSTICS OPS PERSISTENCE VERIFY OK", "OPS EVENTS:",
+                        "OPS BOOTS:"):
+              if token not in persist:
+                  bad.append(("build.sh PERSIST", token, "missing"))
+          for token in ("OPS DRIFT", '"operations": {'):
+              if token not in pbuild:
+                  bad.append(("build.sh", token, "missing"))
+          if pbuild.count('sys.exit("OPS DRIFT') < 2:
+              bad.append(("build.sh receipt block", "OPS DRIFT refusal", "missing"))
+          for token in ("DIAGNOSTICS OPS VERIFY OK", "ROTATION VERIFY OK",
+                        "rotation-drill", "session-failure.stats",
+                        "knix-diagnostics"):
+              if token not in pvg:
+                  bad.append(("verify-graphics.sh", token, "missing"))
           verify_rel = gfx.get("verify", "")
           if not (root / verify_rel).is_file():
               bad.append(("graphics.verify", verify_rel, "missing"))
@@ -337,7 +392,7 @@ jobs:
                   print("CONTRACT DRIFT:", b, file=sys.stderr)
               sys.exit(1)
           print("CONTRACT OK: %d inputs, locked kernel/rootfs baseline, one artifact, "
-                "%d build stages, UEFI self-boot + graphics + framebuffer + crash loop + diagnostics + persistence + release gate" %
+                "%d build stages, UEFI self-boot + graphics + framebuffer + crash loop + diagnostics + persistence + operations + release gate" %
                 (checked, len(m.get("build_stages", []))))
           PY
 

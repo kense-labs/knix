@@ -242,23 +242,55 @@ JOURNAL
 cat > "$MOUNT/usr/lib/knix/session-failure-report.sh" <<'REPORT'
 #!/bin/bash
 # Guest-owned crash diagnostics, invoked by knix-session.service OnFailure=.
+# Besides the report and the persistent boot-stamped archive, this script owns
+# three operational duties: bounded archive rotation, cross-boot statistics and
+# a local err-priority journal alert with a login-visible notice. Nothing is
+# written, rotated or forwarded by the host. A verification drill may redirect
+# all outputs into an isolated /run/knix subdirectory; /var/lib/knix (the
+# shipped disk) is never touched by a drill.
 set -u
 UNIT=knix-session.service
 DIR=/run/knix
 PDIR=/var/lib/knix
+LIMIT=8192
+GENS=3
+TAG=knix-diagnostics
+DRILL="${KNIX_DIAG_DRILL_DIR:-}"
+if [ -n "$DRILL" ]; then
+  case "$DRILL" in
+    /run/knix/*) ;;
+    *) exit 0 ;;
+  esac
+  DIR="$DRILL/run"
+  PDIR="$DRILL/var"
+fi
 mkdir -p "$DIR" "$PDIR" || exit 0
 TIMESTAMP="$(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || echo unknown)"
 BOOT_ID="$(cat /proc/sys/kernel/random/boot_id 2>/dev/null || echo unknown)"
-ACTIVE_STATE="$(systemctl show -p ActiveState --value "$UNIT" 2>/dev/null || echo unknown)"
-RESULT="$(systemctl show -p Result --value "$UNIT" 2>/dev/null || echo unknown)"
-EXEC_STATUS="$(systemctl show -p ExecMainStatus --value "$UNIT" 2>/dev/null || echo unknown)"
-RESTARTS="$(systemctl show -p NRestarts --value "$UNIT" 2>/dev/null || echo unknown)"
-FAILED_UNITS="$(systemctl --failed --no-legend 2>/dev/null | wc -l)"
-SWAY_PROCS="$(pgrep -c sway 2>/dev/null || true)"
-SSH_STATE="$(systemctl is-active ssh.service 2>/dev/null || echo unknown)"
-SERIAL_STATE=missing
-[ -c /dev/ttyAMA0 ] && SERIAL_STATE=present
-LIMIT_LINES="$(journalctl -u "$UNIT" --no-pager -n 40 2>/dev/null | grep -c 'Start request repeated too quickly.' || true)"
+if [ -n "$DRILL" ]; then
+  # A drill exercises bookkeeping only: it must not query systemd 200 times and
+  # must never raise a real alert or touch the production /run snapshot.
+  ACTIVE_STATE=active
+  RESULT=success
+  EXEC_STATUS=0
+  RESTARTS=0
+  FAILED_UNITS=0
+  SWAY_PROCS=0
+  SSH_STATE=active
+  SERIAL_STATE=present
+  LIMIT_LINES=0
+else
+  ACTIVE_STATE="$(systemctl show -p ActiveState --value "$UNIT" 2>/dev/null || echo unknown)"
+  RESULT="$(systemctl show -p Result --value "$UNIT" 2>/dev/null || echo unknown)"
+  EXEC_STATUS="$(systemctl show -p ExecMainStatus --value "$UNIT" 2>/dev/null || echo unknown)"
+  RESTARTS="$(systemctl show -p NRestarts --value "$UNIT" 2>/dev/null || echo unknown)"
+  FAILED_UNITS="$(systemctl --failed --no-legend 2>/dev/null | wc -l)"
+  SWAY_PROCS="$(pgrep -c sway 2>/dev/null || true)"
+  SSH_STATE="$(systemctl is-active ssh.service 2>/dev/null || echo unknown)"
+  SERIAL_STATE=missing
+  [ -c /dev/ttyAMA0 ] && SERIAL_STATE=present
+  LIMIT_LINES="$(journalctl -u "$UNIT" --no-pager -n 40 2>/dev/null | grep -c 'Start request repeated too quickly.' || true)"
+fi
 {
   echo "unit=$UNIT"
   echo "owner=guest"
@@ -278,13 +310,78 @@ LIMIT_LINES="$(journalctl -u "$UNIT" --no-pager -n 40 2>/dev/null | grep -c 'Sta
 # The runtime snapshot is a tmpfs and disappears on reboot. Mirror it and append
 # one boot-stamped line per event to the guest-owned archive on the root disk.
 cp "$DIR/session-failure.txt" "$PDIR/session-failure.txt" || true
+ARCHIVE="$PDIR/session-failure.log"
 echo "boot=$BOOT_ID timestamp=$TIMESTAMP unit=$UNIT owner=guest manager=systemd restarts=$RESTARTS result=$RESULT active_state=$ACTIVE_STATE exec_main_status=$EXEC_STATUS failed_units=$FAILED_UNITS sway_processes=${SWAY_PROCS:-0} ssh=$SSH_STATE serial=$SERIAL_STATE start_limit_lines=${LIMIT_LINES:-0}" \
-  >> "$PDIR/session-failure.log" || true
+  >> "$ARCHIVE" || true
 echo "$TIMESTAMP unit=$UNIT restarts=$RESTARTS result=$RESULT active_state=$ACTIVE_STATE failed_units=$FAILED_UNITS" \
   >> "$DIR/session-failure.history" || true
+
+# Bounded rotation: the guest rotates its OWN archive family, oldest first.
+# The active archive always stays below LIMIT bytes; generations are .1..N.
+SIZE="$(wc -c < "$ARCHIVE" 2>/dev/null || true)"
+SIZE="${SIZE//[^0-9]/}"
+[ -n "$SIZE" ] || SIZE=0
+if [ "$SIZE" -gt "$LIMIT" ]; then
+  i=$GENS
+  while [ "$i" -gt 1 ]; do
+    OLD="$ARCHIVE.$((i - 1))"
+    [ -f "$OLD" ] && mv -f "$OLD" "$ARCHIVE.$i"
+    i=$((i - 1))
+  done
+  mv -f "$ARCHIVE" "$ARCHIVE.1" || true
+  : > "$ARCHIVE" || true
+  ROT="$(cat "$PDIR/session-failure.rotations" 2>/dev/null || echo 0)"
+  echo "$((ROT + 1))" > "$PDIR/session-failure.rotations" || true
+fi
+
+# Cross-boot statistics are recomputed by the guest from the whole archive
+# family, so a rotation can never erase the cumulative count or the boot set.
+TOTAL=0
+BOOT_SET=""
+for f in "$ARCHIVE" "$ARCHIVE".1 "$ARCHIVE".2 "$ARCHIVE".3; do
+  [ -f "$f" ] || continue
+  N="$(grep -c 'active_state=' "$f" 2>/dev/null || true)"
+  TOTAL=$((TOTAL + ${N:-0}))
+  BOOT_SET="$BOOT_SET$(cat "$f" 2>/dev/null)\n"
+done
+BOOTS="$(printf '%b' "$BOOT_SET" | sed -n 's/^boot=\([^ ]*\).*/\1/p' | sort -u | grep -c . || true)"
+ROT="$(cat "$PDIR/session-failure.rotations" 2>/dev/null || echo 0)"
+{
+  echo "owner=guest"
+  echo "manager=systemd"
+  echo "total_events=$TOTAL"
+  echo "boots_seen=${BOOTS:-0}"
+  echo "rotations=${ROT:-0}"
+  echo "last_boot=$BOOT_ID"
+  echo "last_event=$TIMESTAMP"
+  echo "terminal_active_state=$ACTIVE_STATE"
+  echo "archive_limit_bytes=$LIMIT"
+  echo "generations=$GENS"
+} > "$PDIR/session-failure.stats" || true
+
+# Local alert: the guest raises an err-priority journal message, keeps a
+# persistent notice on its root disk and exposes it to interactive logins.
+# There is no network, no host channel and no external service involved.
+if [ -z "$DRILL" ]; then
+  ALERT="alert=$TIMESTAMP unit=$UNIT boot=$BOOT_ID active_state=$ACTIVE_STATE result=$RESULT failed_units=$FAILED_UNITS report=$PDIR/session-failure.txt"
+  echo "$ALERT" > "$DIR/session-failure.alert" || true
+  echo "$ALERT" > "$PDIR/session-failure.alert" || true
+  echo "knix session failure: $ALERT" | systemd-cat -p err -t "$TAG" 2>/dev/null || true
+fi
 exit 0
 REPORT
 chmod 0755 "$MOUNT/usr/lib/knix/session-failure-report.sh"
+cat > "$MOUNT/etc/profile.d/10-knix-session-alert.sh" <<'NOTICE'
+# Guest-owned, login-visible crash notice. It is scoped to the current boot so
+# a healthy reboot does not keep repeating an old failure; the durable record
+# stays in /var/lib/knix and in the persistent journal.
+alert=/var/lib/knix/session-failure.alert
+boot=$(cat /proc/sys/kernel/random/boot_id 2>/dev/null || true)
+if [ -r "$alert" ] && [ -n "$boot" ] && grep -q "boot=$boot" "$alert"; then
+  printf 'Knix: session failure reported during this boot -- %s\n' "$(cat "$alert")"
+fi
+NOTICE
+chmod 0644 "$MOUNT/etc/profile.d/10-knix-session-alert.sh"
 cat > "$MOUNT/etc/systemd/system/knix-session-failure.service" <<'FAILURE'
 [Unit]
 Description=Knix session failure diagnostics
@@ -377,6 +474,22 @@ for token in 'session-failure.txt' 'session-failure.history' \
   grep -q "$token" "$DIAG_SCRIPT" \
     || { echo "diagnostics script lost: $token" >&2; exit 1; }
 done
+# session.json declares diagnostics.operations: bounded rotation, cross-boot
+# statistics and a local alert are all owned by the same guest OnFailure=
+# script. The verification drill is confined to /run/knix so it can never
+# rotate or rewrite the archive on the shipped disk.
+for token in 'LIMIT=8192' 'GENS=3' 'TAG=knix-diagnostics' \
+             'KNIX_DIAG_DRILL_DIR' '/run/knix/*' 'session-failure.stats' \
+             'session-failure.rotations' 'total_events=' 'boots_seen=' \
+             'session-failure.alert' 'systemd-cat -p err'; do
+  grep -q -- "$token" "$DIAG_SCRIPT" \
+    || { echo "diagnostics script lost operations token: $token" >&2; exit 1; }
+done
+NOTICE="$MOUNT/etc/profile.d/10-knix-session-alert.sh"
+test -f "$NOTICE" \
+  || { echo "missing guest-owned login-visible failure notice" >&2; exit 1; }
+grep -q '/var/lib/knix/session-failure.alert' "$NOTICE" \
+  || { echo "login notice lost the persistent alert path" >&2; exit 1; }
 PERSIST_CONF="$MOUNT/etc/systemd/journald.conf.d/knix-persistence.conf"
 test -f "$PERSIST_CONF" \
   || { echo "missing guest-owned journald persistence config" >&2; exit 1; }
@@ -386,7 +499,7 @@ test -d "$MOUNT/var/lib/knix" \
   || { echo "missing guest-owned persistent diagnostics directory" >&2; exit 1; }
 test -d "$MOUNT/var/log/journal" \
   || { echo "missing persistent journal directory" >&2; exit 1; }
-echo "diagnostics: guest-owned OnFailure= report + crash history + persistent archive (systemd + journald)"
+echo "diagnostics: guest-owned OnFailure= report + crash history + persistent archive + bounded rotation, cross-boot stats and local alert (systemd + journald)"
 echo "seat: seatd + drm,libinput + guest udev rule (autostart enabled)"
 echo -n "brand assets: "; ls -1 "$MOUNT/usr/share/knix/brand" | wc -l
 ls -lh "$MOUNT/boot/vmlinuz-$KVER-knix"

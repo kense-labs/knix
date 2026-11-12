@@ -74,7 +74,24 @@
       "verification": "build.sh --build stops and relaunches the same knix.img with its EFI variable store kept, then requires the archive to still hold the terminal failed state while /run/knix is gone, the stored boot id differs from the current one and journalctl still lists the previous boot",
       "fallback": "GPU=none produces no failure and therefore writes no archive entry; the serial console and ssh remain the full fallback path"
     },
-    "fallback": "the guest-owned archive and the persistent journal keep the durable record; /run/knix is a runtime snapshot; GPU=none never produces a failure and keeps the serial console and ssh as the full fallback path"
+    "operations": {
+      "owner": "guest",
+      "manager": "systemd",
+      "archive_limit_bytes": 8192,
+      "generations": 3,
+      "statistics": "/var/lib/knix/session-failure.stats",
+      "alert": "/var/lib/knix/session-failure.alert",
+      "runtime_alert": "/run/knix/session-failure.alert",
+      "journal_tag": "knix-diagnostics",
+      "journal_priority": "err",
+      "login_notice": "/etc/profile.d/10-knix-session-alert.sh",
+      "drill_directory": "/run/knix/rotation-drill",
+      "min_boots_seen": 2,
+      "rule": "the guest's own OnFailure= script keeps a bounded rotated archive, recomputes cross-boot statistics and raises a local err-priority journal alert with a login-visible notice; no host, network or external channel is involved",
+      "verification": "verify-graphics.sh requires DIAGNOSTICS OPS VERIFY OK plus ROTATION VERIFY OK from a drill in an isolated /run directory; build.sh --build relaunches the same disk and requires DIAGNOSTICS OPS PERSISTENCE VERIFY OK after a guest-triggered failure in the second boot, before any receipt is written",
+      "fallback": "GPU=none produces no failed state, so no alert is raised; the serial console and ssh remain the full fallback path"
+    },
+    "fallback": "the guest-owned archive, statistics, alert and persistent journal keep the durable record; /run/knix is a runtime snapshot; GPU=none never produces a failure and keeps the serial console and ssh as the full fallback path"
   },
   "input": { "backend": "libinput", "owner": "guest" },
   "output": { "backend": "drm", "device": "virtio-gpu", "owner": "guest" },

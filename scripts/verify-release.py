@@ -54,6 +54,7 @@ CHECKS = (
     "session_crash_loop_verified",
     "session_diagnostics_verified",
     "diagnostics_persistence_verified",
+    "diagnostics_operations_verified",
     "framebuffer_pixels_verified",
     "single_publish_surface",
 )
@@ -228,6 +229,26 @@ def check(image: pathlib.Path, receipt: pathlib.Path, checksum: pathlib.Path,
             or not isinstance(persist.get("events"), int)
             or persist["events"] < minimum):
         errors.append("diagnostics persistence drift: the crash archive did not survive a reboot")
+    # P15: the archive must also be operable -- a bounded rotation drill, an
+    # err-priority guest alert and statistics that advance across two boots.
+    mo = mg.get("diagnostics", {}).get("operations", {})
+    ops = diag.get("operations", {})
+    min_boots = policy.get("min_boots_seen", mo.get("min_boots_seen", 2))
+    if (ops.get("owner") != "guest"
+            or ops.get("verified") is not True
+            or ops.get("rotation_drill_verified") is not True
+            or ops.get("cross_boot_verified") is not True
+            or ops.get("statistics") != mo.get("statistics")
+            or ops.get("alert") != mo.get("alert")
+            or ops.get("archive_limit_bytes") != mo.get("archive_limit_bytes")
+            or ops.get("generations") != mo.get("generations")
+            or ops.get("journal_tag") != mo.get("journal_tag")
+            or ops.get("journal_priority") != mo.get("journal_priority")
+            or not isinstance(ops.get("boots_seen"), int)
+            or ops["boots_seen"] < min_boots
+            or not isinstance(ops.get("total_events"), int)
+            or ops["total_events"] < minimum):
+        errors.append("diagnostics operations drift: guest rotation, cross-boot stats or local alert was not proven")
 
     fb = gfx.get("framebuffer", {})
     mfb = mg.get("framebuffer", {})
@@ -335,6 +356,20 @@ def synthetic_receipt(m: dict, identity: dict, image_bytes: bytes) -> dict:
                                     "events": m["release"]["min_diagnostics_events"],
                                     "survives_reboot": True,
                                     "verified": True,
+                                },
+                                "operations": {
+                                    "owner": "guest",
+                                    "statistics": mg["diagnostics"]["operations"]["statistics"],
+                                    "alert": mg["diagnostics"]["operations"]["alert"],
+                                    "archive_limit_bytes": mg["diagnostics"]["operations"]["archive_limit_bytes"],
+                                    "generations": mg["diagnostics"]["operations"]["generations"],
+                                    "journal_tag": mg["diagnostics"]["operations"]["journal_tag"],
+                                    "journal_priority": mg["diagnostics"]["operations"]["journal_priority"],
+                                    "rotation_drill_verified": True,
+                                    "cross_boot_verified": True,
+                                    "total_events": m["release"]["min_diagnostics_events"] + 1,
+                                    "boots_seen": m["release"]["min_boots_seen"],
+                                    "verified": True,
                                 }},
             },
         },
@@ -431,6 +466,24 @@ def self_test(m: dict, identity: dict) -> int:
     case("persistent archive events too few",
          nested("graphics", "session", "diagnostics", "persistence", "events")(1),
          "diagnostics persistence drift")
+    case("diagnostics operations missing",
+         lambda r, i, c: r["graphics"]["session"]["diagnostics"].pop(
+             "operations", None), "diagnostics operations drift")
+    case("operations host-owned",
+         nested("graphics", "session", "diagnostics", "operations", "owner")("host"),
+         "diagnostics operations drift")
+    case("rotation drill unverified",
+         nested("graphics", "session", "diagnostics", "operations",
+                "rotation_drill_verified")(False), "diagnostics operations drift")
+    case("cross-boot proof missing",
+         nested("graphics", "session", "diagnostics", "operations",
+                "cross_boot_verified")(False), "diagnostics operations drift")
+    case("operations saw only one boot",
+         nested("graphics", "session", "diagnostics", "operations",
+                "boots_seen")(1), "diagnostics operations drift")
+    case("operations alert path changed",
+         nested("graphics", "session", "diagnostics", "operations",
+                "alert")("/tmp/alert"), "diagnostics operations drift")
     case("framebuffer samples",
          nested("graphics", "framebuffer", "matching_samples")(8),
          "framebuffer pixel proof drift")

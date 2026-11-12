@@ -307,9 +307,11 @@ if [ "$GRAPHICS_RC" -ne 0 ] \
    || ! grep -q 'LIMIT VERIFY OK' "$DEV/guest-graphics.log" \
    || ! grep -q 'DIAGNOSTICS VERIFY OK' "$DEV/guest-graphics.log" \
    || ! grep -q 'PERSISTENCE VERIFY OK' "$DEV/guest-graphics.log" \
+   || ! grep -q 'DIAGNOSTICS OPS VERIFY OK' "$DEV/guest-graphics.log" \
+   || ! grep -q 'ROTATION VERIFY OK' "$DEV/guest-graphics.log" \
    || ! grep -q 'SESSION VERIFY OK' "$DEV/guest-graphics.log" \
    || ! grep -q 'GRAPHICS VERIFY OK' "$DEV/guest-graphics.log"; then
-  echo "AUTOSTART/RESILIENCE/LIMIT/DIAGNOSTICS/PERSISTENCE/SESSION/GRAPHICS VERIFY FAILED (rc=$GRAPHICS_RC)" >&2
+  echo "AUTOSTART/RESILIENCE/LIMIT/DIAGNOSTICS/PERSISTENCE/OPS/ROTATION/SESSION/GRAPHICS VERIFY FAILED (rc=$GRAPHICS_RC)" >&2
   exit 1
 fi
 
@@ -379,12 +381,83 @@ systemctl is-active knix-session.service | grep -qx active
 [ -c /dev/ttyAMA0 ]
 echo "PERSISTENCE EVENTS: $EVENTS"
 echo "DIAGNOSTICS PERSISTENCE VERIFY OK: guest archive survived reboot ($EVENTS events, boot $STORED_BOOT != $CURRENT_BOOT, $BOOTS boots in the journal)"
+
+# P15: the same guest-owned bookkeeping must keep counting in a NEW boot. The
+# host only asks guest systemd to signal its own compositor; every write below
+# is performed by the guest OnFailure= unit. A verification step must never
+# leave a degraded session on the published disk.
+STATS="$PDIR/session-failure.stats"
+ALERT="$PDIR/session-failure.alert"
+NOTICE=/etc/profile.d/10-knix-session-alert.sh
+test -s "$STATS" || { echo "guest cross-boot statistics did not survive" >&2; exit 1; }
+test -s "$ALERT" || { echo "guest persistent alert did not survive" >&2; exit 1; }
+test -f "$NOTICE" || { echo "guest login notice did not survive" >&2; exit 1; }
+grep -q '^owner=guest$' "$STATS" \
+  || { echo "surviving statistics are not guest-owned" >&2; exit 1; }
+BEFORE_EVENTS="$(sed -n 's/^total_events=//p' "$STATS" | head -1)"
+BEFORE_BOOTS="$(sed -n 's/^boots_seen=//p' "$STATS" | head -1)"
+[ -n "$BEFORE_EVENTS" ] && [ "$BEFORE_EVENTS" -ge 2 ] \
+  || { echo "surviving statistics lost the crash timeline" >&2; exit 1; }
+grep -q 'active_state=failed' "$ALERT" \
+  || { echo "surviving alert lost the terminal failed state" >&2; exit 1; }
+journalctl -t knix-diagnostics -p err --no-pager 2>/dev/null \
+  | grep -q 'knix session failure' \
+  || { echo "the err-priority guest alert did not survive" >&2; exit 1; }
+# Signal the compositor through guest systemd. OnFailure= reports the failure,
+# which appends a second boot id to the archive and advances the statistics.
+systemctl reset-failed knix-session.service >/dev/null 2>&1 || true
+# One SIGKILL normally produces an OnFailure= report, but a fast auto-restart
+# may finish before the oneshot lands. Retry a bounded number of times; the
+# guest start-rate limit (5 in 30s) is never reached.
+REPORTED=0
+for _attempt in 1 2 3; do
+  systemctl kill --signal=SIGKILL knix-session.service >/dev/null 2>&1 || true
+  for _ in $(seq 1 10); do
+    if grep -q "boot=$CURRENT_BOOT" "$ARCHIVE"; then REPORTED=1; break; fi
+    sleep 1
+  done
+  if [ "$REPORTED" = 1 ]; then break; fi
+  systemctl reset-failed knix-session.service >/dev/null 2>&1 || true
+done
+[ "$REPORTED" = 1 ] \
+  || { echo "guest OnFailure= did not report a failure in the second boot" >&2; exit 1; }
+AFTER_EVENTS="$(sed -n 's/^total_events=//p' "$STATS" | head -1)"
+AFTER_BOOTS="$(sed -n 's/^boots_seen=//p' "$STATS" | head -1)"
+[ -n "$AFTER_EVENTS" ] && [ "$AFTER_EVENTS" -gt "$BEFORE_EVENTS" ] \
+  || { echo "guest statistics did not advance across the reboot ($BEFORE_EVENTS -> ${AFTER_EVENTS:-none})" >&2; exit 1; }
+[ -n "$AFTER_BOOTS" ] && [ "$AFTER_BOOTS" -ge 2 ] \
+  || { echo "guest statistics did not keep both boots (${AFTER_BOOTS:-none})" >&2; exit 1; }
+grep -q "boot=$STORED_BOOT" "$ARCHIVE" \
+  || { echo "the previous boot vanished from the guest archive" >&2; exit 1; }
+grep -q "boot=$CURRENT_BOOT" "$ALERT" \
+  || { echo "the guest did not refresh its alert in this boot" >&2; exit 1; }
+# Guest systemd restores the session on its own; never ship a failed unit.
+systemctl reset-failed knix-session.service >/dev/null 2>&1 || true
+systemctl restart knix-session.service \
+  || { echo "guest systemd did not recover after the second-boot failure" >&2; exit 1; }
+RECOVERED=0
+for _ in $(seq 1 30); do
+  if systemctl is-active knix-session.service | grep -qx active \
+     && [ "$(systemctl --failed --no-legend | wc -l)" -eq 0 ]; then
+    RECOVERED=1; break
+  fi
+  sleep 1
+done
+[ "$RECOVERED" = 1 ] \
+  || { echo "the guest session stayed degraded after the second-boot failure" >&2; exit 1; }
+[ "$(ps -o user= -C sway | head -1 | tr -d ' ')" = knix ] \
+  || { echo "the recovered compositor is not knix-owned" >&2; exit 1; }
+echo "OPS EVENTS: $AFTER_EVENTS"
+echo "OPS BOOTS: $AFTER_BOOTS"
+echo "DIAGNOSTICS OPS PERSISTENCE VERIFY OK: guest archive and stats advanced across reboot ($BEFORE_EVENTS -> $AFTER_EVENTS events, $AFTER_BOOTS boots), alert + err journal intact, session recovered as knix"
 PERSIST
 cat "$DEV/guest-persistence.log"
 if [ "$PERSIST_RC" -ne 0 ] \
    || ! grep -q 'DIAGNOSTICS PERSISTENCE VERIFY OK' "$DEV/guest-persistence.log" \
-   || ! grep -q '^PERSISTENCE EVENTS: ' "$DEV/guest-persistence.log"; then
-  echo "DIAGNOSTICS PERSISTENCE VERIFY FAILED (rc=$PERSIST_RC)" >&2
+   || ! grep -q '^PERSISTENCE EVENTS: ' "$DEV/guest-persistence.log" \
+   || ! grep -q 'DIAGNOSTICS OPS PERSISTENCE VERIFY OK' "$DEV/guest-persistence.log" \
+   || ! grep -q '^OPS EVENTS: ' "$DEV/guest-persistence.log"; then
+  echo "DIAGNOSTICS PERSISTENCE/OPS VERIFY FAILED (rc=$PERSIST_RC)" >&2
   exit 1
 fi
 stop_guest
@@ -409,8 +482,24 @@ if (not persist_match or int(persist_match.group(1)) < 2
         or "DIAGNOSTICS PERSISTENCE VERIFY OK" not in persist_log):
     sys.exit("PERSISTENCE DRIFT: the guest crash archive did not survive a reboot")
 persist_events = int(persist_match.group(1))
-identity = json.loads((root / "platform/identity/identity.json").read_text())
 m = json.loads((root / "platform/image/manifest.json").read_text())
+# P15: the receipt must describe real guest-owned operations, not a promise.
+# The cold-boot log proves the rotation drill and the local alert; the second
+# boot log proves the statistics advanced with a new boot id.
+if ("DIAGNOSTICS OPS VERIFY OK" not in guest_log
+        or "ROTATION VERIFY OK" not in guest_log):
+    sys.exit("OPS DRIFT: the guest did not verify its diagnostics operations")
+ops_match = re.search(r"^OPS EVENTS: (\d+)$", persist_log, re.M)
+boots_match = re.search(r"^OPS BOOTS: (\d+)$", persist_log, re.M)
+min_boots = m["graphics"]["diagnostics"]["operations"]["min_boots_seen"]
+if (not ops_match or not boots_match
+        or int(ops_match.group(1)) <= persist_events
+        or int(boots_match.group(1)) < min_boots
+        or "DIAGNOSTICS OPS PERSISTENCE VERIFY OK" not in persist_log):
+    sys.exit("OPS DRIFT: guest diagnostics operations did not advance across a reboot")
+ops_events = int(ops_match.group(1))
+ops_boots = int(boots_match.group(1))
+identity = json.loads((root / "platform/identity/identity.json").read_text())
 kernel = json.loads((dev / "kernel-build.json").read_text())
 rootfs = json.loads((dev / "rootfs-build.json").read_text())
 framebuffer = json.loads((dev / "framebuffer-verify.json").read_text())
@@ -507,6 +596,20 @@ receipt = {
                     "journal": m["graphics"]["diagnostics"]["persistence"]["journal"],
                     "events": persist_events,
                     "survives_reboot": True,
+                    "verified": True,
+                },
+                "operations": {
+                    "owner": m["graphics"]["diagnostics"]["operations"]["owner"],
+                    "statistics": m["graphics"]["diagnostics"]["operations"]["statistics"],
+                    "alert": m["graphics"]["diagnostics"]["operations"]["alert"],
+                    "archive_limit_bytes": m["graphics"]["diagnostics"]["operations"]["archive_limit_bytes"],
+                    "generations": m["graphics"]["diagnostics"]["operations"]["generations"],
+                    "journal_tag": m["graphics"]["diagnostics"]["operations"]["journal_tag"],
+                    "journal_priority": m["graphics"]["diagnostics"]["operations"]["journal_priority"],
+                    "rotation_drill_verified": True,
+                    "cross_boot_verified": True,
+                    "total_events": ops_events,
+                    "boots_seen": ops_boots,
                     "verified": True,
                 },
             },
