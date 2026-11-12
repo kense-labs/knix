@@ -33,6 +33,9 @@ jobs:
       - name: Run-backend contract gate
         run: python3 scripts/verify-backends.py
 
+      - name: Release verification gate
+        run: python3 scripts/verify-release.py --self-test
+
       # The seed qcow2 is pinned by SHA512 but lives outside the repository and
       # is never fetched in CI. build.sh --check validates it on a build host;
       # here we verify every in-repo input, the locked kernel/rootfs baseline
@@ -75,6 +78,29 @@ jobs:
                         "kernel_drift_is_never_refreshed"):
               if token not in refresh:
                   bad.append(("refresh-baseline.py", token, "missing"))
+          rel = m.get("release", {})
+          if (rel.get("tool") != "scripts/verify-release.py"
+                  or rel.get("read_only") is not True
+                  or rel.get("schema") != 3
+                  or len(rel.get("checks", [])) != 14
+                  or rel.get("min_diagnostics_events") != 2
+                  or rel.get("framebuffer_samples") != 9
+                  or rel.get("publish_surface") != ["knix.img", "origin/main"]):
+              bad.append(("manifest.release", "acceptance policy drifted"))
+          gate_path = root / "scripts/verify-release.py"
+          if not gate_path.is_file():
+              bad.append(("verify-release.py", "missing"))
+          else:
+              gate = gate_path.read_text()
+              for token in ("RELEASE VERIFY OK", "RELEASE FAILED", "--self-test",
+                            "receipt checksum drift", "image sha256 drift",
+                            "baseline sha256 drift", "publish_surface drift"):
+                  if token not in gate:
+                      bad.append(("verify-release.py", token, "missing"))
+          for group, entries in m["inputs"].items():
+              if isinstance(entries, dict) and any(
+                      "verify-release" in k for k in entries):
+                  bad.append(("inputs", group, "release gate must not be pinned"))
           boot = m.get("boot", {})
           if boot.get("method") != "UEFI self-boot":
               bad.append(("boot.method", "expected UEFI self-boot"))
@@ -278,7 +304,7 @@ jobs:
                   print("CONTRACT DRIFT:", b, file=sys.stderr)
               sys.exit(1)
           print("CONTRACT OK: %d inputs, locked kernel/rootfs baseline, one artifact, "
-                "%d build stages, UEFI self-boot + graphics + framebuffer + crash loop + diagnostics" %
+                "%d build stages, UEFI self-boot + graphics + framebuffer + crash loop + diagnostics + release gate" %
                 (checked, len(m.get("build_stages", []))))
           PY
 

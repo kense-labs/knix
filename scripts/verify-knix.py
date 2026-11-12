@@ -730,6 +730,69 @@ def main() -> int:
             "a failed compositor is diagnosed by the guest's own systemd",
             "diagnostics contract: %s" % diagnostics_errors[:4])
 
+    # I25 -- a published image must be independently acceptable: the receipt
+    # is written by the build itself, so a separate read-only gate has to prove
+    # the bytes, the pinned inputs, the locked baseline and the whole guest
+    # evidence chain still match the committed manifest.
+    release_errors = []
+    try:
+        rel = json.loads((ROOT / "platform/image/manifest.json").read_text(
+            encoding="utf-8")).get("release", {})
+        if (rel.get("tool") != "scripts/verify-release.py"
+                or rel.get("schema") != 3
+                or rel.get("artifact") != "knix.img"
+                or rel.get("format") != "qcow2"
+                or rel.get("read_only") is not True
+                or rel.get("min_diagnostics_events") != 2
+                or rel.get("framebuffer_samples") != 9
+                or rel.get("min_framebuffer_bar_pixels") != 100
+                or rel.get("publish_surface") != ["knix.img", "origin/main"]
+                or "not_a_build_input" not in rel):
+            release_errors.append("manifest release policy drifted")
+        checks = rel.get("checks", [])
+        if (len(checks) != 14
+                or "image_sha256_and_bytes_match_receipt" not in checks
+                or "receipt_checksum_matches" not in checks
+                or "baseline_matches_manifest" not in checks
+                or "session_diagnostics_verified" not in checks
+                or "framebuffer_pixels_verified" not in checks
+                or "single_publish_surface" not in checks):
+            release_errors.append("release policy lost an acceptance check")
+        gate = ROOT / "scripts" / "verify-release.py"
+        if not gate.is_file() or not (gate.stat().st_mode & 0o111):
+            release_errors.append("verify-release.py is missing or not executable")
+        else:
+            text = gate.read_text(encoding="utf-8")
+            try:
+                ast.parse(text, filename=str(gate))
+            except SyntaxError as exc:
+                release_errors.append("verify-release.py does not parse: %s" % exc)
+            for token in ("RELEASE VERIFY OK", "RELEASE FAILED", "--self-test",
+                          "--image", "--receipt", "--checksum", "canonical_sha",
+                          "image sha256 drift", "receipt checksum drift",
+                          "inputs drift", "baseline sha256 drift",
+                          "publish_surface drift", "no QEMU"):
+                if token not in text:
+                    release_errors.append("verify-release.py lost %s" % token)
+        mi = json.loads((ROOT / "platform/image/manifest.json").read_text(
+            encoding="utf-8")).get("inputs", {})
+        for group, entries in mi.items():
+            if isinstance(entries, dict) and any(
+                    "verify-release" in str(k) for k in entries):
+                release_errors.append("release gate became a build input: %s" % group)
+        workflow = (ROOT / ".github/workflows/knix-contract.yml").read_text(
+            encoding="utf-8")
+        if ("Release verification gate" not in workflow
+                or "verify-release.py --self-test" not in workflow):
+            release_errors.append("CI lost the release verification gate")
+    except (OSError, ValueError) as exc:
+        release_errors.append("unreadable release contract: %s" % exc)
+    if "| I25 |" not in readme:
+        release_errors.append("README lost I25")
+    require(not release_errors,
+            "a release is accepted by a read-only host-side gate",
+            "release contract: %s" % release_errors[:4])
+
     # the only collection mechanism still parses
     try:
         ast.parse((ROOT / "scripts" / "collect-knix.py").read_text(encoding="utf-8"))

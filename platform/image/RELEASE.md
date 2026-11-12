@@ -15,6 +15,8 @@ identity, the build recipe and the verification gate that reproduce it.
 | 摘要与签名 | `platform/image/sign.sh` | `BUILD-RECEIPT.json` + `.sha256`（+ 可选 `.sig`） |
 | 契约校验 | `python3 scripts/verify-knix.py` | 无 |
 | 可复现基线 | `python3 scripts/verify-repro.py` | 无 |
+| 发布验收 | `python3 scripts/verify-release.py` | 无（主机侧只读） |
+| 发布验收自测 | `python3 scripts/verify-release.py --self-test` | 无（临时目录） |
 | 刷新策略自测 | `python3 scripts/refresh-baseline.py --self-test` | 无（临时目录） |
 | 锁定基线检查 | `python3 scripts/refresh-baseline.py --check` | 无 |
 | 锁定基线刷新 | `python3 scripts/refresh-baseline.py --propose` → 评审 → `--apply --reason "..."` | `$KNIX_DEV_DIR/BASELINE-PROPOSAL.json`（仓外） |
@@ -31,50 +33,63 @@ image contents.
 
 ## Verify a release
 
+`scripts/verify-release.py` is the single read-only acceptance gate. It runs on
+any host with Python 3.9+, needs no QEMU, no guest and no third-party module,
+and writes nothing.
+
 ```bash
-# 1. the receipt itself is intact
-openssl dgst -sha256 BUILD-RECEIPT.json
-cat BUILD-RECEIPT.json.sha256
+# from the repository, with the image and receipt in $KNIX_DEV_DIR (../knix-m0)
+python3 scripts/verify-release.py
 
-# 2. the image matches the receipt
-python3 - <<'PY'
-import hashlib, json, pathlib
-r = json.loads(pathlib.Path("BUILD-RECEIPT.json").read_text())
-h = hashlib.sha256()
-with pathlib.Path("knix.img").open("rb") as fh:
-    for chunk in iter(lambda: fh.read(1 << 20), b""):
-        h.update(chunk)
-print("receipt:", r["sha256"])
-print("image:  ", h.hexdigest())
-print("MATCH" if h.hexdigest() == r["sha256"] else "MISMATCH")
-PY
+# or point it at a downloaded release
+python3 scripts/verify-release.py \
+  --image /path/knix.img \
+  --receipt /path/BUILD-RECEIPT.json \
+  --checksum /path/BUILD-RECEIPT.json.sha256
 
-# 3. when a release key was used
+# machine-readable result
+python3 scripts/verify-release.py --json
+```
+
+It refuses the release unless all 14 checks in `manifest.json.release.checks`
+pass: image bytes and sha256 equal the receipt; the `.sha256` openssl digest
+covers the exact receipt file; every pinned input group and `seed_sha512`
+equals `manifest.json.inputs`; `baseline.sha256` is the sha256 of the canonical
+`build_baseline` object; the kernel and rootfs summaries carry every locked
+field; the boot chain is UEFI self-boot with no seed ISO; `graphics` and its
+`session`, `autostart`, `resilience`, `crash_loop`, `diagnostics` and
+`framebuffer` sections are all verified (at least 2 guest-reported diagnostics
+events, 9/9 framebuffer samples plus swaybar pixels); and the publish surface is
+exactly `knix.img` plus `origin/main`.
+
+A successful run prints `RELEASE VERIFY OK`; any drift prints one
+`RELEASE FAILED:` line per reason and exits 1. The gate is deliberately absent
+from `inputs.*_sha256`: pinning it would change the receipt it judges. It adds
+no product capability and is not a substitute for the build-time guest
+verification. The receipt's `kernel`, `rootfs`, `inputs`, `boot`, `graphics` and
+`baseline` sections therefore still have to match the committed manifest; a
+mismatch means the image was assembled from drifted inputs or skipped a
+verification stage.
+
+`--self-test` builds a policy-consistent synthetic receipt in a temporary
+directory and refuses 30 tampered variants (image swap, edited receipt, stale or
+missing checksum, input and baseline drift, missing evidence, extra publish
+surface) without QEMU or a build artifact; CI runs it as the
+`Release verification gate` step. `scripts/verify-repro.py`, I25 and the CI
+single-image contract block keep the policy itself from drifting.
+
+For a signed release the detached signature is still checked out of band:
+
+```bash
 openssl dgst -sha256 -verify knix-release.pub \
   -signature BUILD-RECEIPT.json.sig BUILD-RECEIPT.json
 ```
 
-The receipt's `sha256` must equal `knix.img`. Its `kernel`, `rootfs`, `inputs`,
-`boot`, `graphics` and `baseline` sections record every digest used by the
-build, the locked kernel/rootfs baseline, the UEFI self-boot method and the fact
-that real Wayland rendering was verified; a mismatch there means the image was
-assembled from drifted inputs or skipped a verification stage. `.sha256` covers
-the receipt, not the image.
+The receipt's `sha256` only matches the image at the moment `build.sh --build`
+finished. qcow2 is writable, so booting the published image afterwards changes
+its bytes; extra checks use a `qemu-img create -b knix.img` overlay and
+re-verify the backing file. `.sha256` covers the receipt, not the image.
 
-`baseline.sha256` is the digest of the canonical `build_baseline` object in
-`platform/image/manifest.json`. Compare it against the committed manifest to
-prove which locked baseline produced this image:
-
-```bash
-python3 - <<'PY'
-import hashlib, json, pathlib
-m = json.loads(pathlib.Path("platform/image/manifest.json").read_text())
-r = json.loads(pathlib.Path("BUILD-RECEIPT.json").read_text())
-canonical = json.dumps(m["build_baseline"], sort_keys=True, separators=(",", ":"))
-print("MATCH" if hashlib.sha256(canonical.encode()).hexdigest() == r["baseline"]["sha256"]
-      else "BASELINE DRIFT")
-PY
-```
 A release key is never stored in the repository; `KNIX_SIGNING_KEY` selects one
 at signing time, and the matching public key is distributed out of band.
 

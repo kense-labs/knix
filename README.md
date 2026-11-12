@@ -87,6 +87,7 @@
 | I22 | 桌面必须真的画出像素：guest 自选颜色并由 sway 绘制，主机只用 QMP 读取 virtio-gpu 帧缓冲，9/9 采样与 swaybar 像素都匹配才允许写 receipt |
 | I23 | 合成器连续崩溃时由 guest systemd 的 start limit 停止重启；验收要求 `ActiveState=failed`、零 sway 进程、恰好 1 个失败单元、串口 + SSH 可用，随后由 guest 自己恢复完整会话 |
 | I24 | 失败的合成器由 guest 自己的 `OnFailure=` 单元写出诊断报告与崩溃时间线；报告只来自 guest 的 unit 状态、journal 与本地设备节点，receipt 记录 guest 上报的崩溃事件数 |
+| I25 | 发布产物必须能被独立验收：`verify-release.py` 只读校验镜像字节、receipt 校验和、全部锁定输入、基线与整条 guest 证据链；它不进入构建输入，也不提供任何产品能力 |
 
 ## Operations
 
@@ -97,6 +98,9 @@ python3 scripts/verify-backends.py
 python3 scripts/refresh-baseline.py --check
 python3 scripts/refresh-baseline.py --self-test
 python3 platform/image/verify-framebuffer.py --self-test
+python3 scripts/verify-release.py --self-test
+python3 scripts/verify-release.py          # accepts $KNIX_DEV_DIR/knix.img + receipt
+python3 scripts/verify-release.py --image /path/knix.img --receipt /path/BUILD-RECEIPT.json
 
 python3 scripts/collect-knix.py --list
 python3 scripts/collect-knix.py
@@ -165,6 +169,7 @@ python3 scripts/verify-knix.py && git add -A && git commit -m "chore: refresh sn
 - 崩溃诊断也归 Guest：主 unit 的 `OnFailure=knix-session-failure.service` 让 systemd 在**每一次**失败态（含自动重启前的短暂失败）调用 guest 自有的 oneshot 报告脚本，从 guest 的 unit 状态、journal 与 `/dev` 节点生成 `/run/knix/session-failure.txt`（最新快照）与 `/run/knix/session-failure.history`（崩溃时间线），不读任何宿主状态。报告单元自己必须成功退出，否则会变成第二个失败单元、破坏 P11 的「恰好 1 个失败单元」。`verify-graphics.sh` 在失败态硬校验报告字段（`active_state=failed` / `result=signal` / `exec_main_status=9` / `failed_units=1` / 零 sway / SSH + 串口）、历史至少 2 个事件且最后一条是终态，输出 `DIAGNOSTICS VERIFY OK` 与 `DIAGNOSTICS EVENTS: N`；`build.sh --build` 只有解析到该事件数才写 receipt，receipt 记录 `graphics.session.diagnostics`。`/run` 是运行期快照，持久证据由 guest journal 保存；`GPU=none` 不产生失败态，串口与 SSH 仍是完整降级路径。
 - `manifest.json` 的 `build_baseline` 锁定 guest 侧内核与 rootfs 的全部摘要；`platform/image/package-versions.txt` 是 388 个已安装包的版本锁定清单，属于构建输入而非构建产物。`build.sh --build` 在组装前逐字段比对两份摘要与 lockfile 字节，任一漂移即中止并提示刷新基线；receipt 记录 `baseline.sha256` 与 `baseline.verified`。
 - receipt 的 `sha256` / `bytes` 只对应构建完成那一刻的 `knix.img`：qcow2 是可写盘，任何后续启动都会写入 journal 与运行期状态。构建完成后不再启动发布镜像；需要额外验收（如 `GPU=none` 降级）时，用 `qemu-img create -b knix.img` 建 overlay 副本启动，并在门禁里复核 backing 镜像字节未变。
+- 发布的最后一道判定在仓内而不在构建机：`scripts/verify-release.py` 对镜像字节、receipt 的 `.sha256` 校验和、18 个锁定输入、规范化 `build_baseline`、UEFI 自举与整条 guest 证据链（autostart / resilience / crash_loop / diagnostics / framebuffer）逐项只读比对 `manifest.json.release`。镜像被替换、receipt 被编辑、输入或基线漂移、任一验收段缺失或诊断事件数不足都会拒绝；`--self-test` 在临时目录跑 30 个篡改用例，不需要 VM 或构建产物。该工具不是构建输入，不改变 receipt 与镜像字节；`native-apple` 裸机发布仍 deferred。
 - `scripts/verify-repro.py` 是仓内可复现性门禁：校验全部输入哈希、基线字段完整性、lockfile 排序与唯一性、构建阶段脚本可执行、UEFI / 图形 / 帧缓冲契约、receipt 字段，以及 `platform/` / `scripts/` / `docs/` / `.github/` 内没有 `.img` / `.qcow2` / `.zst` / `.ppm` 等二进制构建产物。
 - 锁定基线的刷新不是手工编辑 manifest：`scripts/refresh-baseline.py --check` 逐字段比对 guest 摘要与锁定值，`--propose` 生成含 old/new、输入哈希与四份指纹的 `BASELINE-PROPOSAL.json`，`--apply --reason "..."` 只有在提案未过期、字段仍与当前摘要一致、理由不少于 8 字符时才写回 `build_baseline.rootfs` 与 `*_sha256` 输入组（必要时同步 lockfile）。内核摘要漂移一律拒绝，必须回到 `build-kernel.sh --apply`；CI 用 `--self-test` 在没有 guest 产物的情况下跑 12 个策略用例。
 - 两个后端的 `backend.json` 不是镜像构建输入：切换后端不改变全部输入哈希、锁定基线与 receipt。`native-apple` 的 `verified` 为 false 且无 `boot_entry`，门禁拒绝它假称完成；两个后端的能力、设备、认证、界面与输入语义都归 Guest。

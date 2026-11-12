@@ -182,5 +182,34 @@
     "ci_gate": "--self-test exercises the policy without guest artifacts"
   },
   "receipt": "platform/image/build.sh writes $KNIX_DEV_DIR/BUILD-RECEIPT.json (schema 3) with the artifact sha256, the canonical build_baseline sha256, the graphics.session verification result including autostart, crash recovery, crash-loop limiting and the number of guest-reported failure diagnostics, the graphics.framebuffer pixel proof, and every build input digest",
+  "release": {
+    "tool": "scripts/verify-release.py",
+    "schema": 3,
+    "artifact": "knix.img",
+    "format": "qcow2",
+    "read_only": true,
+    "not_a_build_input": "the release gate never enters inputs.*_sha256, so it does not change the receipt it judges",
+    "checks": [
+      "image_sha256_and_bytes_match_receipt",
+      "receipt_checksum_matches",
+      "inputs_match_manifest",
+      "seed_sha512_matches_manifest",
+      "baseline_matches_manifest",
+      "kernel_and_rootfs_summaries_match_baseline",
+      "boot_is_uefi_self_boot",
+      "graphics_verified",
+      "session_autostart_verified",
+      "session_resilience_verified",
+      "session_crash_loop_verified",
+      "session_diagnostics_verified",
+      "framebuffer_pixels_verified",
+      "single_publish_surface"
+    ],
+    "min_diagnostics_events": 2,
+    "framebuffer_samples": 9,
+    "min_framebuffer_bar_pixels": 100,
+    "publish_surface": ["knix.img", "origin/main"],
+    "ci_gate": "--self-test refuses tampered receipts and images in a temporary directory without a VM or a build artifact"
+  },
   "publish_surface": ["knix.img", "origin/main"]
 }

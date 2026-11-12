@@ -47,4 +47,6 @@ KNIX_DEV_DIR=../knix-m0 platform/backends/vm-virt/boot-native.sh
 
 附加构建盘是 qcow2。停止 VM 前必须在 guest 内 `sync`，否则页缓存里未回写的产物会变成 0 字节；`build.sh --build`、`build-kernel.sh`、`build-rootfs.sh`、`assemble-native.sh` 与 `inject-identity.sh` 都已内置该步骤。
 
+发布产物由仓内 `scripts/verify-release.py` 只读验收，与本后端的启动路径无关：切换后端不改变 18 个锁定输入、`build_baseline` 或 receipt，因此后端真源始终不在 `manifest.json.inputs` 里。该验收只判定已构建的字节与证据链，不启动本后端的 VM，也不改写 `knix.img`。
+
 Deferred：能力协商清单与 `knix check` 后端探测。

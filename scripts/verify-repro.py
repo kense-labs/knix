@@ -306,6 +306,39 @@ def main() -> int:
             or policy.get("fingerprints_must_match") is not True):
         errors.append("baseline_refresh policy drifted")
 
+    # 6c. a built image has an independent, read-only acceptance gate. The gate
+    # is not a build input: pinning it would change the receipt it judges.
+    rel = m.get("release", {})
+    if (rel.get("tool") != "scripts/verify-release.py"
+            or rel.get("read_only") is not True
+            or rel.get("schema") != 3
+            or len(rel.get("checks", [])) != 14
+            or rel.get("min_diagnostics_events") != 2
+            or rel.get("framebuffer_samples") != 9
+            or rel.get("publish_surface") != ["knix.img", "origin/main"]):
+        errors.append("manifest.release acceptance policy drifted")
+    release_gate = ROOT / "scripts" / "verify-release.py"
+    if not release_gate.is_file():
+        errors.append("release verification gate is missing")
+    else:
+        if not (release_gate.stat().st_mode & 0o111):
+            errors.append("release verification gate is not executable")
+        rg = release_gate.read_text(encoding="utf-8")
+        try:
+            compile(rg, str(release_gate), "exec")
+        except SyntaxError as exc:
+            errors.append("verify-release.py does not parse: %s" % exc)
+        for token in ("--self-test", "RELEASE VERIFY OK", "RELEASE FAILED",
+                      "receipt checksum drift", "image sha256 drift",
+                      "baseline sha256 drift", "inputs drift",
+                      "publish_surface drift", "canonical_sha"):
+            if token not in rg:
+                errors.append("verify-release.py lost %s" % token)
+    for group, entries in m.get("inputs", {}).items():
+        if isinstance(entries, dict) and any(
+                "verify-release" in str(k) for k in entries):
+            errors.append("release gate became a build input in %s" % group)
+
     # 7. binary build artifacts never enter the repository
     for top in SCAN_DIRS:
         base = ROOT / top
