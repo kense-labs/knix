@@ -287,6 +287,46 @@ systemctl is-active ssh.service 2>/dev/null | grep -qx active \
 [ -c /dev/ttyAMA0 ] \
   || fail "the serial console is not available during the crash-loop fallback"
 
+echo "=== guest-owned crash diagnostics ==="
+# P11 only observed the failure from a verification script. P12 requires the
+# guest's own systemd OnFailure= unit to have reported it. systemd fires the
+# oneshot once per failed state (including the brief failure before each auto
+# restart), so the history is a crash timeline and the report is its last
+# snapshot. Nothing here is written by the host or by this script.
+DIAG_UNIT_NAME="knix-session-failure.service"
+DIAG_UNIT="/etc/systemd/system/$DIAG_UNIT_NAME"
+DIAG_SCRIPT="/usr/lib/knix/session-failure-report.sh"
+DIAG_REPORT="/run/knix/session-failure.txt"
+DIAG_HISTORY="/run/knix/session-failure.history"
+[ -f "$DIAG_UNIT" ] || fail "missing guest-owned failure diagnostics unit"
+[ -x "$DIAG_SCRIPT" ] || fail "missing executable guest-owned diagnostics script"
+grep -q "^OnFailure=$DIAG_UNIT_NAME\$" "$UNIT" \
+  || fail "the session unit has no guest-owned OnFailure= trigger"
+[ -s "$DIAG_REPORT" ] || fail "guest systemd wrote no failure report"
+[ -s "$DIAG_HISTORY" ] || fail "guest systemd wrote no crash history"
+for kv in 'unit=knix-session.service' 'owner=guest' 'manager=systemd' \
+          'active_state=failed' 'result=signal' 'exec_main_status=9' \
+          'failed_units=1' 'sway_processes=0' 'ssh=active' 'serial=present'; do
+  grep -q "^$kv\$" "$DIAG_REPORT" \
+    || fail "the guest failure report is missing or wrong: $kv"
+done
+grep -q '^timestamp=' "$DIAG_REPORT" \
+  || fail "the guest failure report has no guest timestamp"
+grep -q '^restarts=' "$DIAG_REPORT" \
+  || fail "the guest failure report has no restart counter"
+DIAG_EVENTS="$(grep -c 'active_state=' "$DIAG_HISTORY" || true)"
+[ -n "$DIAG_EVENTS" ] && [ "$DIAG_EVENTS" -ge 2 ] \
+  || fail "only ${DIAG_EVENTS:-0} crash events were reported by guest systemd"
+tail -1 "$DIAG_HISTORY" | grep -q 'active_state=failed' \
+  || fail "the last reported crash is not the terminal failed state"
+systemctl show -p Result --value "$DIAG_UNIT_NAME" | grep -qx success \
+  || fail "the guest diagnostics unit did not complete successfully"
+if systemctl is-failed "$DIAG_UNIT_NAME" >/dev/null 2>&1; then
+  fail "the guest diagnostics unit became a second failed unit"
+fi
+echo "DIAGNOSTICS EVENTS: $DIAG_EVENTS"
+echo "DIAGNOSTICS VERIFY OK: guest systemd reported $DIAG_EVENTS crashes to $DIAG_REPORT (final state failed, one failed unit, ssh + serial intact)"
+
 # Cleaning up the test is NOT the recovery proof: P9's SIGKILL segment above is.
 # reset-failed clears the start-rate counter; removing stale IPC sockets first
 # is essential or the checks below connect to a dead compositor's socket.

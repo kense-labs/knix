@@ -50,6 +50,19 @@
       "fallback": "a crash loop leaves the serial console and ssh as the full fallback path; guest systemd stops the loop instead of burning CPU forever"
     }
   },
+  "diagnostics": {
+    "owner": "guest",
+    "manager": "systemd",
+    "unit": "/etc/systemd/system/knix-session-failure.service",
+    "script": "/usr/lib/knix/session-failure-report.sh",
+    "trigger": "OnFailure=knix-session-failure.service on knix-session.service",
+    "report": "/run/knix/session-failure.txt",
+    "history": "/run/knix/session-failure.history",
+    "format": "key=value lines in the report, one line per reported failure in the history",
+    "rule": "every failed state of the compositor is reported by the guest's own systemd; the report is derived only from guest unit state, the guest journal and local device nodes, never from host input",
+    "verification": "build.sh --build requires DIAGNOSTICS VERIFY OK: the guest-written report must describe the final failed state and the history must contain more than one reported crash",
+    "fallback": "the journal is the durable record; /run/knix is a runtime snapshot; GPU=none never produces a failure and keeps the serial console and ssh as the full fallback path"
+  },
   "input": { "backend": "libinput", "owner": "guest" },
   "output": { "backend": "drm", "device": "virtio-gpu", "owner": "guest" },
   "authentication": { "owner": "guest" },

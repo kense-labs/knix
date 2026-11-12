@@ -193,6 +193,11 @@ ConditionPathExists=/dev/dri/renderD128
 # launcher. The start limit stops a restart loop from burning the CPU forever.
 StartLimitIntervalSec=30
 StartLimitBurst=5
+# A failed compositor is diagnosed by the guest's own systemd. OnFailure= fires
+# once per failed state -- including the brief failure before each automatic
+# restart -- so the history is a crash timeline and the report is the latest
+# snapshot. No host input, network or private framework is involved.
+OnFailure=knix-session-failure.service
 
 [Service]
 Type=simple
@@ -217,6 +222,59 @@ RestartSec=2
 [Install]
 WantedBy=multi-user.target
 UNIT
+
+# Crash diagnostics are a guest capability, not a host-side report. systemd
+# invokes this oneshot on every failed state of the session unit. The script
+# reads only guest unit state, the guest journal and local device nodes; it
+# always succeeds so it never becomes a second failed unit. /run is a tmpfs:
+# the journal keeps the durable record across boots.
+mkdir -p "$MOUNT/usr/lib/knix"
+cat > "$MOUNT/usr/lib/knix/session-failure-report.sh" <<'REPORT'
+#!/bin/bash
+# Guest-owned crash diagnostics, invoked by knix-session.service OnFailure=.
+set -u
+UNIT=knix-session.service
+DIR=/run/knix
+mkdir -p "$DIR" || exit 0
+TIMESTAMP="$(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || echo unknown)"
+ACTIVE_STATE="$(systemctl show -p ActiveState --value "$UNIT" 2>/dev/null || echo unknown)"
+RESULT="$(systemctl show -p Result --value "$UNIT" 2>/dev/null || echo unknown)"
+EXEC_STATUS="$(systemctl show -p ExecMainStatus --value "$UNIT" 2>/dev/null || echo unknown)"
+RESTARTS="$(systemctl show -p NRestarts --value "$UNIT" 2>/dev/null || echo unknown)"
+FAILED_UNITS="$(systemctl --failed --no-legend 2>/dev/null | wc -l)"
+SWAY_PROCS="$(pgrep -c sway 2>/dev/null || true)"
+SSH_STATE="$(systemctl is-active ssh.service 2>/dev/null || echo unknown)"
+SERIAL_STATE=missing
+[ -c /dev/ttyAMA0 ] && SERIAL_STATE=present
+LIMIT_LINES="$(journalctl -u "$UNIT" --no-pager -n 40 2>/dev/null | grep -c 'Start request repeated too quickly.' || true)"
+{
+  echo "unit=$UNIT"
+  echo "owner=guest"
+  echo "manager=systemd"
+  echo "timestamp=$TIMESTAMP"
+  echo "active_state=$ACTIVE_STATE"
+  echo "result=$RESULT"
+  echo "exec_main_status=$EXEC_STATUS"
+  echo "restarts=$RESTARTS"
+  echo "failed_units=$FAILED_UNITS"
+  echo "sway_processes=${SWAY_PROCS:-0}"
+  echo "ssh=$SSH_STATE"
+  echo "serial=$SERIAL_STATE"
+  echo "start_limit_lines=${LIMIT_LINES:-0}"
+} > "$DIR/session-failure.txt" || exit 0
+echo "$TIMESTAMP unit=$UNIT restarts=$RESTARTS result=$RESULT active_state=$ACTIVE_STATE failed_units=$FAILED_UNITS" \
+  >> "$DIR/session-failure.history" || true
+exit 0
+REPORT
+chmod 0755 "$MOUNT/usr/lib/knix/session-failure-report.sh"
+cat > "$MOUNT/etc/systemd/system/knix-session-failure.service" <<'FAILURE'
+[Unit]
+Description=Knix session failure diagnostics
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /usr/lib/knix/session-failure-report.sh
+FAILURE
+
 # Auto-start is a guest-owned enablement symlink, never a host service. The
 # ConditionPathExists pair keeps GPU=none boots on the serial/ssh fallback.
 cat > "$MOUNT/etc/systemd/network/20-virtio.network" <<'NET'
@@ -282,6 +340,24 @@ for directive in 'Restart=on-failure' 'RestartSec=2' \
     || { echo "session unit lost its resilience directive: $directive" >&2; exit 1; }
 done
 echo "resilience: Restart=on-failure / RestartSec=2 / StartLimitBurst=5 in 30s (guest systemd)"
+# session.json declares diagnostics: the failure report must be produced by a
+# guest-owned OnFailure= unit, never by a build-host script.
+DIAG_UNIT_FILE="$MOUNT/etc/systemd/system/knix-session-failure.service"
+DIAG_SCRIPT="$MOUNT/usr/lib/knix/session-failure-report.sh"
+test -f "$DIAG_UNIT_FILE" \
+  || { echo "missing guest-owned failure diagnostics unit" >&2; exit 1; }
+test -x "$DIAG_SCRIPT" \
+  || { echo "missing executable guest-owned diagnostics script" >&2; exit 1; }
+grep -q '^OnFailure=knix-session-failure.service$' "$UNIT_FILE" \
+  || { echo "session unit lost its guest-owned OnFailure= trigger" >&2; exit 1; }
+grep -q '^ExecStart=/bin/bash /usr/lib/knix/session-failure-report.sh$' "$DIAG_UNIT_FILE" \
+  || { echo "failure diagnostics unit does not invoke the guest script" >&2; exit 1; }
+for token in 'session-failure.txt' 'session-failure.history' 'owner=guest' \
+             'manager=systemd' 'active_state=' 'failed_units=' 'exit 0'; do
+  grep -q "$token" "$DIAG_SCRIPT" \
+    || { echo "diagnostics script lost: $token" >&2; exit 1; }
+done
+echo "diagnostics: guest-owned OnFailure= report + crash history (systemd)"
 echo "seat: seatd + drm,libinput + guest udev rule (autostart enabled)"
 echo -n "brand assets: "; ls -1 "$MOUNT/usr/share/knix/brand" | wc -l
 ls -lh "$MOUNT/boot/vmlinuz-$KVER-knix"

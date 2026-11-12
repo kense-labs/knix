@@ -18,6 +18,8 @@ KNIX_DEV_DIR=../knix-m0 platform/backends/vm-virt/boot-dev.sh
 
 会话的失败态也归 Guest：`knix-session.service` 的 `Restart=on-failure` / `RestartSec=2` / `StartLimitBurst=5` / `StartLimitIntervalSec=30` 由 guest 自己的 systemd 执行。`build.sh --build` 的冷启验收在单次 SIGKILL 恢复之后继续故意击杀，直到 systemd 报 `Start request repeated too quickly.` 并进入 `failed`，此时要求零 sway 进程、恰好 1 个失败单元（会话 unit）、`ssh` 与串口完好；随后 `reset-failed` + `restart` 清场，恢复后的 sway 重新提供 libinput / DRM / GBM / GL / Wayland 客户端并画出 P10 的像素图案。宿主只提供标准 virtio 设备，不代为重启、停用或伪造失败态；`GPU=none` 时 DRM condition 不满足，不会构造崩溃循环。30 秒滑动窗口下 `NRestarts` 为 4 或 5、`Result` 恒为 `signal`，门禁不硬编码次数。
 
+失败诊断同样归 Guest：`knix-session.service` 的 `OnFailure=knix-session-failure.service` 让 systemd 在每次失败态自动调用 guest 自有的 oneshot 脚本，把 unit 状态、journal 与本地设备节点写成 `/run/knix/session-failure.txt` 与 `session-failure.history`。验收脚本只读这两份 guest 产物，不代写报告；报告单元自身必须成功，否则会变成第二个失败单元。`/run` 是运行期快照，持久证据由 guest journal 保存，主机不收集、不上报、不注入任何诊断数据。
+
 ```bash
 KNIX_DEV_DIR=../knix-m0 platform/backends/vm-virt/boot-native.sh
 ```

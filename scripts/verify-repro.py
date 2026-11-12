@@ -222,6 +222,55 @@ def main() -> int:
             or sl.get("burst") != 5 or sl.get("interval_sec") != 30):
         errors.append("session.json resilience.crash_loop drifted")
 
+    # 5d. a failed compositor is diagnosed inside the guest, not by the host
+    diag = gfx.get("diagnostics", {})
+    if (diag.get("owner") != "guest" or diag.get("manager") != "systemd"
+            or diag.get("unit") != "/etc/systemd/system/knix-session-failure.service"
+            or diag.get("script") != "/usr/lib/knix/session-failure-report.sh"
+            or diag.get("report") != "/run/knix/session-failure.txt"
+            or diag.get("history") != "/run/knix/session-failure.history"
+            or diag.get("min_reported_events") != 2
+            or "OnFailure=" not in diag.get("trigger", "")):
+        errors.append("graphics.diagnostics contract drifted")
+    asm_path = ROOT / "platform/image/assemble-native.sh"
+    if not asm_path.is_file():
+        errors.append("assemble-native.sh is missing")
+    else:
+        asm = asm_path.read_text(encoding="utf-8")
+        # Check the real unit heredoc: a validation-loop literal with the same
+        # words must not be able to stand in for the directive itself.
+        heredoc = asm.split("<<'UNIT'\n", 1)[-1].split("\nUNIT\n", 1)[0]
+        lines = [line.strip() for line in heredoc.splitlines()]
+        if "OnFailure=knix-session-failure.service" not in lines:
+            errors.append("assemble-native.sh unit heredoc lost OnFailure=")
+        for token in ("session-failure-report.sh", "session-failure.txt",
+                      "session-failure.history", "knix-session-failure.service",
+                      "owner=guest", "exit 0"):
+            if token not in asm:
+                errors.append("assemble-native.sh lost diagnostics token: %s" % token)
+    vg_diag = (ROOT / gfx.get("verify", "")).read_text(encoding="utf-8")
+    for token in ("DIAGNOSTICS VERIFY OK", "DIAGNOSTICS EVENTS:",
+                  "session-failure.txt", "session-failure.history",
+                  "knix-session-failure.service", "OnFailure=",
+                  "active_state=failed", "is-failed",
+                  "'failed_units=1'", 'tail -1 "$DIAG_HISTORY"',
+                  '"$DIAG_EVENTS" -ge 2'):
+        if token not in vg_diag:
+            errors.append("verify-graphics.sh lost diagnostics token: %s" % token)
+    for token in ("DIAGNOSTICS VERIFY OK", "DIAGNOSTICS EVENTS:",
+                  '"diagnostics": {', "diag_events"):
+        if token not in build_text:
+            errors.append("build.sh lost diagnostics gate: %s" % token)
+    try:
+        sd = json.loads((ROOT / "platform/identity/session.json").read_text(
+            encoding="utf-8")).get("diagnostics", {})
+    except (OSError, ValueError):
+        sd = {}
+    if (sd.get("owner") != "guest" or sd.get("manager") != "systemd"
+            or "OnFailure=" not in sd.get("trigger", "")
+            or sd.get("report") != "/run/knix/session-failure.txt"):
+        errors.append("session.json diagnostics contract drifted")
+
     # 6. the receipt records the same baseline the build verifies
     build = (ROOT / "platform/image/build.sh").read_text(encoding="utf-8")
     for token in ("build_baseline", "BASELINE DRIFT", "package-versions.txt",

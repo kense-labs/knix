@@ -42,6 +42,7 @@
 - 认证权威、界面所有权与输入语义留在 Guest。
 - 构建期的像素验收只允许主机通过 QEMU 标准 QMP `screendump` **只读**观察 virtio-gpu scanout；测试图案由 Guest 自选并绘制，主机不得绘制、注入或配置 guest 界面内容，抓帧产物不进入发布面。
 - 合成器崩溃恢复、重启限流与失败态降级由 Guest 自己的 systemd 拥有；构建期只能故意发信号并只读观察 unit / journal 状态，宿主不得代为重启、停用、启用或伪造失败态。失败态必须保留串口与 SSH 作为完整降级路径。
+- 失败诊断由 Guest 自己的 `OnFailure=` 单元产生，字段只取自 Guest 的 unit 状态、journal 与本地设备节点；宿主与验收脚本都不得代写、篡改或转发诊断报告。诊断产物是 Guest 运行期状态，不进入发布面，也不成为宿主可观测能力的来源。
 
 ## Host adapters
 

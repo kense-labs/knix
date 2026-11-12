@@ -165,6 +165,21 @@ jobs:
                   or scl.get("interval_sec") != 30
                   or scl.get("signal") != "Start request repeated too quickly."):
               bad.append(("session.json", "crash-loop contract drifted"))
+          dg = gfx.get("diagnostics", {})
+          if (dg.get("owner") != "guest" or dg.get("manager") != "systemd"
+                  or dg.get("unit") != "/etc/systemd/system/knix-session-failure.service"
+                  or dg.get("script") != "/usr/lib/knix/session-failure-report.sh"
+                  or dg.get("report") != "/run/knix/session-failure.txt"
+                  or dg.get("history") != "/run/knix/session-failure.history"
+                  or dg.get("min_reported_events") != 2
+                  or "OnFailure=" not in dg.get("trigger", "")):
+              bad.append(("graphics.diagnostics", "guest-owned crash report missing"))
+          sd = session_doc.get("diagnostics", {})
+          if (sd.get("owner") != "guest" or sd.get("manager") != "systemd"
+                  or "OnFailure=" not in sd.get("trigger", "")
+                  or sd.get("report") != "/run/knix/session-failure.txt"
+                  or sd.get("history") != "/run/knix/session-failure.history"):
+              bad.append(("session.json", "diagnostics contract drifted"))
           verify_rel = gfx.get("verify", "")
           if not (root / verify_rel).is_file():
               bad.append(("graphics.verify", verify_rel, "missing"))
@@ -187,7 +202,13 @@ jobs:
                             "FRAMEBUFFER PATTERN PAINTED", "LIMIT VERIFY OK",
                             "Start request repeated too quickly",
                             "systemctl reset-failed", "FAILED_UNITS",
-                            "ssh.service", "/dev/ttyAMA0", "NRestarts"):
+                            "ssh.service", "/dev/ttyAMA0", "NRestarts",
+                            "DIAGNOSTICS VERIFY OK", "DIAGNOSTICS EVENTS:",
+                            "session-failure.txt", "session-failure.history",
+                            "knix-session-failure.service", "OnFailure=",
+                            "'failed_units=1'", 'tail -1 "$DIAG_HISTORY"',
+                            '"$DIAG_EVENTS" -ge 2', "active_state=failed",
+                            "is-failed"):
                   if token not in v:
                       bad.append(("verify-graphics.sh", token, "missing"))
               if 'systemctl stop "$UNIT_NAME"' in v:
@@ -203,7 +224,9 @@ jobs:
               bad.append(("assemble-native.sh", "graphics modules-load missing"))
           for token in ("71-knix-virtio-input.rules", "knix-session.service",
                         "WLR_BACKENDS=drm,libinput", "LIBSEAT_BACKEND=seatd",
-                        "sudo,video,input,render", "TAG+=\"seat\""):
+                        "sudo,video,input,render", "TAG+=\"seat\"",
+                        "session-failure-report.sh", "session-failure.txt",
+                        "session-failure.history", "knix-session-failure.service"):
               if token not in assemble:
                   bad.append(("assemble-native.sh", token, "missing"))
           # Check the actual unit heredoc, not just the validation loop that
@@ -211,7 +234,8 @@ jobs:
           unit_heredoc = assemble.split("<<'UNIT'\n", 1)[-1].split("\nUNIT\n", 1)[0]
           unit_lines = [line.strip() for line in unit_heredoc.splitlines()]
           for directive in ("Restart=on-failure", "RestartSec=2",
-                            "StartLimitBurst=5", "StartLimitIntervalSec=30"):
+                            "StartLimitBurst=5", "StartLimitIntervalSec=30",
+                            "OnFailure=knix-session-failure.service"):
               if directive not in unit_lines:
                   bad.append(("assemble-native.sh", "unit heredoc lost " + directive))
           if "virtio-gpu-pci" not in native or "GPU_INPUT" not in native:
@@ -234,7 +258,9 @@ jobs:
                         '"resilience": {', "FRAMEBUFFER VERIFY OK",
                         "verify-framebuffer.py", "framebuffer-verify.json",
                         '"framebuffer": {', "QMP=\"$DEV/qmp.sock\"",
-                        "LIMIT VERIFY OK", '"crash_loop": {'):
+                        "LIMIT VERIFY OK", '"crash_loop": {',
+                        "DIAGNOSTICS VERIFY OK", "DIAGNOSTICS EVENTS:",
+                        '"diagnostics": {', "diag_events"):
               if token not in build:
                   bad.append(("build.sh", token, "missing"))
           if "! systemctl is-enabled" in build:
@@ -252,7 +278,7 @@ jobs:
                   print("CONTRACT DRIFT:", b, file=sys.stderr)
               sys.exit(1)
           print("CONTRACT OK: %d inputs, locked kernel/rootfs baseline, one artifact, "
-                "%d build stages, UEFI self-boot + graphics + framebuffer + crash loop" %
+                "%d build stages, UEFI self-boot + graphics + framebuffer + crash loop + diagnostics" %
                 (checked, len(m.get("build_stages", []))))
           PY
 

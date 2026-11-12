@@ -672,6 +672,64 @@ def main() -> int:
             "a compositor crash loop is limited and observed inside the guest",
             "crash-loop contract: %s" % crash_loop_errors[:4])
 
+    # I24 -- the guest itself must report a failed compositor. A verification
+    # script observing the failure is not a diagnostic capability; the report
+    # has to come from the guest's own systemd OnFailure= unit.
+    diagnostics_errors = []
+    try:
+        m = json.loads((ROOT / "platform/image/manifest.json").read_text(
+            encoding="utf-8"))
+        d = m.get("graphics", {}).get("diagnostics", {})
+        if (d.get("owner") != "guest" or d.get("manager") != "systemd"
+                or d.get("unit") != "/etc/systemd/system/knix-session-failure.service"
+                or d.get("script") != "/usr/lib/knix/session-failure-report.sh"
+                or d.get("report") != "/run/knix/session-failure.txt"
+                or d.get("history") != "/run/knix/session-failure.history"
+                or d.get("min_reported_events") != 2
+                or "OnFailure=" not in d.get("trigger", "")):
+            diagnostics_errors.append("manifest graphics.diagnostics drifted")
+        sess = json.loads((ROOT / "platform/identity/session.json").read_text(
+            encoding="utf-8")).get("diagnostics", {})
+        if (sess.get("owner") != "guest" or sess.get("manager") != "systemd"
+                or "OnFailure=" not in sess.get("trigger", "")
+                or sess.get("report") != "/run/knix/session-failure.txt"
+                or sess.get("history") != "/run/knix/session-failure.history"):
+            diagnostics_errors.append("session.json diagnostics contract drifted")
+        vg = (ROOT / "platform/image/verify-graphics.sh").read_text(
+            encoding="utf-8")
+        for token in ("DIAGNOSTICS VERIFY OK", "DIAGNOSTICS EVENTS:",
+                      "session-failure.txt", "session-failure.history",
+                      "knix-session-failure.service", "OnFailure=",
+                      "active_state=failed", "is-failed",
+                      "'failed_units=1'", 'tail -1 "$DIAG_HISTORY"',
+                      '"$DIAG_EVENTS" -ge 2'):
+            if token not in vg:
+                diagnostics_errors.append("verify-graphics.sh lost %s" % token)
+        asm = (ROOT / "platform/image/assemble-native.sh").read_text(
+            encoding="utf-8")
+        for token in ("OnFailure=knix-session-failure.service",
+                      "session-failure-report.sh", "session-failure.txt",
+                      "session-failure.history",
+                      "knix-session-failure.service"):
+            if token not in asm:
+                diagnostics_errors.append("assemble-native.sh lost %s" % token)
+        bs = (ROOT / "platform/image/build.sh").read_text(encoding="utf-8")
+        for token in ("DIAGNOSTICS VERIFY OK", "DIAGNOSTICS EVENTS:",
+                      '"diagnostics": {', "diag_events"):
+            if token not in bs:
+                diagnostics_errors.append("build.sh lost %s" % token)
+        workflow = (ROOT / ".github/workflows/knix-contract.yml").read_text(
+            encoding="utf-8")
+        if "graphics.diagnostics" not in workflow:
+            diagnostics_errors.append("CI contract lost the diagnostics check")
+    except (OSError, ValueError) as exc:
+        diagnostics_errors.append("unreadable diagnostics contract: %s" % exc)
+    if "| I24 |" not in readme:
+        diagnostics_errors.append("README lost I24")
+    require(not diagnostics_errors,
+            "a failed compositor is diagnosed by the guest's own systemd",
+            "diagnostics contract: %s" % diagnostics_errors[:4])
+
     # the only collection mechanism still parses
     try:
         ast.parse((ROOT / "scripts" / "collect-knix.py").read_text(encoding="utf-8"))

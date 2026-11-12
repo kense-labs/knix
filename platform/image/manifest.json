@@ -10,7 +10,7 @@
     "owner": "platform/image/",
     "location": "$KNIX_DEV_DIR/knix.img",
     "single": true,
-    "role": "GPT disk with a 512 MiB FAT32 EFI system partition and an ext4 root; native rootfs, self-built 7.2.15 kernel, 773 modules (including virtio-gpu and virtio-input), guest-owned initramfs, systemd-boot, a guest-owned DRM device and a guest-owned seatd session unit that runs sway as knix"
+    "role": "GPT disk with a 512 MiB FAT32 EFI system partition and an ext4 root; native rootfs, self-built 7.2.15 kernel, 773 modules (including virtio-gpu and virtio-input), guest-owned initramfs, systemd-boot, a guest-owned DRM device, a guest-owned seatd session unit that runs sway as knix and a guest-owned systemd OnFailure= crash diagnostic"
   },
   "inputs": {
     "seed": {
@@ -24,7 +24,7 @@
       "platform/identity/knix-release": "6f0d9eb37a09f1bbf9bb51241c9aa713b3f18566761b24dcd922fb1341c06535",
       "platform/identity/identity.json": "c216c0805f0dc4dd0976de4161786d4c3e16184fa4e63d24a0bab8e81659369b",
       "platform/identity/packages.json": "bb7996b818eda8521ab69b499037f6e63a20497cc737ecbcc328c60add389a2d",
-      "platform/identity/session.json": "f8a7cb8869b726161e9cd98cafd5b9f2be677ac2e985ddcb69809ae684ed2444",
+      "platform/identity/session.json": "b75ddc38c81e35231b8d685cc9b358ed6e0d8cd450208f26a2a63328cb86893d",
       "platform/identity/brand.manifest.json": "a6a3dbea169c6217d763ad9cf0898ca76425168994e9112982e8090de6c4db6f"
     },
     "brand_sha256": {
@@ -37,11 +37,11 @@
       "repos/linux/arch/arm64/configs/virt.config": "7cd8a9d570fd42fb3fce2724f7293f2f8e4bf24193acf315b5fbd676d1963319",
       "platform/image/build-kernel.sh": "b24314037ad1843e4055b210ad83fb6ad55631b56784a1df4f85acadc086e5f0",
       "platform/image/build-rootfs.sh": "1559ba0d87811baa4038e3a5ecadfa26b75e08603242ca76ec787328c92d0b94",
-      "platform/image/assemble-native.sh": "58f5dbe98276656bce6f23a0439aaaa7881054ada3da87d35fa958b8e1ccc795",
-      "platform/image/build.sh": "fa60d61cde41d4038030fe1922ccf92b1e6c005daef522465999574e0de75ad8"
+      "platform/image/assemble-native.sh": "02adadf8e5600e462ab990725c62551d11928492da330b0ca4031511456d17b0",
+      "platform/image/build.sh": "126effa2a76abe926d8e9a64246c8f457057ecf258e2cc9cea81742208928ab4"
     },
     "verification_sha256": {
-      "platform/image/verify-graphics.sh": "00940b052f765882e7245bb15e45462b3772f9b4425312a57ef4fcfcfeb0d4cc",
+      "platform/image/verify-graphics.sh": "de7474a761dd169ea11620c4c605b27d8ac5d5986d3046791df81c252c6ca464",
       "platform/image/verify-framebuffer.py": "ba40bede3ed7ceac7dccffa14ee9f23472625c052d531ae9774b8effec4fe1d2"
     },
     "baseline_sha256": {
@@ -61,8 +61,8 @@
       "graphics_modules": ["virtio-gpu", "virtio_input"]
     },
     "rootfs": {
-      "tarball_sha256": "0e334d99c83bc10715f303d8e53efba72788c9a17b7ae206b6f654e69e1275ff",
-      "tarball_bytes": 226791641,
+      "tarball_sha256": "3bdf5381f81b6ec3bf5b04835645b8bf4a4a60b29ab9b1862e9a5acb793bed0f",
+      "tarball_bytes": 226795266,
       "package_set_sha256": "bb7996b818eda8521ab69b499037f6e63a20497cc737ecbcc328c60add389a2d",
       "package_count": 39,
       "package_versions_sha256": "11417d90b6bfa1d8ad5e35e170fde4a4f5ec8c0a79c576bbabb617d37480e5bf",
@@ -98,6 +98,8 @@
     "QMP screendump (P6) of that scanout shows the guest colour at 9/9 sample points plus guest swaybar pixels before any receipt is written",
     "a deliberate crash loop makes guest systemd refuse further restarts, leaving ActiveState=failed, zero sway processes, exactly one failed unit (the session unit) and ssh plus the serial console intact",
     "after the crash loop the guest's own systemd recovers a knix-owned sway with DRM, libinput, GBM/GL and a Wayland client, which then paints the verified framebuffer pattern",
+    "the guest's own systemd OnFailure= unit writes /run/knix/session-failure.txt from guest unit state, journal and local device nodes, with no host input",
+    "verify-graphics.sh requires the guest report to describe the final failed state and the guest history to contain more than one reported crash before any receipt is written",
     "GPU=none leaves the autostart condition unmet and keeps the serial console and ssh as the full fallback path, with zero failed units",
     "build.sh compares every kernel/rootfs summary field and both lockfiles against build_baseline before assembling",
     "scripts/verify-repro.py checks all pinned inputs, the lockfile and the absence of binary build artifacts"
@@ -154,6 +156,19 @@
       "degraded_failed_units": 1,
       "verification": "build.sh --build requires LIMIT VERIFY OK before the guest paints the framebuffer pattern: repeated SIGKILL must make guest systemd stop restarting, leave exactly one failed unit with ssh and the serial console intact, and then recover a complete knix-owned session",
       "fallback": "serial console and ssh stay available while the compositor unit is failed; a crash loop never becomes a host-managed capability"
+    },
+    "diagnostics": {
+      "owner": "guest",
+      "manager": "systemd",
+      "trigger": "OnFailure=knix-session-failure.service on knix-session.service; systemd invokes the oneshot once per failed state",
+      "unit": "/etc/systemd/system/knix-session-failure.service",
+      "script": "/usr/lib/knix/session-failure-report.sh",
+      "report": "/run/knix/session-failure.txt",
+      "history": "/run/knix/session-failure.history",
+      "format": "key=value lines in the report, one line per reported failure in the history",
+      "min_reported_events": 2,
+      "rule": "verify-graphics.sh requires DIAGNOSTICS VERIFY OK: the guest-written report must describe the final failed state (active_state=failed, result=signal, exec_main_status=9, failed_units=1, zero sway processes, ssh and serial intact) and the history must record more than one crash",
+      "fallback": "the journal is the durable record and /run/knix is a runtime snapshot; GPU=none produces no failure and keeps the serial console and ssh as the full fallback path"
     }
   },
   "baseline_refresh": {
@@ -166,6 +181,6 @@
     "kernel_drift_never_refreshed": "rebuild with build-kernel.sh --apply instead",
     "ci_gate": "--self-test exercises the policy without guest artifacts"
   },
-  "receipt": "platform/image/build.sh writes $KNIX_DEV_DIR/BUILD-RECEIPT.json (schema 3) with the artifact sha256, the canonical build_baseline sha256, the graphics.session verification result including autostart, crash recovery and crash-loop limiting, the graphics.framebuffer pixel proof, and every build input digest",
+  "receipt": "platform/image/build.sh writes $KNIX_DEV_DIR/BUILD-RECEIPT.json (schema 3) with the artifact sha256, the canonical build_baseline sha256, the graphics.session verification result including autostart, crash recovery, crash-loop limiting and the number of guest-reported failure diagnostics, the graphics.framebuffer pixel proof, and every build input digest",
   "publish_surface": ["knix.img", "origin/main"]
 }

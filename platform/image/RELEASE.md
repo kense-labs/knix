@@ -166,6 +166,35 @@ The 30-second sliding window means `NRestarts` is 4 or 5 and `Result` stays
 hard-coded counter or `Result=start-limit-hit`. On the `GPU=none` path the DRM
 condition stays unmet, the unit remains inactive and no crash loop is created.
 
+## Crash diagnostics
+
+P11 proved that guest systemd stops a restart loop, but the failure was only
+ever observed from outside by a verification script. P12 makes the guest report
+its own failures. `knix-session.service` declares
+`OnFailure=knix-session-failure.service`; systemd invokes that guest-owned
+oneshot once per failed state, including the brief failed state before each
+automatic restart. The guest script
+`/usr/lib/knix/session-failure-report.sh` writes
+`/run/knix/session-failure.txt` (latest snapshot as `key=value` lines) and
+appends one line per event to `/run/knix/session-failure.history`. Every field
+comes from the guest's own `systemctl show`, guest journal and local device
+nodes -- no host input, no network, no private framework.
+
+The reporter must always succeed: a failed diagnostics unit would become a
+second failed unit and break the crash-loop contract's "exactly one failed
+unit" degraded state. `verify-graphics.sh` checks, while the session is still
+failed, that the report contains `active_state=failed`, `result=signal`,
+`exec_main_status=9`, `failed_units=1`, `sway_processes=0`, `ssh=active` and
+`serial=present`, that the history holds more than one reported crash and that
+its last line is the terminal failed state. It emits `DIAGNOSTICS VERIFY OK`
+and `DIAGNOSTICS EVENTS: N`; `build.sh --build` parses that event count and
+refuses a receipt without it. The receipt records
+`graphics.session.diagnostics` with the guest-reported event count.
+
+`/run` is a tmpfs runtime snapshot; the guest journal keeps the durable record.
+On the `GPU=none` path the DRM condition is unmet, no failure is produced and
+the serial console and ssh remain the full fallback path.
+
 ## Framebuffer pixel proof
 
 Reporting a compositor process is not proof that a desktop was painted. After

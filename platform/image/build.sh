@@ -305,9 +305,10 @@ if [ "$GRAPHICS_RC" -ne 0 ] \
    || ! grep -q 'AUTOSTART VERIFY OK' "$DEV/guest-graphics.log" \
    || ! grep -q 'RESILIENCE VERIFY OK' "$DEV/guest-graphics.log" \
    || ! grep -q 'LIMIT VERIFY OK' "$DEV/guest-graphics.log" \
+   || ! grep -q 'DIAGNOSTICS VERIFY OK' "$DEV/guest-graphics.log" \
    || ! grep -q 'SESSION VERIFY OK' "$DEV/guest-graphics.log" \
    || ! grep -q 'GRAPHICS VERIFY OK' "$DEV/guest-graphics.log"; then
-  echo "AUTOSTART/RESILIENCE/LIMIT/SESSION/GRAPHICS VERIFY FAILED (rc=$GRAPHICS_RC)" >&2
+  echo "AUTOSTART/RESILIENCE/LIMIT/DIAGNOSTICS/SESSION/GRAPHICS VERIFY FAILED (rc=$GRAPHICS_RC)" >&2
   exit 1
 fi
 
@@ -331,8 +332,15 @@ stop_guest
 echo "=== receipt ==="
 IMG_SHA="$(sha256 "$IMAGE")"
 python3 - "$DEV" "$IMG_SHA" "$ROOT" <<'PY'
-import datetime, hashlib, json, pathlib, sys
+import datetime, hashlib, json, pathlib, re, sys
 dev, img_sha, root = pathlib.Path(sys.argv[1]), sys.argv[2], pathlib.Path(sys.argv[3])
+# The receipt records how many crashes the guest itself reported. Refuse to
+# write a receipt when the guest-produced verification log lacks that line.
+guest_log = (dev / "guest-graphics.log").read_text()
+diag_match = re.search(r"^DIAGNOSTICS EVENTS: (\d+)$", guest_log, re.M)
+if not diag_match or int(diag_match.group(1)) < 2:
+    sys.exit("DIAGNOSTICS DRIFT: guest systemd did not report its crash timeline")
+diag_events = int(diag_match.group(1))
 identity = json.loads((root / "platform/identity/identity.json").read_text())
 m = json.loads((root / "platform/image/manifest.json").read_text())
 kernel = json.loads((dev / "kernel-build.json").read_text())
@@ -413,6 +421,15 @@ receipt = {
                 "burst": m["graphics"]["crash_loop"]["burst"],
                 "interval_sec": m["graphics"]["crash_loop"]["interval_sec"],
                 "degraded_failed_units": m["graphics"]["crash_loop"]["degraded_failed_units"],
+                "verified": True,
+            },
+            "diagnostics": {
+                "owner": m["graphics"]["diagnostics"]["owner"],
+                "manager": m["graphics"]["diagnostics"]["manager"],
+                "unit": m["graphics"]["diagnostics"]["unit"],
+                "report": m["graphics"]["diagnostics"]["report"],
+                "history": m["graphics"]["diagnostics"]["history"],
+                "events": diag_events,
                 "verified": True,
             },
         },
