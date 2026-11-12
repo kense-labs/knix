@@ -24,6 +24,9 @@ jobs:
       - name: Reproducibility gate
         run: python3 scripts/verify-repro.py
 
+      - name: Baseline refresh policy
+        run: python3 scripts/refresh-baseline.py --self-test
+
       - name: Run-backend contract gate
         run: python3 scripts/verify-backends.py
 
@@ -58,6 +61,17 @@ jobs:
               bad.append(("build_baseline", "kernel/rootfs lock missing"))
           if m.get("publish_surface") != ["knix.img", "origin/main"]:
               bad.append(("publish_surface", "drifted"))
+          br = m.get("baseline_refresh", {})
+          if (br.get("tool") != "scripts/refresh-baseline.py"
+                  or br.get("require_proposal") is not True
+                  or br.get("require_reason_chars") != 8
+                  or br.get("fingerprints_must_match") is not True):
+              bad.append(("baseline_refresh", "policy drifted"))
+          refresh = (root / "scripts/refresh-baseline.py").read_text()
+          for token in ("--self-test", "--propose", "--apply", "--reason",
+                        "kernel_drift_is_never_refreshed"):
+              if token not in refresh:
+                  bad.append(("refresh-baseline.py", token, "missing"))
           boot = m.get("boot", {})
           if boot.get("method") != "UEFI self-boot":
               bad.append(("boot.method", "expected UEFI self-boot"))

@@ -15,6 +15,9 @@ identity, the build recipe and the verification gate that reproduce it.
 | 摘要与签名 | `platform/image/sign.sh` | `BUILD-RECEIPT.json` + `.sha256`（+ 可选 `.sig`） |
 | 契约校验 | `python3 scripts/verify-knix.py` | 无 |
 | 可复现基线 | `python3 scripts/verify-repro.py` | 无 |
+| 刷新策略自测 | `python3 scripts/refresh-baseline.py --self-test` | 无（临时目录） |
+| 锁定基线检查 | `python3 scripts/refresh-baseline.py --check` | 无 |
+| 锁定基线刷新 | `python3 scripts/refresh-baseline.py --propose` → 评审 → `--apply --reason "..."` | `$KNIX_DEV_DIR/BASELINE-PROPOSAL.json`（仓外） |
 
 `build.sh --build` creates a blank qcow2, assembles the native rootfs, the
 self-built kernel and its matching 773 modules inside the helper guest,
@@ -144,10 +147,40 @@ ships in `knix.img`. The receipt carries `baseline.sha256`,
 
 `scripts/verify-repro.py` is the read-only CI gate: all 17 pinned inputs, the
 baseline structure, lockfile ordering and uniqueness, executable build stages,
-the receipt contract and the absence of binary artifacts under `platform/`,
-`scripts/`, `docs/` and `.github/`. It needs no seed image and no VM. Running a
-full QEMU/HVF build in CI remains out of scope: the seed is not in the
-repository and HVF only exists on macOS.
+the receipt contract, the baseline-refresh policy and the absence of binary
+artifacts under `platform/`, `scripts/`, `docs/` and `.github/`. It needs no
+seed image and no VM. Running a full QEMU/HVF build in CI remains out of scope:
+the seed is not in the repository and HVF only exists on macOS.
+
+## Refreshing the locked baseline
+
+When the Debian mirror or a build recipe legitimately changes, the lock is not
+edited by hand. `scripts/refresh-baseline.py` owns the refresh:
+
+```bash
+python3 scripts/refresh-baseline.py --check       # read-only field-level diff
+python3 scripts/refresh-baseline.py --propose    # writes BASELINE-PROPOSAL.json
+# review old/new values, the four fingerprints and the reason, then:
+python3 scripts/refresh-baseline.py --apply --reason "Debian mirror updated trixie"
+python3 scripts/refresh-baseline.py --check
+KNIX_DEV_DIR=... platform/image/build.sh --build   # rewrite the receipt
+```
+
+`--apply` refuses a missing or already-applied proposal, a reason shorter than
+8 characters, stale fingerprints (kernel/rootfs summaries, the guest lockfile
+or the manifest bytes), a field diff that no longer matches the current guest
+summaries, and a guest lockfile that contradicts its own `rootfs-build.json`.
+It only rewrites `build_baseline.rootfs`, the `*_sha256` input groups and, when
+needed, the committed `package-versions.txt`; the kernel lock, artifact, boot,
+graphics and publish-surface fields are never touched by this tool. A kernel
+summary drift must go back through `build-kernel.sh --apply`, because a new
+kernel changes the image itself.
+
+`manifest.json.baseline_refresh` is the machine-readable policy. I20, the
+`Baseline refresh policy` CI step (`--self-test`, 12 cases in a temporary
+directory without guest artifacts) and the single-image contract block refuse
+any drift in that policy. The proposal file lives outside the repository and is
+not a publish surface.
 
 ## Run backends
 

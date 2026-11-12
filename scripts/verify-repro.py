@@ -158,6 +158,29 @@ def main() -> int:
         if token not in recipe:
             errors.append("build-rootfs.sh lost the package lock: %s" % token)
 
+    # 6b. refreshing the locked baseline stays explicit, scoped and testable
+    refresh_path = ROOT / "scripts/refresh-baseline.py"
+    if not refresh_path.is_file():
+        errors.append("baseline refresh tool is missing")
+    else:
+        refresh = refresh_path.read_text(encoding="utf-8")
+        try:
+            compile(refresh, str(refresh_path), "exec")
+        except SyntaxError as exc:
+            errors.append("baseline refresh tool does not parse: %s" % exc)
+        for token in ("--check", "--propose", "--apply", "--reason",
+                      "--self-test", "BASELINE-PROPOSAL.json",
+                      "kernel_drift_is_never_refreshed",
+                      "REFUSED: stale proposal"):
+            if token not in refresh:
+                errors.append("refresh-baseline.py lost policy token: %s" % token)
+    policy = m.get("baseline_refresh", {})
+    if (policy.get("tool") != "scripts/refresh-baseline.py"
+            or policy.get("require_proposal") is not True
+            or policy.get("require_reason_chars") != 8
+            or policy.get("fingerprints_must_match") is not True):
+        errors.append("baseline_refresh policy drifted")
+
     # 7. binary build artifacts never enter the repository
     for top in SCAN_DIRS:
         base = ROOT / top

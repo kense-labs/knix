@@ -514,6 +514,33 @@ def main() -> int:
             "the image boots into its own guest-owned desktop",
             "autostart contract: %s" % autostart_errors[:4])
 
+    # I20 -- a locked baseline can only be refreshed through an explicit,
+    # scoped proposal with a reason; kernel drift never goes through it.
+    refresh_errors = []
+    try:
+        tool = (ROOT / "scripts" / "refresh-baseline.py").read_text(
+            encoding="utf-8")
+        for token in ("--check", "--propose", "--apply", "--reason",
+                      "--self-test", "BASELINE-PROPOSAL.json",
+                      "kernel_drift_is_never_refreshed",
+                      "REFUSED: stale proposal"):
+            if token not in tool:
+                refresh_errors.append("refresh-baseline.py lost %s" % token)
+        ast.parse(tool, filename="scripts/refresh-baseline.py")
+        pol = json.loads((ROOT / "platform/image/manifest.json").read_text(
+            encoding="utf-8")).get("baseline_refresh", {})
+        if (pol.get("tool") != "scripts/refresh-baseline.py"
+                or pol.get("require_proposal") is not True
+                or pol.get("require_reason_chars") != 8):
+            refresh_errors.append("baseline_refresh policy drifted")
+    except (OSError, SyntaxError, ValueError) as exc:
+        refresh_errors.append("unreadable baseline refresh policy: %s" % exc)
+    if "| I20 |" not in readme:
+        refresh_errors.append("README lost I20")
+    require(not refresh_errors,
+            "baseline refresh requires an explicit, scoped proposal",
+            "refresh policy: %s" % refresh_errors[:4])
+
     # the only collection mechanism still parses
     try:
         ast.parse((ROOT / "scripts" / "collect-knix.py").read_text(encoding="utf-8"))

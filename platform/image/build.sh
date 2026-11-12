@@ -197,8 +197,8 @@ if hashlib.sha256(guest_bytes).hexdigest() != br.get("package_versions_sha256"):
 if bad:
     for line in bad:
         print("BASELINE DRIFT:", line, file=sys.stderr)
-    print("Refresh with build-rootfs.sh --apply, copy package-versions.txt into",
-          "platform/image/, then update manifest.json and all input digests.",
+    print("Refresh with scripts/refresh-baseline.py: --propose, review the",
+          "field-level diff, then --apply --reason \"...\" and rebuild the image.",
           file=sys.stderr)
     sys.exit(1)
 print("BASELINE OK: kernel %s/%d modules, rootfs %d package versions locked" %

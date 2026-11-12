@@ -38,7 +38,7 @@
       "platform/image/build-kernel.sh": "b24314037ad1843e4055b210ad83fb6ad55631b56784a1df4f85acadc086e5f0",
       "platform/image/build-rootfs.sh": "1559ba0d87811baa4038e3a5ecadfa26b75e08603242ca76ec787328c92d0b94",
       "platform/image/assemble-native.sh": "95ca362f1bde3b22aee92c1ea1085c9df3ad7e1e0bbe0eeb389745cb13b3c6f2",
-      "platform/image/build.sh": "1fbe81fdf91b1f17eaaac8fcd5607e81dc52f92310462dafd9b9e5e615ad37e0"
+      "platform/image/build.sh": "17a33c4e369e67f1f8762a6f5366f9001c05341a0e4dc17fdb0052d505f87868"
     },
     "verification_sha256": {
       "platform/image/verify-graphics.sh": "ba7e3335d8786a07743c7b3cdbf12bda4a8331bf651a8deef5a961598c0d99f7"
@@ -120,6 +120,16 @@
     "autostart": true,
     "autostart_target": "multi-user.target",
     "autostart_condition": "/dev/dri/card0"
+  },
+  "baseline_refresh": {
+    "tool": "scripts/refresh-baseline.py",
+    "commands": ["--check", "--propose", "--apply --reason <why>", "--self-test"],
+    "require_proposal": true,
+    "require_reason_chars": 8,
+    "fingerprints_must_match": true,
+    "scope": ["build_baseline.rootfs", "inputs.*_sha256", "platform/image/package-versions.txt"],
+    "kernel_drift_never_refreshed": "rebuild with build-kernel.sh --apply instead",
+    "ci_gate": "--self-test exercises the policy without guest artifacts"
   },
   "receipt": "platform/image/build.sh writes $KNIX_DEV_DIR/BUILD-RECEIPT.json (schema 3) with the artifact sha256, the canonical build_baseline sha256, the graphics.session verification result including autostart, and every build input digest",
   "publish_surface": ["knix.img", "origin/main"]
