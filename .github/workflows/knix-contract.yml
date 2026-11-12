@@ -154,6 +154,17 @@ jobs:
                             "guest pattern", "too dark to prove a repaint"):
                   if token not in f:
                       bad.append(("verify-framebuffer.py", token, "missing"))
+          cl = gfx.get("crash_loop", {})
+          if (cl.get("owner") != "guest" or cl.get("manager") != "systemd"
+                  or cl.get("burst") != 5 or cl.get("interval_sec") != 30
+                  or cl.get("degraded_failed_units") != 1
+                  or cl.get("signal") != "Start request repeated too quickly."):
+              bad.append(("graphics.crash_loop", "guest-owned start-limit contract missing"))
+          scl = session_doc.get("resilience", {}).get("crash_loop", {})
+          if (scl.get("owner") != "guest" or scl.get("burst") != 5
+                  or scl.get("interval_sec") != 30
+                  or scl.get("signal") != "Start request repeated too quickly."):
+              bad.append(("session.json", "crash-loop contract drifted"))
           verify_rel = gfx.get("verify", "")
           if not (root / verify_rel).is_file():
               bad.append(("graphics.verify", verify_rel, "missing"))
@@ -173,7 +184,10 @@ jobs:
                   if token not in v:
                       bad.append(("verify-graphics.sh", token, "missing"))
               for token in ("FRAMEBUFFER PATTERN:", "/dev/urandom", "solid_color",
-                            "FRAMEBUFFER PATTERN PAINTED"):
+                            "FRAMEBUFFER PATTERN PAINTED", "LIMIT VERIFY OK",
+                            "Start request repeated too quickly",
+                            "systemctl reset-failed", "FAILED_UNITS",
+                            "ssh.service", "/dev/ttyAMA0", "NRestarts"):
                   if token not in v:
                       bad.append(("verify-graphics.sh", token, "missing"))
               if 'systemctl stop "$UNIT_NAME"' in v:
@@ -219,7 +233,8 @@ jobs:
                         "is-active knix-session.service", '"autostart"',
                         '"resilience": {', "FRAMEBUFFER VERIFY OK",
                         "verify-framebuffer.py", "framebuffer-verify.json",
-                        '"framebuffer": {', "QMP=\"$DEV/qmp.sock\""):
+                        '"framebuffer": {', "QMP=\"$DEV/qmp.sock\"",
+                        "LIMIT VERIFY OK", '"crash_loop": {'):
               if token not in build:
                   bad.append(("build.sh", token, "missing"))
           if "! systemctl is-enabled" in build:
@@ -237,7 +252,7 @@ jobs:
                   print("CONTRACT DRIFT:", b, file=sys.stderr)
               sys.exit(1)
           print("CONTRACT OK: %d inputs, locked kernel/rootfs baseline, one artifact, "
-                "%d build stages, UEFI self-boot + graphics + framebuffer" %
+                "%d build stages, UEFI self-boot + graphics + framebuffer + crash loop" %
                 (checked, len(m.get("build_stages", []))))
           PY
 

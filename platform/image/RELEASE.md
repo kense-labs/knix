@@ -140,12 +140,38 @@ process. `RESILIENCE VERIFY OK` is required before the receipt is written, and
 a broken compositor from looping forever; on the `GPU=none` path the DRM
 condition stays unmet and the unit remains inactive.
 
+## Crash-loop limit
+
+One successful restart does not prove that a broken compositor is contained.
+`StartLimitBurst=5` / `StartLimitIntervalSec=30` were declared in P9 but never
+exercised. After `RESILIENCE VERIFY OK`, `verify-graphics.sh` keeps sending
+`systemctl kill --signal=SIGKILL knix-session.service` until the guest's own
+systemd refuses another restart. It then requires `ActiveState=failed`,
+`MainPID=0`, zero surviving sway processes, the journal line
+`Start request repeated too quickly.`, exactly one failed unit (the session unit
+itself), `ssh.service` active and `/dev/ttyAMA0` present. That is an observable,
+still-manageable degraded guest -- not a host-managed recovery.
+
+`systemctl reset-failed` + `systemctl restart` afterwards is test cleanup, not
+the recovery proof (that belongs to the P9 segment). Stale sway IPC sockets are
+removed first, otherwise the checks would talk to a dead compositor's socket.
+The recovered sway must again belong to `knix` and provide the three libinput
+devices, the active `Virtual-1` output, freshly allocated GBM buffers and a GL
+FBO, plus a `foot` window committing a `wlr_surface`. `LIMIT VERIFY OK` is a
+hard gate of `build.sh --build`, and `graphics.session.crash_loop.verified` is
+written into the receipt.
+
+The 30-second sliding window means `NRestarts` is 4 or 5 and `Result` stays
+`signal`; the gate therefore checks a range and the journal line rather than a
+hard-coded counter or `Result=start-limit-hit`. On the `GPU=none` path the DRM
+condition stays unmet, the unit remains inactive and no crash loop is created.
+
 ## Framebuffer pixel proof
 
 Reporting a compositor process is not proof that a desktop was painted. After
-crash recovery, `verify-graphics.sh` closes the verification terminals, picks a
+the crash-loop recovery, `verify-graphics.sh` closes the verification terminals, picks a
 24-bit colour from the guest's own `/dev/urandom` (each channel is lifted into
-`0x40..0xff` so a black screen cannot pass) and asks the restarted sway to
+`0x40..0xff` so a black screen cannot pass) and asks the recovered sway to
 paint it with `output * background #RRGGBB solid_color` on the standard
 `virtio-gpu-pci` scanout. It prints `FRAMEBUFFER PATTERN: <hex>` into the guest
 verification log.

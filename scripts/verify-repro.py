@@ -193,6 +193,35 @@ def main() -> int:
         if token not in build_text:
             errors.append("build.sh lost framebuffer gate: %s" % token)
 
+    # 5c. a crash loop is stopped by guest systemd, with a real fallback path
+    cl = gfx.get("crash_loop", {})
+    if (cl.get("owner") != "guest" or cl.get("manager") != "systemd"
+            or cl.get("burst") != 5 or cl.get("interval_sec") != 30
+            or cl.get("degraded_failed_units") != 1
+            or cl.get("signal") != "Start request repeated too quickly."):
+        errors.append("graphics.crash_loop contract drifted")
+    vg_path = ROOT / gfx.get("verify", "")
+    if not vg_path.is_file():
+        errors.append("graphics verification recipe is missing")
+    else:
+        text = vg_path.read_text(encoding="utf-8")
+        for token in ("LIMIT VERIFY OK", "Start request repeated too quickly",
+                      "systemctl reset-failed", "sway-ipc.*.sock",
+                      "FAILED_UNITS", "ssh.service", "/dev/ttyAMA0"):
+            if token not in text:
+                errors.append("verify-graphics.sh lost crash-loop token: %s" % token)
+    for token in ("LIMIT VERIFY OK", '"crash_loop": {'):
+        if token not in build_text:
+            errors.append("build.sh lost crash-loop gate: %s" % token)
+    try:
+        sl = json.loads((ROOT / "platform/identity/session.json").read_text(
+            encoding="utf-8")).get("resilience", {}).get("crash_loop", {})
+    except (OSError, ValueError):
+        sl = {}
+    if (sl.get("owner") != "guest" or sl.get("manager") != "systemd"
+            or sl.get("burst") != 5 or sl.get("interval_sec") != 30):
+        errors.append("session.json resilience.crash_loop drifted")
+
     # 6. the receipt records the same baseline the build verifies
     build = (ROOT / "platform/image/build.sh").read_text(encoding="utf-8")
     for token in ("build_baseline", "BASELINE DRIFT", "package-versions.txt",

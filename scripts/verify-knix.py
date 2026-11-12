@@ -630,6 +630,48 @@ def main() -> int:
             "the guest-painted framebuffer is proven from real pixels",
             "framebuffer contract: %s" % framebuffer_errors[:4])
 
+    # I23 -- one restart is not enough: a crash loop must be stopped by the
+    # guest's own systemd, leave an observable degraded state with a real
+    # fallback, and then recover a complete knix-owned session.
+    crash_loop_errors = []
+    try:
+        m = json.loads((ROOT / "platform/image/manifest.json").read_text(
+            encoding="utf-8"))
+        cl = m.get("graphics", {}).get("crash_loop", {})
+        if (cl.get("owner") != "guest" or cl.get("manager") != "systemd"
+                or cl.get("burst") != 5 or cl.get("interval_sec") != 30
+                or cl.get("degraded_failed_units") != 1
+                or cl.get("signal") != "Start request repeated too quickly."):
+            crash_loop_errors.append("manifest graphics.crash_loop drifted")
+        sess = json.loads((ROOT / "platform/identity/session.json").read_text(
+            encoding="utf-8")).get("resilience", {}).get("crash_loop", {})
+        if (sess.get("owner") != "guest" or sess.get("burst") != 5
+                or sess.get("interval_sec") != 30
+                or sess.get("signal") != "Start request repeated too quickly."):
+            crash_loop_errors.append("session.json crash_loop contract drifted")
+        vg = (ROOT / "platform/image/verify-graphics.sh").read_text(
+            encoding="utf-8")
+        for token in ("LIMIT VERIFY OK", "Start request repeated too quickly",
+                      "systemctl reset-failed", "FAILED_UNITS",
+                      "ssh.service", "/dev/ttyAMA0", "NRestarts"):
+            if token not in vg:
+                crash_loop_errors.append("verify-graphics.sh lost %s" % token)
+        bs = (ROOT / "platform/image/build.sh").read_text(encoding="utf-8")
+        for token in ("LIMIT VERIFY OK", '"crash_loop": {'):
+            if token not in bs:
+                crash_loop_errors.append("build.sh lost %s" % token)
+        workflow = (ROOT / ".github/workflows/knix-contract.yml").read_text(
+            encoding="utf-8")
+        if "graphics.crash_loop" not in workflow:
+            crash_loop_errors.append("CI contract lost the crash-loop check")
+    except (OSError, ValueError) as exc:
+        crash_loop_errors.append("unreadable crash-loop contract: %s" % exc)
+    if "| I23 |" not in readme:
+        crash_loop_errors.append("README lost I23")
+    require(not crash_loop_errors,
+            "a compositor crash loop is limited and observed inside the guest",
+            "crash-loop contract: %s" % crash_loop_errors[:4])
+
     # the only collection mechanism still parses
     try:
         ast.parse((ROOT / "scripts" / "collect-knix.py").read_text(encoding="utf-8"))

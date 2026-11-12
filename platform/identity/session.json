@@ -39,7 +39,16 @@
     "start_limit_burst": 5,
     "start_limit_interval_sec": 30,
     "verification": "build.sh --build sends SIGKILL to the compositor and requires guest systemd to bring back a knix-owned sway with DRM, libinput and a real Wayland client before writing the receipt",
-    "fallback": "GPU=none keeps the DRM condition unmet; repeated crashes stop at the systemd start limit and leave the serial console and ssh available"
+    "fallback": "GPU=none keeps the DRM condition unmet; repeated crashes stop at the systemd start limit and leave the serial console and ssh available",
+    "crash_loop": {
+      "owner": "guest",
+      "manager": "systemd",
+      "interval_sec": 30,
+      "burst": 5,
+      "signal": "Start request repeated too quickly.",
+      "verification": "verify-graphics.sh deliberately sends SIGKILL until guest systemd refuses another restart, then requires ActiveState=failed, zero sway processes, exactly one failed unit (the session unit itself), ssh and the serial console intact, and a complete knix-owned session recovered by guest systemd",
+      "fallback": "a crash loop leaves the serial console and ssh as the full fallback path; guest systemd stops the loop instead of burning CPU forever"
+    }
   },
   "input": { "backend": "libinput", "owner": "guest" },
   "output": { "backend": "drm", "device": "virtio-gpu", "owner": "guest" },

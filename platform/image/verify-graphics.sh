@@ -229,6 +229,120 @@ grep -q 'New wlr_surface' "$LOG" \
   || fail "no Wayland surface was committed after the restart"
 echo "RESILIENCE VERIFY OK: systemd restarted sway $OLD_PID -> $NEW_PID as knix with DRM, libinput and a Wayland client"
 
+echo "=== guest-owned crash-loop limit ==="
+# P9 proved ONE restart. The declared start limit has never been exercised: a
+# broken compositor must be stopped by the guest's own systemd, not restarted
+# forever. The exact restart count lives in systemd's 30s sliding window (it is
+# 4 or 5 depending on earlier restarts); the durable evidence is the journal's
+# "Start request repeated too quickly." line, not Result=start-limit-hit.
+LIMIT_ROUNDS=0
+LIMIT_FAILED=0
+LIMIT_STATE=""
+for _ in $(seq 1 8); do
+  READY=0
+  for _ in $(seq 1 15); do
+    LIMIT_STATE="$(systemctl show -p ActiveState --value "$UNIT_NAME" 2>/dev/null || true)"
+    LIMIT_PID="$(systemctl show -p MainPID --value "$UNIT_NAME" 2>/dev/null || true)"
+    if [ "$LIMIT_STATE" = active ] && [ -n "$LIMIT_PID" ] && [ "$LIMIT_PID" != 0 ]; then
+      READY=1
+      break
+    fi
+    [ "$LIMIT_STATE" = failed ] && break
+    sleep 1
+  done
+  if [ "$LIMIT_STATE" = failed ]; then
+    LIMIT_FAILED=1
+    break
+  fi
+  [ "$READY" = 1 ] || fail "the compositor never became killable during the crash loop"
+  systemctl kill --signal=SIGKILL "$UNIT_NAME" >/dev/null 2>&1 \
+    || fail "could not signal the compositor during the crash loop"
+  LIMIT_ROUNDS=$((LIMIT_ROUNDS + 1))
+  sleep 4
+done
+[ "$LIMIT_FAILED" = 1 ] \
+  || fail "guest systemd kept restarting sway after $LIMIT_ROUNDS SIGKILLs"
+RESTARTS="$(systemctl show -p NRestarts --value "$UNIT_NAME")"
+[ "$RESTARTS" -ge 3 ] && [ "$RESTARTS" -le 8 ] \
+  || fail "unexpected restart count before the start limit: $RESTARTS"
+[ "$(systemctl show -p MainPID --value "$UNIT_NAME")" = 0 ] \
+  || fail "the failed session still has a main process"
+SWAY_PROCS="$(pgrep -c sway || true)"
+[ -z "$SWAY_PROCS" ] || [ "$SWAY_PROCS" = 0 ] \
+  || fail "$SWAY_PROCS sway processes survived the crash loop"
+journalctl -u "$UNIT_NAME" --no-pager -n 80 \
+  > "$RUNTIME/knix-limit-journal.txt" 2>/dev/null || true
+grep -q 'Start request repeated too quickly' "$RUNTIME/knix-limit-journal.txt" \
+  || fail "guest systemd never reported its start-rate limit"
+
+# A failed compositor is a degraded, still-manageable guest: exactly one failed
+# unit (the session itself), zero sway processes, ssh and the serial console.
+FAILED_UNITS="$(systemctl --failed --no-legend | wc -l)"
+[ "$FAILED_UNITS" -eq 1 ] \
+  || fail "$FAILED_UNITS failed units during the crash-loop fallback (expected exactly the session unit)"
+systemctl --failed --no-legend | grep -q "$UNIT_NAME" \
+  || fail "the failed unit is not the guest-owned session unit"
+systemctl is-active ssh.service 2>/dev/null | grep -qx active \
+  || fail "ssh is not available during the crash-loop fallback"
+[ -c /dev/ttyAMA0 ] \
+  || fail "the serial console is not available during the crash-loop fallback"
+
+# Cleaning up the test is NOT the recovery proof: P9's SIGKILL segment above is.
+# reset-failed clears the start-rate counter; removing stale IPC sockets first
+# is essential or the checks below connect to a dead compositor's socket.
+systemctl reset-failed "$UNIT_NAME" >/dev/null 2>&1 || true
+rm -f "$RUNTIME"/sway-ipc.*.sock "$RUNTIME"/wayland-? 2>/dev/null || true
+systemctl restart "$UNIT_NAME" \
+  || fail "guest systemd did not recover after the crash loop"
+LIMIT_SOCK=""
+for _ in $(seq 1 25); do
+  LIMIT_SOCK="$(ls -t "$RUNTIME"/sway-ipc.*.sock 2>/dev/null | head -1 || true)"
+  [ -n "$LIMIT_SOCK" ] && break
+  sleep 1
+done
+[ -n "$LIMIT_SOCK" ] || fail "the recovered sway never opened its IPC socket"
+export SWAYSOCK="$LIMIT_SOCK"
+WD="$(ls -t "$RUNTIME"/wayland-? 2>/dev/null | head -1 || true)"
+[ -n "$WD" ] && export WAYLAND_DISPLAY="${WD##*/}"
+SWAY_USER="$(ps -o user= -C sway | head -1 | tr -d ' ')"
+[ "$SWAY_USER" = knix ] \
+  || fail "the recovered compositor is $SWAY_USER, not knix"
+systemctl is-active "$UNIT_NAME" | grep -qx active \
+  || fail "the recovered session unit is not active"
+swaymsg -t get_inputs > "$RUNTIME/knix-inputs.json"
+grep -q '"identifier"' "$RUNTIME/knix-inputs.json" \
+  || fail "the recovered session lost its libinput devices"
+grep -q 'QEMU Virtio Keyboard' "$RUNTIME/knix-inputs.json" \
+  || fail "the recovered session lost the virtio keyboard"
+grep -q 'QEMU Virtio Tablet' "$RUNTIME/knix-inputs.json" \
+  || fail "the recovered session lost the virtio tablet"
+swaymsg -t get_outputs > "$RUNTIME/knix-outputs.json"
+grep -q '"name": "Virtual-1"' "$RUNTIME/knix-outputs.json" \
+  || fail "the recovered session has no DRM output"
+grep -q '"active": true' "$RUNTIME/knix-outputs.json" \
+  || fail "the recovered session has no active DRM output"
+for _ in $(seq 1 10); do
+  if grep -q 'Allocated .* GBM buffer' "$LOG" \
+     && grep -q 'Created GL FBO' "$LOG"; then
+    break
+  fi
+  sleep 1
+done
+grep -q 'Allocated .* GBM buffer' "$LOG" \
+  || fail "the recovered sway allocated no GBM framebuffer"
+grep -q 'Created GL FBO' "$LOG" \
+  || fail "the recovered sway created no GL render target"
+swaymsg exec /usr/bin/foot > /dev/null
+for _ in $(seq 1 10); do
+  swaymsg -t get_tree | grep -q '"app_id": "foot"' && break
+  sleep 1
+done
+swaymsg -t get_tree | grep -q '"app_id": "foot"' \
+  || fail "foot did not get a Wayland window after the crash loop"
+grep -q 'New wlr_surface' "$LOG" \
+  || fail "no Wayland surface was committed after the crash loop"
+echo "LIMIT VERIFY OK: guest systemd stopped the crash loop after $RESTARTS restarts ($LIMIT_ROUNDS kills, 1 failed unit, ssh + serial intact) and recovered sway as knix with DRM, libinput and a Wayland client"
+
 echo "=== guest-owned framebuffer pattern ==="
 # The compositor proves it painted by choosing a colour from guest entropy and
 # putting it on the scanout. The host only reads that colour from this log and

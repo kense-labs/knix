@@ -304,9 +304,10 @@ cat "$DEV/guest-graphics.log"
 if [ "$GRAPHICS_RC" -ne 0 ] \
    || ! grep -q 'AUTOSTART VERIFY OK' "$DEV/guest-graphics.log" \
    || ! grep -q 'RESILIENCE VERIFY OK' "$DEV/guest-graphics.log" \
+   || ! grep -q 'LIMIT VERIFY OK' "$DEV/guest-graphics.log" \
    || ! grep -q 'SESSION VERIFY OK' "$DEV/guest-graphics.log" \
    || ! grep -q 'GRAPHICS VERIFY OK' "$DEV/guest-graphics.log"; then
-  echo "AUTOSTART/RESILIENCE/SESSION/GRAPHICS VERIFY FAILED (rc=$GRAPHICS_RC)" >&2
+  echo "AUTOSTART/RESILIENCE/LIMIT/SESSION/GRAPHICS VERIFY FAILED (rc=$GRAPHICS_RC)" >&2
   exit 1
 fi
 
@@ -404,6 +405,14 @@ receipt = {
                 "restart_sec": m["graphics"]["resilience"]["restart_sec"],
                 "start_limit_burst": m["graphics"]["resilience"]["start_limit_burst"],
                 "start_limit_interval_sec": m["graphics"]["resilience"]["start_limit_interval_sec"],
+                "verified": True,
+            },
+            "crash_loop": {
+                "owner": m["graphics"]["crash_loop"]["owner"],
+                "manager": m["graphics"]["crash_loop"]["manager"],
+                "burst": m["graphics"]["crash_loop"]["burst"],
+                "interval_sec": m["graphics"]["crash_loop"]["interval_sec"],
+                "degraded_failed_units": m["graphics"]["crash_loop"]["degraded_failed_units"],
                 "verified": True,
             },
         },
