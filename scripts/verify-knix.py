@@ -585,6 +585,51 @@ def main() -> int:
             "a crashed compositor is recovered by guest systemd and verified",
             "resilience contract: %s" % resilience_errors[:4])
 
+    # I22 -- the desktop must paint real guest-owned pixels, not merely report
+    # that a compositor is running. The guest picks the colour; the host only
+    # reads the standard virtio-gpu scanout through QMP.
+    framebuffer_errors = []
+    try:
+        m = json.loads((ROOT / "platform/image/manifest.json").read_text(
+            encoding="utf-8"))
+        fb = m.get("graphics", {}).get("framebuffer", {})
+        if (fb.get("owner") != "guest"
+                or fb.get("resolution") != [1280, 800]
+                or fb.get("samples") != 9
+                or fb.get("verify") != "platform/image/verify-framebuffer.py"
+                or "QMP screendump (P6)" not in fb.get("capture", "")):
+            framebuffer_errors.append("manifest graphics.framebuffer drifted")
+        tool = (ROOT / "platform/image/verify-framebuffer.py").read_text(
+            encoding="utf-8")
+        for token in ("--self-test", "FRAMEBUFFER VERIFY OK",
+                      "FRAMEBUFFER PATTERN:", "qmp_capabilities",
+                      '"format": "ppm"', "guest pattern"):
+            if token not in tool:
+                framebuffer_errors.append("verify-framebuffer.py lost %s" % token)
+        ast.parse(tool, filename="platform/image/verify-framebuffer.py")
+        guest = (ROOT / "platform/image/verify-graphics.sh").read_text(
+            encoding="utf-8")
+        for token in ("FRAMEBUFFER PATTERN:", "/dev/urandom", "solid_color",
+                      "FRAMEBUFFER PATTERN PAINTED"):
+            if token not in guest:
+                framebuffer_errors.append("verify-graphics.sh lost %s" % token)
+        bs = (ROOT / "platform/image/build.sh").read_text(encoding="utf-8")
+        for token in ("FRAMEBUFFER VERIFY OK", "verify-framebuffer.py",
+                      '"framebuffer": {'):
+            if token not in bs:
+                framebuffer_errors.append("build.sh lost %s" % token)
+        workflow = (ROOT / ".github/workflows/knix-contract.yml").read_text(
+            encoding="utf-8")
+        if "verify-framebuffer.py --self-test" not in workflow:
+            framebuffer_errors.append("CI lost the framebuffer self-test step")
+    except (OSError, SyntaxError, ValueError) as exc:
+        framebuffer_errors.append("unreadable framebuffer contract: %s" % exc)
+    if "| I22 |" not in readme:
+        framebuffer_errors.append("README lost I22")
+    require(not framebuffer_errors,
+            "the guest-painted framebuffer is proven from real pixels",
+            "framebuffer contract: %s" % framebuffer_errors[:4])
+
     # the only collection mechanism still parses
     try:
         ast.parse((ROOT / "scripts" / "collect-knix.py").read_text(encoding="utf-8"))

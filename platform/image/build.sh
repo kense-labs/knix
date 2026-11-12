@@ -9,7 +9,8 @@
 # summary. This script consumes those artifacts and assembles the single image.
 # It refuses to assemble anything that differs from the kernel/rootfs baseline
 # locked in manifest.json, boots once, verifies identity, UEFI self-boot and
-# real sway rendering on the guest-owned DRM device, then writes the receipt.
+# real sway rendering on the guest-owned DRM device, captures the guest-painted
+# framebuffer headlessly through QMP, then writes the receipt.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -218,7 +219,7 @@ echo "=== cold boot verification (UEFI self-boot) ==="
 # and a fresh EDK2 variable store. A reachable ssh proves the image self-boots.
 # The cold boot must exercise the standard graphics path: the guest owns the
 # DRM device and its input, while the display backend stays headless.
-KNIX_DEV_DIR="$DEV" DISK="$IMAGE" \
+KNIX_DEV_DIR="$DEV" DISK="$IMAGE" QMP="$DEV/qmp.sock" \
   GPU=virtio-gpu-pci GPU_INPUT="virtio-keyboard-pci virtio-tablet-pci" \
   DISPLAY_BACKEND=none \
   "$NATIVE_BOOT" > "$DEV/boot-verify.log" 2>&1 &
@@ -308,6 +309,22 @@ if [ "$GRAPHICS_RC" -ne 0 ] \
   echo "AUTOSTART/RESILIENCE/SESSION/GRAPHICS VERIFY FAILED (rc=$GRAPHICS_RC)" >&2
   exit 1
 fi
+
+echo "=== framebuffer verification (guest-drawn pixels via QMP) ==="
+# The guest chose a colour from its own entropy and sway painted it. Read the
+# standard virtio-gpu scanout headlessly and require those exact pixels plus
+# the guest swaybar before a receipt is allowed to exist. No host-side drawing.
+FRAMEBUFFER_RC=0
+python3 "$ROOT/platform/image/verify-framebuffer.py" \
+  --qmp "$DEV/qmp.sock" --out "$DEV/framebuffer.ppm" \
+  --log "$DEV/guest-graphics.log" --summary "$DEV/framebuffer-verify.json" \
+  > "$DEV/framebuffer-verify.log" 2>&1 || FRAMEBUFFER_RC=$?
+cat "$DEV/framebuffer-verify.log"
+if [ "$FRAMEBUFFER_RC" -ne 0 ] \
+   || ! grep -q 'FRAMEBUFFER VERIFY OK' "$DEV/framebuffer-verify.log"; then
+  echo "FRAMEBUFFER VERIFY FAILED (rc=$FRAMEBUFFER_RC)" >&2
+  exit 1
+fi
 stop_guest
 
 echo "=== receipt ==="
@@ -319,6 +336,9 @@ identity = json.loads((root / "platform/identity/identity.json").read_text())
 m = json.loads((root / "platform/image/manifest.json").read_text())
 kernel = json.loads((dev / "kernel-build.json").read_text())
 rootfs = json.loads((dev / "rootfs-build.json").read_text())
+framebuffer = json.loads((dev / "framebuffer-verify.json").read_text())
+if framebuffer.get("verified") is not True or framebuffer.get("owner") != "guest":
+    sys.exit("FRAMEBUFFER DRIFT: the pixel proof was not produced by the guest")
 baseline = m["build_baseline"]
 baseline_sha = hashlib.sha256(
     json.dumps(baseline, sort_keys=True, separators=(",", ":")).encode()
@@ -352,6 +372,18 @@ receipt = {
         "owner": m["graphics"]["owner"],
         "verify": m["graphics"]["verify"],
         "verified": True,
+        "framebuffer": {
+            "owner": m["graphics"]["framebuffer"]["owner"],
+            "capture": m["graphics"]["framebuffer"]["capture"],
+            "verify": m["graphics"]["framebuffer"]["verify"],
+            "width": framebuffer["width"],
+            "height": framebuffer["height"],
+            "pattern_sha256": framebuffer["pattern_sha256"],
+            "samples": framebuffer["samples"],
+            "matching_samples": framebuffer["matching_samples"],
+            "bar_pixels": framebuffer["bar_pixels"],
+            "verified": True,
+        },
         "session": {
             "user": m["graphics"]["session_user"],
             "seat_manager": m["graphics"]["seat_manager"],

@@ -27,6 +27,9 @@ jobs:
       - name: Baseline refresh policy
         run: python3 scripts/refresh-baseline.py --self-test
 
+      - name: Framebuffer pixel gate
+        run: python3 platform/image/verify-framebuffer.py --self-test
+
       - name: Run-backend contract gate
         run: python3 scripts/verify-backends.py
 
@@ -133,6 +136,24 @@ jobs:
           if (sr.get("owner") != "guest" or sr.get("restart") != "on-failure"
                   or sr.get("start_limit_burst") != 5):
               bad.append(("session.json", "resilience contract drifted"))
+          fb = gfx.get("framebuffer", {})
+          if (fb.get("owner") != "guest"
+                  or fb.get("resolution") != [1280, 800]
+                  or fb.get("samples") != 9
+                  or fb.get("verify") != "platform/image/verify-framebuffer.py"
+                  or "QMP screendump (P6)" not in fb.get("capture", "")):
+              bad.append(("graphics.framebuffer", "guest-owned pixel contract missing"))
+          fb_rel = fb.get("verify", "")
+          if not (root / fb_rel).is_file():
+              bad.append(("graphics.framebuffer.verify", fb_rel, "missing"))
+          else:
+              f = (root / fb_rel).read_text()
+              for token in ("--self-test", "FRAMEBUFFER VERIFY OK",
+                            "FRAMEBUFFER SELF-TEST OK", "FRAMEBUFFER PATTERN:",
+                            "qmp_capabilities", "screendump", '"format": "ppm"',
+                            "guest pattern", "too dark to prove a repaint"):
+                  if token not in f:
+                      bad.append(("verify-framebuffer.py", token, "missing"))
           verify_rel = gfx.get("verify", "")
           if not (root / verify_rel).is_file():
               bad.append(("graphics.verify", verify_rel, "missing"))
@@ -151,8 +172,14 @@ jobs:
                             'Created GL FBO', '"app_id": "foot"', 'New wlr_surface'):
                   if token not in v:
                       bad.append(("verify-graphics.sh", token, "missing"))
+              for token in ("FRAMEBUFFER PATTERN:", "/dev/urandom", "solid_color",
+                            "FRAMEBUFFER PATTERN PAINTED"):
+                  if token not in v:
+                      bad.append(("verify-graphics.sh", token, "missing"))
               if 'systemctl stop "$UNIT_NAME"' in v:
                   bad.append(("verify-graphics.sh", "must not stop the boot-time session"))
+          if '-qmp "unix:$QMP,server=on,wait=off"' not in dev:
+              bad.append(("boot-dev.sh", "headless QMP screendump socket missing"))
           kernel_recipe = (root / "platform/image/build-kernel.sh").read_text()
           for token in ("CONFIG_DRM_VIRTIO_GPU=m", "CONFIG_VIRTIO_INPUT=m",
                         "CONFIG_DRM_VIRTIO_GPU_KMS=y"):
@@ -190,7 +217,9 @@ jobs:
           for token in ("AUTOSTART VERIFY OK", "RESILIENCE VERIFY OK",
                         "is-enabled knix-session.service",
                         "is-active knix-session.service", '"autostart"',
-                        '"resilience": {'):
+                        '"resilience": {', "FRAMEBUFFER VERIFY OK",
+                        "verify-framebuffer.py", "framebuffer-verify.json",
+                        '"framebuffer": {', "QMP=\"$DEV/qmp.sock\""):
               if token not in build:
                   bad.append(("build.sh", token, "missing"))
           if "! systemctl is-enabled" in build:
@@ -208,7 +237,7 @@ jobs:
                   print("CONTRACT DRIFT:", b, file=sys.stderr)
               sys.exit(1)
           print("CONTRACT OK: %d inputs, locked kernel/rootfs baseline, one artifact, "
-                "%d build stages, UEFI self-boot + graphics" %
+                "%d build stages, UEFI self-boot + graphics + framebuffer" %
                 (checked, len(m.get("build_stages", []))))
           PY
 
@@ -221,7 +250,9 @@ jobs:
         run: |
           python3 - <<'PY'
           import ast, pathlib
-          for p in sorted(pathlib.Path("scripts").glob("*.py")):
+          recipes = sorted(pathlib.Path("scripts").glob("*.py"))
+          recipes += sorted(pathlib.Path("platform/image").glob("*.py"))
+          for p in recipes:
               ast.parse(p.read_text(), filename=str(p))
               print("parsed", p)
           PY

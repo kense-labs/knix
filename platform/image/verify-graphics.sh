@@ -229,5 +229,26 @@ grep -q 'New wlr_surface' "$LOG" \
   || fail "no Wayland surface was committed after the restart"
 echo "RESILIENCE VERIFY OK: systemd restarted sway $OLD_PID -> $NEW_PID as knix with DRM, libinput and a Wayland client"
 
+echo "=== guest-owned framebuffer pattern ==="
+# The compositor proves it painted by choosing a colour from guest entropy and
+# putting it on the scanout. The host only reads that colour from this log and
+# reads the standard virtio-gpu framebuffer through QMP; it draws nothing.
+# Close the verification terminals first so no window covers the sample grid.
+swaymsg '[app_id="foot"] kill' >/dev/null 2>&1 || true
+sleep 1
+RAW="$(od -An -N3 -tx1 /dev/urandom | tr -d ' \n')"
+# Lift every channel into 0x40..0xff: a near-black colour would be
+# indistinguishable from an uninitialised framebuffer on the host side.
+PATTERN_R=$((0x${RAW:0:2} % 0xC0 + 0x40))
+PATTERN_G=$((0x${RAW:2:2} % 0xC0 + 0x40))
+PATTERN_B=$((0x${RAW:4:2} % 0xC0 + 0x40))
+PATTERN_HEX="$(printf '%02x%02x%02x' "$PATTERN_R" "$PATTERN_G" "$PATTERN_B")"
+swaymsg "output * background #$PATTERN_HEX solid_color" \
+  | grep -q '"success": true' \
+  || fail "sway refused to paint the guest-chosen framebuffer pattern"
+sleep 2
+echo "FRAMEBUFFER PATTERN: $PATTERN_HEX"
+echo "FRAMEBUFFER PATTERN PAINTED: the restarted sway painted #$PATTERN_HEX"
+
 echo "SESSION VERIFY OK: knix/seatd, $(grep -c '"identifier"' "$RUNTIME/knix-inputs.json") libinput devices"
 echo "GRAPHICS VERIFY OK"

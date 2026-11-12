@@ -59,7 +59,7 @@ def main() -> int:
         errors.append("publish_surface in contract.json drifted: %s" % surface)
 
     # A backend must never become an image build input: switching launch paths
-    # cannot change the receipt, the locked baseline or the 17 pinned inputs.
+    # cannot change the receipt, the locked baseline or the pinned inputs.
     try:
         m = json.loads(MANIFEST.read_text(encoding="utf-8"))
         for group, entries in m.get("inputs", {}).items():

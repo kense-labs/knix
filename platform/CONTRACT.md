@@ -31,7 +31,7 @@
 - 后端切换不得改写 `repos.json` 的 `count`、`snapshot_sha`、`snapshot_files`、`snapshot_bytes` 与 `totals`。
 - `repos/` 是只读派生产物；`platform/` 不写入 `repos/`。
 - 新增后端须同时更新 `platform/contract.json` 的 `backends`、本节的表格与 `platform/backends/<name>/backend.json`。
-- 后端真源不是镜像构建输入，不得进入 `platform/image/manifest.json` 的 `inputs`；切换后端不改变 17 个输入哈希、锁定基线与 receipt。
+- 后端真源不是镜像构建输入，不得进入 `platform/image/manifest.json` 的 `inputs`；切换后端不改变全部输入哈希、锁定基线与 receipt。
 - `unverified_backends` 列出的后端保持 `verified: false`、`status: contract-only`、无 `boot_entry`，并声明 deferred 项；门禁拒绝其假称完成。
 
 ## Capability rules
@@ -40,6 +40,7 @@
 - 私有扩展必须可关闭，并声明降级路径；所有 guest 侧 feature 默认关闭。
 - 宿主状态不得作为 knix 的硬件语义：网络、电源、显示、音量、输入与认证由 knix 自己的抽象决定。
 - 认证权威、界面所有权与输入语义留在 Guest。
+- 构建期的像素验收只允许主机通过 QEMU 标准 QMP `screendump` **只读**观察 virtio-gpu scanout；测试图案由 Guest 自选并绘制，主机不得绘制、注入或配置 guest 界面内容，抓帧产物不进入发布面。
 
 ## Host adapters
 

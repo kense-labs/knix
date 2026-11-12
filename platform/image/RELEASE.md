@@ -140,6 +140,35 @@ process. `RESILIENCE VERIFY OK` is required before the receipt is written, and
 a broken compositor from looping forever; on the `GPU=none` path the DRM
 condition stays unmet and the unit remains inactive.
 
+## Framebuffer pixel proof
+
+Reporting a compositor process is not proof that a desktop was painted. After
+crash recovery, `verify-graphics.sh` closes the verification terminals, picks a
+24-bit colour from the guest's own `/dev/urandom` (each channel is lifted into
+`0x40..0xff` so a black screen cannot pass) and asks the restarted sway to
+paint it with `output * background #RRGGBB solid_color` on the standard
+`virtio-gpu-pci` scanout. It prints `FRAMEBUFFER PATTERN: <hex>` into the guest
+verification log.
+
+`platform/image/verify-framebuffer.py` then runs on the build host. It reads
+that colour, opens the QEMU QMP unix socket exposed by `boot-dev.sh`, sends
+`qmp_capabilities` and `screendump` with `format=ppm`, and parses the resulting
+P6 framebuffer. It requires 1280x800, maxval 255, a complete pixel payload, all
+nine sample points to equal the guest-reported colour exactly, and at least 100
+non-pattern pixels in the top bar (the guest swaybar). Only after
+`FRAMEBUFFER VERIFY OK` does `build.sh --build` stop the guest and write the
+receipt; the receipt's `graphics.framebuffer` section carries the pattern
+digest, sample counts and swaybar pixel count. The host draws nothing, injects
+nothing and configures nothing inside the guest -- it only reads a standard
+QEMU scanout. `GPU=none` has no scanout and keeps the serial console and ssh as
+the full fallback path.
+
+CI runs `python3 platform/image/verify-framebuffer.py --self-test`, which
+exercises 12 synthetic-PPM cases (control, wrong colour, black scanout, no
+swaybar, wrong resolution, wrong maxval, truncated pixels, malformed pattern
+log) without QEMU, a seed image or a VM. Framebuffer captures (`.ppm`) stay in
+`$KNIX_DEV_DIR` and are refused as repository artifacts by `verify-repro.py`.
+
 ## Reproducibility baseline
 
 The kernel and rootfs are built inside an arm64 Linux guest, so their summaries
@@ -159,7 +188,7 @@ ships in `knix.img`. The receipt carries `baseline.sha256`,
 `baseline.kernel`, `baseline.rootfs`, `baseline.package_lock` and
 `baseline.verified`.
 
-`scripts/verify-repro.py` is the read-only CI gate: all 17 pinned inputs, the
+`scripts/verify-repro.py` is the read-only CI gate: all pinned inputs, the
 baseline structure, lockfile ordering and uniqueness, executable build stages,
 the receipt contract, the baseline-refresh policy and the absence of binary
 artifacts under `platform/`, `scripts/`, `docs/` and `.github/`. It needs no
@@ -204,7 +233,7 @@ paths: guest-owned capability, device, authentication, interface and input
 semantics, one `knix.img`, one publish surface, read-only kernel-fragment and
 boot-chain references, no host adapters and no build artifacts. Backend truths
 are deliberately absent from `manifest.json.inputs`, so switching launch paths
-never changes the 17 pinned inputs, `build_baseline` or the receipt.
+never changes the pinned inputs, `build_baseline` or the receipt.
 
 `vm-virt` is the verified path. `native-apple` stays `contract-only` with
 `verified: false` and no boot entry; bare-metal boot, the external ABI mapping,

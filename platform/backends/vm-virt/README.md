@@ -14,7 +14,7 @@
 KNIX_DEV_DIR=../knix-m0 platform/backends/vm-virt/boot-dev.sh
 ```
 
-`boot-native.sh` 是唯一镜像 `knix.img` 的 UEFI 自举入口：不挂 `-kernel`、不挂 seed ISO、不用宿主内核或 initrd，并默认挂上 `virtio-gpu-pci` 与 virtio 键鼠。Guest 内核里的 `virtio-gpu` / `virtio_input` 模块由 `/etc/modules-load.d/knix-graphics.conf` 加载，sway 直接在 guest 自有的 `/dev/dri/card0` 上渲染；宿主只提供标准 virtio 设备，不提供图形能力。镜像开机即由 guest 自己的 `multi-user.target` 启动 `knix-session.service`，不依赖任何宿主启动器。`build.sh --build` 的冷启验收先证明该 unit 已 `enabled` + `active`，`platform/image/verify-graphics.sh` 只 restart 取干净日志：sway 以 `knix` 非 root 用户经 seatd 运行，`WLR_BACKENDS=drm,libinput` 让 `get_inputs` 报告 virtio 键鼠，同时验证 GBM / GL 实际渲染与 Wayland 客户端窗口。设置 `GPU=none GPU_INPUT=none` 可回到纯串口 + SSH 路径，unit 的 `ConditionPathExists=/dev/dri/card0` 不触发（实测 enabled 但 inactive、0 失败单元）；`DISPLAY_BACKEND=cocoa` 可在 macOS 上打开窗口看到这个桌面。helper / 构建路径显式关闭图形设备，避免 PCI probe 顺序改变构建盘设备名。
+`boot-native.sh` 是唯一镜像 `knix.img` 的 UEFI 自举入口：不挂 `-kernel`、不挂 seed ISO、不用宿主内核或 initrd，并默认挂上 `virtio-gpu-pci` 与 virtio 键鼠。Guest 内核里的 `virtio-gpu` / `virtio_input` 模块由 `/etc/modules-load.d/knix-graphics.conf` 加载，sway 直接在 guest 自有的 `/dev/dri/card0` 上渲染；宿主只提供标准 virtio 设备，不提供图形能力。镜像开机即由 guest 自己的 `multi-user.target` 启动 `knix-session.service`，不依赖任何宿主启动器。`build.sh --build` 的冷启验收先证明该 unit 已 `enabled` + `active`，`platform/image/verify-graphics.sh` 只 restart 取干净日志：sway 以 `knix` 非 root 用户经 seatd 运行，`WLR_BACKENDS=drm,libinput` 让 `get_inputs` 报告 virtio 键鼠，同时验证 GBM / GL 实际渲染与 Wayland 客户端窗口。设置 `GPU=none GPU_INPUT=none` 可回到纯串口 + SSH 路径，unit 的 `ConditionPathExists=/dev/dri/card0` 不触发（实测 enabled 但 inactive、0 失败单元）；`DISPLAY_BACKEND=cocoa` 可在 macOS 上打开窗口看到这个桌面。headless 验收不需要开窗：`boot-dev.sh` 始终暴露一个 QMP unix socket，`build.sh --build` 在关掉 guest 之前用 `screendump format=ppm` 只读导出 virtio-gpu scanout，核对 guest 自选并绘制的纯色图案与 swaybar 像素（`FRAMEBUFFER VERIFY OK`）。主机只观察，不绘制也不注入 guest 内容。helper / 构建路径显式关闭图形设备，避免 PCI probe 顺序改变构建盘设备名。
 
 ```bash
 KNIX_DEV_DIR=../knix-m0 platform/backends/vm-virt/boot-native.sh
@@ -36,6 +36,8 @@ KNIX_DEV_DIR=../knix-m0 platform/backends/vm-virt/boot-native.sh
 | `EXTRA_DISK` | 空 | 单个附加 virtio 盘，用于 guest 内原生内核/rootfs 构建 |
 | `EXTRA_DISKS` | 空 | 空格分隔的多个附加盘，按给定顺序成为 `/dev/vdc`、`/dev/vdd`…；`build.sh --build` 用它同时挂构建盘与目标镜像 |
 | `SSH_PORT` | `2222` | 用户态网络端口转发 |
+| `QMP` | `$KNIX_DEV_DIR/qmp.sock` | QEMU QMP unix socket；headless `screendump` 像素验收从这里读取标准 virtio-gpu scanout |
+| `PIDFILE` / `SERIAL` | `$KNIX_DEV_DIR/qemu.pid` / `serial.log` | QEMU 进程与串口日志，可覆盖以便并行使用 overlay 副本 |
 
 启动脚本只决定启动路径。身份、认证、界面、输入与设备语义全部在 Guest；宿主只提供标准 virtio。固件使用 QEMU 自带的 `edk2-aarch64-code.fd` + `edk2-arm-vars.fd`；Debian `qemu-efi-aarch64` 的 AAVMF 变体会停在固件阶段，不作为本后端的固件来源。
 

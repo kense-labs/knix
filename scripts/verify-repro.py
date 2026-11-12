@@ -20,7 +20,7 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 MANIFEST = ROOT / "platform" / "image" / "manifest.json"
 HEX64 = re.compile(r"^[0-9a-f]{64}$")
-ARTIFACT_SUFFIXES = (".img", ".qcow2", ".zst", ".fd", ".iso", ".ko")
+ARTIFACT_SUFFIXES = (".img", ".qcow2", ".zst", ".fd", ".iso", ".ko", ".ppm")
 ARTIFACT_NAMES = {"BUILD-RECEIPT.json", "BUILD-RECEIPT.json.sha256", "knix-Image"}
 SCAN_DIRS = ("platform", "scripts", "docs", ".github")
 
@@ -157,6 +157,41 @@ def main() -> int:
         for token in ("RESILIENCE VERIFY OK", "systemctl kill --signal=SIGKILL"):
             if token not in vgfx:
                 errors.append("verify-graphics.sh lost recovery proof: %s" % token)
+
+    # 5b. the framebuffer pixel proof is guest-owned and build-time enforced
+    fb = gfx.get("framebuffer", {})
+    if (fb.get("owner") != "guest"
+            or fb.get("resolution") != [1280, 800]
+            or fb.get("samples") != 9
+            or fb.get("verify") != "platform/image/verify-framebuffer.py"
+            or "QMP screendump (P6)" not in fb.get("capture", "")):
+        errors.append("graphics.framebuffer pixel contract drifted")
+    fb_tool = ROOT / "platform/image/verify-framebuffer.py"
+    if not fb_tool.is_file():
+        errors.append("framebuffer verification recipe is missing")
+    else:
+        text = fb_tool.read_text(encoding="utf-8")
+        try:
+            compile(text, str(fb_tool), "exec")
+        except SyntaxError as exc:
+            errors.append("verify-framebuffer.py does not parse: %s" % exc)
+        for token in ("--self-test", '"format": "ppm"', "FRAMEBUFFER VERIFY OK",
+                      "FRAMEBUFFER PATTERN:", "qmp_capabilities", "screendump",
+                      "guest pattern"):
+            if token not in text:
+                errors.append("verify-framebuffer.py lost %s" % token)
+    vgfx_path = ROOT / gfx.get("verify", "")
+    if vgfx_path.is_file():
+        text = vgfx_path.read_text(encoding="utf-8")
+        for token in ("FRAMEBUFFER PATTERN:", "/dev/urandom", "solid_color",
+                      "FRAMEBUFFER PATTERN PAINTED"):
+            if token not in text:
+                errors.append("verify-graphics.sh lost %s" % token)
+    build_text = (ROOT / "platform/image/build.sh").read_text(encoding="utf-8")
+    for token in ("FRAMEBUFFER VERIFY OK", "verify-framebuffer.py",
+                  '"framebuffer": {', "framebuffer-verify.json"):
+        if token not in build_text:
+            errors.append("build.sh lost framebuffer gate: %s" % token)
 
     # 6. the receipt records the same baseline the build verifies
     build = (ROOT / "platform/image/build.sh").read_text(encoding="utf-8")
