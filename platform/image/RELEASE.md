@@ -126,6 +126,20 @@ hard gate of `build.sh --build`. The receipt records the device, the verificatio
 recipe, `graphics.verified` and a `graphics.session` section with the user, seat
 manager, unit, backends, input devices and the `autostart` result.
 
+The unit also owns crash recovery: `Restart=on-failure`, `RestartSec=2`,
+`StartLimitBurst=5` and `StartLimitIntervalSec=30` are written by
+`assemble-native.sh` and declared by `session.json.resilience`. After the first
+full verification, `verify-graphics.sh` sends SIGKILL with
+`systemctl kill --signal=SIGKILL`, waits for a different `MainPID`, then requires
+the restarted sway to be owned by `knix` and to again report the virtio input
+devices, an active `Virtual-1` DRM output, freshly allocated GBM buffers and a
+GL FBO, plus a `foot` window committing a `wlr_surface`. `ExecStartPre` truncates
+the sway log on every start, so those render markers can only come from the new
+process. `RESILIENCE VERIFY OK` is required before the receipt is written, and
+`graphics.session.resilience.verified` records the result. The start limit stops
+a broken compositor from looping forever; on the `GPU=none` path the DRM
+condition stays unmet and the unit remains inactive.
+
 ## Reproducibility baseline
 
 The kernel and rootfs are built inside an arm64 Linux guest, so their summaries

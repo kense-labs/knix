@@ -146,5 +146,88 @@ grep -q 'New wlr_surface' "$LOG" || fail "no Wayland surface was committed"
 echo "Wayland surfaces: $(grep -c 'New wlr_surface' "$LOG")"
 echo "wayland client: foot window present"
 
+echo "=== guest-owned crash recovery ==="
+# Restart=on-failure was declared but never proven. Kill the compositor and
+# require the guest's own systemd -- not this script -- to bring back a complete
+# knix-owned session before build.sh is allowed to write the receipt.
+grep -q '^Restart=on-failure$' "$UNIT" \
+  || fail "the session unit has no guest-owned restart policy"
+grep -q '^RestartSec=2$' "$UNIT" \
+  || fail "the session unit lost its 2s restart backoff"
+grep -q '^StartLimitBurst=5$' "$UNIT" \
+  || fail "the session unit has no start-rate burst limit"
+grep -q '^StartLimitIntervalSec=30$' "$UNIT" \
+  || fail "the session unit has no start-rate interval"
+OLD_PID="$(systemctl show -p MainPID --value "$UNIT_NAME")"
+[ -n "$OLD_PID" ] && [ "$OLD_PID" != 0 ] \
+  || fail "the session has no main process to kill"
+systemctl kill --signal=SIGKILL "$UNIT_NAME" \
+  || fail "could not signal the compositor"
+sleep 1
+# ExecStartPre truncates the sway log on every start, so the GBM/GL/surface
+# markers checked below can only come from the restarted process.
+rm -f "$RUNTIME"/sway-ipc.*.sock "$RUNTIME"/wayland-? 2>/dev/null || true
+NEW_PID=""
+for _ in $(seq 1 30); do
+  STATE="$(systemctl is-active "$UNIT_NAME" 2>/dev/null || true)"
+  PID="$(systemctl show -p MainPID --value "$UNIT_NAME" 2>/dev/null || true)"
+  if [ "$STATE" = active ] && [ -n "$PID" ] && [ "$PID" != 0 ] \
+     && [ "$PID" != "$OLD_PID" ]; then
+    NEW_PID="$PID"
+    break
+  fi
+  sleep 1
+done
+[ -n "$NEW_PID" ] \
+  || fail "guest systemd did not restart sway after SIGKILL (old pid $OLD_PID)"
+NEW_SOCK=""
+for _ in $(seq 1 25); do
+  NEW_SOCK="$(ls "$RUNTIME"/sway-ipc.*.sock 2>/dev/null | head -1 || true)"
+  [ -n "$NEW_SOCK" ] && break
+  sleep 1
+done
+[ -n "$NEW_SOCK" ] || fail "the restarted sway never opened its IPC socket"
+export SWAYSOCK="$NEW_SOCK"
+WD="$(ls -t "$RUNTIME"/wayland-? 2>/dev/null | head -1 || true)"
+[ -n "$WD" ] && export WAYLAND_DISPLAY="${WD##*/}"
+SWAY_USER="$(ps -o user= -C sway | head -1 | tr -d ' ')"
+[ "$SWAY_USER" = knix ] \
+  || fail "the restarted compositor is $SWAY_USER, not knix"
+systemctl is-active "$UNIT_NAME" | grep -qx active \
+  || fail "the restarted session unit is not active"
+swaymsg -t get_inputs > "$RUNTIME/knix-inputs.json"
+grep -q '"identifier"' "$RUNTIME/knix-inputs.json" \
+  || fail "the restarted session lost its libinput devices"
+grep -q 'QEMU Virtio Keyboard' "$RUNTIME/knix-inputs.json" \
+  || fail "the restarted session lost the virtio keyboard"
+grep -q 'QEMU Virtio Tablet' "$RUNTIME/knix-inputs.json" \
+  || fail "the restarted session lost the virtio tablet"
+swaymsg -t get_outputs > "$RUNTIME/knix-outputs.json"
+grep -q '"name": "Virtual-1"' "$RUNTIME/knix-outputs.json" \
+  || fail "the restarted session has no DRM output"
+grep -q '"active": true' "$RUNTIME/knix-outputs.json" \
+  || fail "the restarted session has no active DRM output"
+for _ in $(seq 1 10); do
+  if grep -q 'Allocated .* GBM buffer' "$LOG" \
+     && grep -q 'Created GL FBO' "$LOG"; then
+    break
+  fi
+  sleep 1
+done
+grep -q 'Allocated .* GBM buffer' "$LOG" \
+  || fail "the restarted sway allocated no GBM framebuffer"
+grep -q 'Created GL FBO' "$LOG" \
+  || fail "the restarted sway created no GL render target"
+swaymsg exec /usr/bin/foot > /dev/null
+for _ in $(seq 1 10); do
+  swaymsg -t get_tree | grep -q '"app_id": "foot"' && break
+  sleep 1
+done
+swaymsg -t get_tree | grep -q '"app_id": "foot"' \
+  || fail "foot did not get a Wayland window after the restart"
+grep -q 'New wlr_surface' "$LOG" \
+  || fail "no Wayland surface was committed after the restart"
+echo "RESILIENCE VERIFY OK: systemd restarted sway $OLD_PID -> $NEW_PID as knix with DRM, libinput and a Wayland client"
+
 echo "SESSION VERIFY OK: knix/seatd, $(grep -c '"identifier"' "$RUNTIME/knix-inputs.json") libinput devices"
 echo "GRAPHICS VERIFY OK"

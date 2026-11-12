@@ -189,6 +189,10 @@ After=systemd-logind.service seatd.service systemd-user-sessions.service systemd
 Wants=seatd.service systemd-udev-settle.service
 ConditionPathExists=/dev/dri/card0
 ConditionPathExists=/dev/dri/renderD128
+# A crashed compositor is recovered by the guest's own systemd, not by a host
+# launcher. The start limit stops a restart loop from burning the CPU forever.
+StartLimitIntervalSec=30
+StartLimitBurst=5
 
 [Service]
 Type=simple
@@ -208,7 +212,7 @@ ExecStart=/usr/bin/sway -d
 StandardOutput=append:/run/knix-session.log
 StandardError=append:/run/knix-session.log
 Restart=on-failure
-RestartSec=1
+RestartSec=2
 
 [Install]
 WantedBy=multi-user.target
@@ -269,6 +273,15 @@ test -L "$ENABLE_LINK" \
   || { echo "session enablement symlink drifted" >&2; exit 1; }
 grep -q '^WantedBy=multi-user.target$' "$MOUNT/etc/systemd/system/knix-session.service" \
   || { echo "session unit lost its [Install] target" >&2; exit 1; }
+# session.json declares resilience: the unit must recover a crashed compositor
+# itself, with an explicit start-rate limit so a broken sway cannot loop forever.
+UNIT_FILE="$MOUNT/etc/systemd/system/knix-session.service"
+for directive in 'Restart=on-failure' 'RestartSec=2' \
+                 'StartLimitBurst=5' 'StartLimitIntervalSec=30'; do
+  grep -q "^$directive\$" "$UNIT_FILE" \
+    || { echo "session unit lost its resilience directive: $directive" >&2; exit 1; }
+done
+echo "resilience: Restart=on-failure / RestartSec=2 / StartLimitBurst=5 in 30s (guest systemd)"
 echo "seat: seatd + drm,libinput + guest udev rule (autostart enabled)"
 echo -n "brand assets: "; ls -1 "$MOUNT/usr/share/knix/brand" | wc -l
 ls -lh "$MOUNT/boot/vmlinuz-$KVER-knix"

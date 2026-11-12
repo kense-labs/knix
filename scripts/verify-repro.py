@@ -143,8 +143,20 @@ def main() -> int:
         errors.append("guest-owned graphics contract drifted")
     if gfx.get("autostart") is not True or gfx.get("autostart_target") != "multi-user.target":
         errors.append("guest-owned autostart contract drifted")
+    res = gfx.get("resilience", {})
+    if (res.get("owner") != "guest" or res.get("manager") != "systemd"
+            or res.get("restart") != "on-failure"
+            or res.get("restart_sec") != 2
+            or res.get("start_limit_burst") != 5
+            or res.get("start_limit_interval_sec") != 30):
+        errors.append("guest-owned crash-recovery contract drifted")
     if not (ROOT / gfx.get("verify", "")).is_file():
         errors.append("graphics verification recipe is missing")
+    else:
+        vgfx = (ROOT / gfx["verify"]).read_text(encoding="utf-8")
+        for token in ("RESILIENCE VERIFY OK", "systemctl kill --signal=SIGKILL"):
+            if token not in vgfx:
+                errors.append("verify-graphics.sh lost recovery proof: %s" % token)
 
     # 6. the receipt records the same baseline the build verifies
     build = (ROOT / "platform/image/build.sh").read_text(encoding="utf-8")

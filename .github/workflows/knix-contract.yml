@@ -122,13 +122,26 @@ jobs:
                   or gfx.get("autostart_target") != "multi-user.target"
                   or gfx.get("autostart_condition") != "/dev/dri/card0"):
               bad.append(("graphics", "autostart contract drifted"))
+          res = gfx.get("resilience", {})
+          if (res.get("owner") != "guest" or res.get("manager") != "systemd"
+                  or res.get("restart") != "on-failure"
+                  or res.get("restart_sec") != 2
+                  or res.get("start_limit_burst") != 5
+                  or res.get("start_limit_interval_sec") != 30):
+              bad.append(("graphics.resilience", "recovery contract drifted"))
+          sr = session_doc.get("resilience", {})
+          if (sr.get("owner") != "guest" or sr.get("restart") != "on-failure"
+                  or sr.get("start_limit_burst") != 5):
+              bad.append(("session.json", "resilience contract drifted"))
           verify_rel = gfx.get("verify", "")
           if not (root / verify_rel).is_file():
               bad.append(("graphics.verify", verify_rel, "missing"))
           else:
               v = (root / verify_rel).read_text()
               for token in ('GRAPHICS VERIFY OK', 'SESSION VERIFY OK',
-                            'AUTOSTART VERIFY OK', 'is-enabled', 'is-active',
+                            'AUTOSTART VERIFY OK', 'RESILIENCE VERIFY OK',
+                            'systemctl kill --signal=SIGKILL',
+                            'is-enabled', 'is-active',
                             'systemctl restart',
                             'multi-user.target.wants/knix-session.service',
                             'knix-session.service', 'seatd',
@@ -152,6 +165,14 @@ jobs:
                         "sudo,video,input,render", "TAG+=\"seat\""):
               if token not in assemble:
                   bad.append(("assemble-native.sh", token, "missing"))
+          # Check the actual unit heredoc, not just the validation loop that
+          # happens to contain the same directive literals.
+          unit_heredoc = assemble.split("<<'UNIT'\n", 1)[-1].split("\nUNIT\n", 1)[0]
+          unit_lines = [line.strip() for line in unit_heredoc.splitlines()]
+          for directive in ("Restart=on-failure", "RestartSec=2",
+                            "StartLimitBurst=5", "StartLimitIntervalSec=30"):
+              if directive not in unit_lines:
+                  bad.append(("assemble-native.sh", "unit heredoc lost " + directive))
           if "virtio-gpu-pci" not in native or "GPU_INPUT" not in native:
               bad.append(("boot-native.sh", "graphics devices not enabled"))
           for token in ('GPU="${GPU-none}"', 'GPU_INPUT="${GPU_INPUT-none}"',
@@ -166,8 +187,10 @@ jobs:
                   or "knix-session.service" not in build
                   or '"session"' not in build):
               bad.append(("build.sh", "seatd session verification is not wired in"))
-          for token in ("AUTOSTART VERIFY OK", "is-enabled knix-session.service",
-                        "is-active knix-session.service", '"autostart"'):
+          for token in ("AUTOSTART VERIFY OK", "RESILIENCE VERIFY OK",
+                        "is-enabled knix-session.service",
+                        "is-active knix-session.service", '"autostart"',
+                        '"resilience": {'):
               if token not in build:
                   bad.append(("build.sh", token, "missing"))
           if "! systemctl is-enabled" in build:

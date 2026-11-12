@@ -30,6 +30,17 @@
     "owner": "guest",
     "fallback": "GPU=none leaves the DRM condition unmet; the serial console and ssh remain the full fallback path"
   },
+  "resilience": {
+    "owner": "guest",
+    "manager": "systemd",
+    "unit": "/etc/systemd/system/knix-session.service",
+    "restart": "on-failure",
+    "restart_sec": 2,
+    "start_limit_burst": 5,
+    "start_limit_interval_sec": 30,
+    "verification": "build.sh --build sends SIGKILL to the compositor and requires guest systemd to bring back a knix-owned sway with DRM, libinput and a real Wayland client before writing the receipt",
+    "fallback": "GPU=none keeps the DRM condition unmet; repeated crashes stop at the systemd start limit and leave the serial console and ssh available"
+  },
   "input": { "backend": "libinput", "owner": "guest" },
   "output": { "backend": "drm", "device": "virtio-gpu", "owner": "guest" },
   "authentication": { "owner": "guest" },

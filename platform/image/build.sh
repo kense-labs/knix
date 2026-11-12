@@ -302,9 +302,10 @@ $SSH knix@127.0.0.1 'sudo bash -s' \
 cat "$DEV/guest-graphics.log"
 if [ "$GRAPHICS_RC" -ne 0 ] \
    || ! grep -q 'AUTOSTART VERIFY OK' "$DEV/guest-graphics.log" \
+   || ! grep -q 'RESILIENCE VERIFY OK' "$DEV/guest-graphics.log" \
    || ! grep -q 'SESSION VERIFY OK' "$DEV/guest-graphics.log" \
    || ! grep -q 'GRAPHICS VERIFY OK' "$DEV/guest-graphics.log"; then
-  echo "AUTOSTART/SESSION/GRAPHICS VERIFY FAILED (rc=$GRAPHICS_RC)" >&2
+  echo "AUTOSTART/RESILIENCE/SESSION/GRAPHICS VERIFY FAILED (rc=$GRAPHICS_RC)" >&2
   exit 1
 fi
 stop_guest
@@ -362,6 +363,15 @@ receipt = {
                 "enabled": m["graphics"]["autostart"],
                 "target": m["graphics"]["autostart_target"],
                 "condition": m["graphics"]["autostart_condition"],
+                "verified": True,
+            },
+            "resilience": {
+                "owner": m["graphics"]["resilience"]["owner"],
+                "manager": m["graphics"]["resilience"]["manager"],
+                "restart": m["graphics"]["resilience"]["restart"],
+                "restart_sec": m["graphics"]["resilience"]["restart_sec"],
+                "start_limit_burst": m["graphics"]["resilience"]["start_limit_burst"],
+                "start_limit_interval_sec": m["graphics"]["resilience"]["start_limit_interval_sec"],
                 "verified": True,
             },
         },

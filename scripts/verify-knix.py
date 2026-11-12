@@ -541,6 +541,50 @@ def main() -> int:
             "baseline refresh requires an explicit, scoped proposal",
             "refresh policy: %s" % refresh_errors[:4])
 
+    # I21 -- the boot-time session must survive a compositor crash through the
+    # guest's own systemd, and that recovery must be a build-time hard gate.
+    resilience_errors = []
+    try:
+        session_doc = json.loads((ROOT / "platform/identity/session.json").read_text(
+            encoding="utf-8"))
+        res = session_doc.get("resilience", {})
+        if (res.get("owner") != "guest" or res.get("manager") != "systemd"
+                or res.get("restart") != "on-failure"
+                or res.get("restart_sec") != 2
+                or res.get("start_limit_burst") != 5
+                or res.get("start_limit_interval_sec") != 30):
+            resilience_errors.append("session.json resilience contract drifted")
+        mres = json.loads((ROOT / "platform/image/manifest.json").read_text(
+            encoding="utf-8")).get("graphics", {}).get("resilience", {})
+        if (mres.get("owner") != "guest" or mres.get("restart") != "on-failure"
+                or mres.get("start_limit_burst") != 5):
+            resilience_errors.append("manifest graphics.resilience drifted")
+        assemble = (ROOT / "platform/image/assemble-native.sh").read_text(
+            encoding="utf-8")
+        unit_heredoc = assemble.split("<<'UNIT'\n", 1)[-1].split("\nUNIT\n", 1)[0]
+        unit_lines = [line.strip() for line in unit_heredoc.splitlines()]
+        for token in ("Restart=on-failure", "RestartSec=2",
+                      "StartLimitBurst=5", "StartLimitIntervalSec=30"):
+            if token not in unit_lines:
+                resilience_errors.append("session unit heredoc lost %s" % token)
+        verify = (ROOT / "platform/image/verify-graphics.sh").read_text(
+            encoding="utf-8")
+        for token in ("RESILIENCE VERIFY OK", "systemctl kill --signal=SIGKILL",
+                      "NEW_PID", "the restarted sway allocated no GBM framebuffer"):
+            if token not in verify:
+                resilience_errors.append("verify-graphics.sh lost %s" % token)
+        bs = (ROOT / "platform/image/build.sh").read_text(encoding="utf-8")
+        for token in ("RESILIENCE VERIFY OK", '"resilience": {'):
+            if token not in bs:
+                resilience_errors.append("build.sh lost %s" % token)
+    except (OSError, ValueError) as exc:
+        resilience_errors.append("unreadable resilience contract: %s" % exc)
+    if "| I21 |" not in readme:
+        resilience_errors.append("README lost I21")
+    require(not resilience_errors,
+            "a crashed compositor is recovered by guest systemd and verified",
+            "resilience contract: %s" % resilience_errors[:4])
+
     # the only collection mechanism still parses
     try:
         ast.parse((ROOT / "scripts" / "collect-knix.py").read_text(encoding="utf-8"))
