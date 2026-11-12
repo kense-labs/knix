@@ -22,9 +22,17 @@
     "groups": ["video", "input", "render"],
     "rule": "the compositor runs as knix through the guest's own seatd; both wlroots backends must be listed or libinput is never loaded; virtio input devices need a guest-owned seat tag"
   },
+  "autostart": {
+    "enabled": true,
+    "target": "multi-user.target",
+    "unit": "/etc/systemd/system/knix-session.service",
+    "condition": "/dev/dri/card0",
+    "owner": "guest",
+    "fallback": "GPU=none leaves the DRM condition unmet; the serial console and ssh remain the full fallback path"
+  },
   "input": { "backend": "libinput", "owner": "guest" },
   "output": { "backend": "drm", "device": "virtio-gpu", "owner": "guest" },
   "authentication": { "owner": "guest" },
   "host_adapters": "none",
-  "fallback": "the session unit requires /dev/dri/card0; GPU=none on boot-dev.sh keeps the serial console and ssh as the full fallback path"
+  "fallback": "the guest's own systemd target starts the session at boot when the DRM device exists; GPU=none leaves that condition unmet and keeps the serial console and ssh available"
 }

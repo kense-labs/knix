@@ -81,6 +81,7 @@
 | I16 | 内核与 rootfs 的构建基线锁定在仓内；`verify-repro.py` 可解析，仓内无二进制构建产物 |
 | I17 | 每个运行后端都有机器真源；`verify-backends.py` 校验后端只是启动路径，Guest 拥有全部能力 |
 | I18 | 图形会话以 `knix` 非 root 用户经 guest 的 seatd 运行；`drm,libinput` 双 backend 与真实输入设备由验收硬校验 |
+| I19 | `knix-session.service` 由 guest 自己的 `multi-user.target` 开机启用；验收在任何脚本触碰 unit 之前证明它已 active，`GPU=none` 仍是完整降级路径 |
 
 ## Operations
 
@@ -149,12 +150,13 @@ python3 scripts/verify-knix.py && git add -A && git commit -m "chore: refresh sn
 - 构建盘的 `out/vmlinux.o` 曾被早期 VM 强停截断；`build-kernel.sh` 现用 ELF section header 检测并清空重建，已产出 773 个 `.ko` 与 `modules.dep`。启动所需的 virtio、ext4、PL011 与 devtmpfs 仍全部编入内核，挂载根分区不依赖可加载模块。
 - `wireless-regdb` 默认指向发行版签名的 `regulatory.db`，与内核内置的上游密钥不匹配；`assemble-native.sh` 把 alternative 切到 `-upstream` 变体，冷启日志已无 `cfg80211` 告警。
 - 图形栈已在 guest 内实测：`boot-native.sh` 默认提供 `virtio-gpu-pci` 与 virtio 键鼠，`build-kernel.sh` 额外编入 `virtio-gpu` / `virtio_input` 模块，`assemble-native.sh` 写 `modules-load.d/knix-graphics.conf`。冷启后 `/dev/dri/card0`、`renderD128`、`card0-Virtual-1` 均由 guest 内核拥有；`platform/image/verify-graphics.sh` 在 guest 内经 `knix-session.service` 以 `knix` 用户启动 sway 1.10.1，验证 `Virtual-1` 1280×800 active、GBM buffer 与 GL FBO 分配、`foot` 拿到 Wayland 窗口并提交 `wlr_surface`。`build.sh --build` 把该脚本作为冷启验收的硬门槛，receipt 记录 `graphics.verified`。
-- 图形会话以 `knix` 非 root 用户经 guest 自有的 seatd 运行：`assemble-native.sh` 写 `71-knix-virtio-input.rules` 给 virtio 键鼠打 `seat` / `uaccess` 标签、把 knix 加入 `video` / `input` / `render` 组，并装默认关闭的 `knix-session.service`；unit 用 `WLR_BACKENDS=drm,libinput` 同时加载两个 backend，只写 `drm` 会把 libinput backend 一起排除。`verify-graphics.sh` 通过 `systemctl start` 启动该 unit，硬校验 sway 运行用户为 knix、`get_inputs` 返回 QEMU Virtio Keyboard / Tablet、GBM / GL 与 foot 窗口。`GPU=none` 时 unit 的 `ConditionPathExists=/dev/dri/card0` 不触发，串口与 SSH 仍是完整降级路径；receipt 记录 `graphics.session`。
+- 镜像开机即进入自有桌面：`knix-session.service` 由 guest 自己的 `multi-user.target` 启用（`session.json` 的 `autostart` 契约），不依赖宿主启动器或验收脚本。`assemble-native.sh` 写 `71-knix-virtio-input.rules` 给 virtio 键鼠打 `seat` / `uaccess` 标签、把 knix 加入 `video` / `input` / `render` 组，并建 enablement symlink；unit 用 `WLR_BACKENDS=drm,libinput` 同时加载两个 backend，只写 `drm` 会排除 libinput。`build.sh` 的 guest verify 在任何验证脚本触碰 unit 之前硬校验它已 `enabled` + `active`；`verify-graphics.sh` 只 `systemctl restart` 取干净日志，校验 sway 属 knix、`get_inputs` 返回 QEMU Virtio Keyboard / Tablet、GBM / GL 与 foot 窗口，输出 `AUTOSTART VERIFY OK`。`GPU=none` 时 `ConditionPathExists=/dev/dri/card0` 不满足，串口与 SSH 仍是完整降级路径；receipt 记录 `graphics.session.autostart`。
 - `manifest.json` 的 `build_baseline` 锁定 guest 侧内核与 rootfs 的全部摘要；`platform/image/package-versions.txt` 是 388 个已安装包的版本锁定清单，属于构建输入而非构建产物。`build.sh --build` 在组装前逐字段比对两份摘要与 lockfile 字节，任一漂移即中止并提示刷新基线；receipt 记录 `baseline.sha256` 与 `baseline.verified`。
+- receipt 的 `sha256` / `bytes` 只对应构建完成那一刻的 `knix.img`：qcow2 是可写盘，任何后续启动都会写入 journal 与运行期状态。构建完成后不再启动发布镜像；需要额外验收（如 `GPU=none` 降级）时，用 `qemu-img create -b knix.img` 建 overlay 副本启动，并在门禁里复核 backing 镜像字节未变。
 - `scripts/verify-repro.py` 是仓内可复现性门禁：校验全部 17 个输入哈希、基线字段完整性、lockfile 排序与唯一性、构建阶段脚本可执行、UEFI / 图形契约、receipt 字段，以及 `platform/` / `scripts/` / `docs/` / `.github/` 内没有 `.img` / `.qcow2` / `.zst` 等二进制构建产物。
 - 两个后端的 `backend.json` 不是镜像构建输入：切换后端不改变 17 个输入哈希、锁定基线与 receipt。`native-apple` 的 `verified` 为 false 且无 `boot_entry`，门禁拒绝它假称完成；两个后端的能力、设备、认证、界面与输入语义都归 Guest。
 - CI 校验仓内契约、输入哈希、锁定基线、后端边界与脚本语法；seed qcow2、QEMU/HVF 启动、镜像组装、UEFI 冷启与 sway 实际渲染仍在本机执行，CI 不跑完整构建。
-- Deferred：能力协商清单、宿主适配器参考实现、统计与清单生成器入库、定期重采调度、增量 diff 报告、CI 内完整构建与基线自动刷新。
+- Deferred：能力协商清单、宿主适配器参考实现、统计与清单生成器入库、定期重采调度、增量 diff 报告、`DISPLAY_BACKEND=cocoa` 下的人工目视验证与多用户登录策略、CI 内完整构建与基线自动刷新。
 
 ## Scale and status
 

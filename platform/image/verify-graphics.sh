@@ -1,8 +1,9 @@
 #!/bin/bash
-# Verify that knix owns a real DRM device, a guest seat and a non-root Wayland
-# session with real libinput devices. Executed INSIDE the arm64 guest as root,
-# streamed over ssh by build.sh. The guest has no python3 or jq, so every
-# check is plain shell.
+# Verify that a booted knix image already has its own non-root Wayland session,
+# a guest seat and real libinput devices on a guest-owned DRM device. Executed
+# INSIDE the arm64 guest as root, streamed over ssh by build.sh. This script
+# never enables or launches the session; it only proves the guest did so at boot.
+# The guest has no python3 or jq, so every check is plain shell.
 set -euo pipefail
 
 LOG="${KNIX_SESSION_LOG:-/run/knix-session.log}"
@@ -46,10 +47,20 @@ for grp in video input render; do
 done
 [ -f "$UDEV_RULE" ] || fail "missing guest-owned virtio input udev rule"
 [ -f "$UNIT" ] || fail "missing guest-owned session unit"
-# The unit is deliberately not enabled: verification starts it on demand, and
-# ConditionPathExists keeps GPU=none boots on the serial/ssh fallback path.
-! systemctl is-enabled "$UNIT_NAME" >/dev/null 2>&1 \
-  || fail "the session unit must stay disabled until verification"
+# session.json declares autostart: the guest's own multi-user.target enables the
+# unit, so a booted knix image already has a compositor before this script runs.
+ENABLE_LINK="/etc/systemd/system/multi-user.target.wants/knix-session.service"
+[ -L "$ENABLE_LINK" ] || fail "missing guest-owned autostart symlink"
+[ "$(readlink "$ENABLE_LINK")" = "../knix-session.service" ] \
+  || fail "the autostart symlink drifted"
+systemctl is-enabled "$UNIT_NAME" 2>/dev/null | grep -qx enabled \
+  || fail "the session unit is not enabled by the guest's own target"
+systemctl is-active "$UNIT_NAME" 2>/dev/null | grep -qx active \
+  || fail "the session did not start by itself at boot"
+BOOT_USER="$(ps -o user= -C sway | head -1 | tr -d ' ')"
+[ "$BOOT_USER" = knix ] \
+  || fail "the boot-time compositor is $BOOT_USER, not knix"
+echo "AUTOSTART VERIFY OK: enabled by multi-user.target, active as knix at boot"
 for dev in "$KBD" "$MOUSE"; do
   udevadm info --query=all --name="$dev" | grep -q '^E: TAGS=.*:seat:' \
     || fail "$dev has no seat tag"
@@ -67,10 +78,12 @@ command -v swaymsg > /dev/null || fail "swaymsg is missing"
 [ -x /usr/bin/foot ] || fail "foot is missing"
 
 echo "=== knix owns the running compositor ==="
+# The unit already started at boot. Restart it so verification owns a clean log
+# and a known compositor state, then leave the session running when we are done.
+rm -f "$RUNTIME"/sway-ipc.*.sock "$RUNTIME"/wayland-? 2>/dev/null || true
 systemctl reset-failed "$UNIT_NAME" 2>/dev/null || true
-systemctl start "$UNIT_NAME" || fail "the knix session unit did not start"
+systemctl restart "$UNIT_NAME" || fail "the knix session unit did not restart"
 cleanup() {
-  systemctl stop "$UNIT_NAME" >/dev/null 2>&1 || true
   systemctl reset-failed "$UNIT_NAME" >/dev/null 2>&1 || true
 }
 trap cleanup EXIT

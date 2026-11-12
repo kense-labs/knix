@@ -14,7 +14,7 @@
 KNIX_DEV_DIR=../knix-m0 platform/backends/vm-virt/boot-dev.sh
 ```
 
-`boot-native.sh` 是唯一镜像 `knix.img` 的 UEFI 自举入口：不挂 `-kernel`、不挂 seed ISO、不用宿主内核或 initrd，并默认挂上 `virtio-gpu-pci` 与 virtio 键鼠。Guest 内核里的 `virtio-gpu` / `virtio_input` 模块由 `/etc/modules-load.d/knix-graphics.conf` 加载，sway 直接在 guest 自有的 `/dev/dri/card0` 上渲染；宿主只提供标准 virtio 设备，不提供图形能力。`build.sh --build` 的冷启验收用 `platform/image/verify-graphics.sh` 启动 guest 自有的 `knix-session.service`：sway 以 `knix` 非 root 用户经 seatd 运行，`WLR_BACKENDS=drm,libinput` 让 `get_inputs` 报告 virtio 键鼠，同时验证 GBM / GL 实际渲染与 Wayland 客户端窗口。设置 `GPU=none GPU_INPUT=none` 可回到纯串口 + SSH 路径，unit 的 `ConditionPathExists=/dev/dri/card0` 不会触发；helper / 构建路径显式关闭图形设备，避免 PCI probe 顺序改变构建盘设备名。
+`boot-native.sh` 是唯一镜像 `knix.img` 的 UEFI 自举入口：不挂 `-kernel`、不挂 seed ISO、不用宿主内核或 initrd，并默认挂上 `virtio-gpu-pci` 与 virtio 键鼠。Guest 内核里的 `virtio-gpu` / `virtio_input` 模块由 `/etc/modules-load.d/knix-graphics.conf` 加载，sway 直接在 guest 自有的 `/dev/dri/card0` 上渲染；宿主只提供标准 virtio 设备，不提供图形能力。镜像开机即由 guest 自己的 `multi-user.target` 启动 `knix-session.service`，不依赖任何宿主启动器。`build.sh --build` 的冷启验收先证明该 unit 已 `enabled` + `active`，`platform/image/verify-graphics.sh` 只 restart 取干净日志：sway 以 `knix` 非 root 用户经 seatd 运行，`WLR_BACKENDS=drm,libinput` 让 `get_inputs` 报告 virtio 键鼠，同时验证 GBM / GL 实际渲染与 Wayland 客户端窗口。设置 `GPU=none GPU_INPUT=none` 可回到纯串口 + SSH 路径，unit 的 `ConditionPathExists=/dev/dri/card0` 不触发（实测 enabled 但 inactive、0 失败单元）；`DISPLAY_BACKEND=cocoa` 可在 macOS 上打开窗口看到这个桌面。helper / 构建路径显式关闭图形设备，避免 PCI probe 顺序改变构建盘设备名。
 
 ```bash
 KNIX_DEV_DIR=../knix-m0 platform/backends/vm-virt/boot-native.sh

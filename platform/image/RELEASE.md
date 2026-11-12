@@ -101,24 +101,27 @@ method, the ESP path and the `root=` append.
 `Virtual-1` connector; the compositor, session file and input semantics all
 live inside the image.
 
-The session is a guest-owned systemd unit, not a root shell.
-`assemble-native.sh` adds `knix` to the `video`, `input` and `render` groups,
-installs a guest-owned udev rule that tags PCI virtio input nodes `seat` and
-`uaccess`, and writes a disabled-by-default `knix-session.service`. The unit
-runs sway as `knix` through the guest's own `seatd` with
-`WLR_BACKENDS=drm,libinput` -- naming only `drm` excludes the libinput backend
-and leaves `swaymsg -t get_inputs` empty regardless of seat setup.
-`ConditionPathExists=/dev/dri/card0` keeps it off the `GPU=none` path.
+The session is a guest-owned systemd unit, not a root shell, and it is enabled
+by the guest's own `multi-user.target`: a booted `knix.img` already has a desktop
+before any verification script runs. `assemble-native.sh` adds `knix` to the
+`video`, `input` and `render` groups, installs a guest-owned udev rule that tags
+PCI virtio input nodes `seat` and `uaccess`, writes `knix-session.service` and
+creates the `multi-user.target.wants` enablement symlink. The unit runs sway as
+`knix` through the guest's own `seatd` with `WLR_BACKENDS=drm,libinput` -- naming
+only `drm` excludes the libinput backend and leaves `swaymsg -t get_inputs` empty
+regardless of seat setup. `ConditionPathExists=/dev/dri/card0` keeps it inactive
+on the `GPU=none` path while the serial console and ssh stay available.
 
-`platform/image/verify-graphics.sh` runs as root inside the cold-booted guest,
-starts that unit with `systemctl start`, and requires the sway process to belong
-to `knix`, `get_inputs` to report the QEMU Virtio Keyboard and Tablet, sway
-1.10.1 to allocate a GBM buffer and a GL FBO, an active 1280x800 output, and
-`foot` to get a real Wayland window that commits `wlr_surface` surfaces. It
-stops the unit on exit and is a hard gate of `build.sh --build`. The receipt
-records the device, the verification recipe, `graphics.verified` and a
-`graphics.session` section with the user, seat manager, unit, backends and
-input devices.
+`build.sh --build` checks `enabled` and `active` on the cold-booted guest before
+any verification script touches the unit. `platform/image/verify-graphics.sh`
+then runs as root, restarts the unit only to obtain a clean log, and requires the
+sway process to belong to `knix`, `get_inputs` to report the QEMU Virtio Keyboard
+and Tablet, sway 1.10.1 to allocate a GBM buffer and a GL FBO, an active 1280x800
+output, and `foot` to get a real Wayland window that commits `wlr_surface`
+surfaces. It emits `AUTOSTART VERIFY OK`, leaves the session running and is a
+hard gate of `build.sh --build`. The receipt records the device, the verification
+recipe, `graphics.verified` and a `graphics.session` section with the user, seat
+manager, unit, backends, input devices and the `autostart` result.
 
 ## Reproducibility baseline
 

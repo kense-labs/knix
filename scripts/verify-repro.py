@@ -141,13 +141,16 @@ def main() -> int:
     gfx = m.get("graphics", {})
     if gfx.get("owner") != "guest" or gfx.get("device") != "virtio-gpu-pci":
         errors.append("guest-owned graphics contract drifted")
+    if gfx.get("autostart") is not True or gfx.get("autostart_target") != "multi-user.target":
+        errors.append("guest-owned autostart contract drifted")
     if not (ROOT / gfx.get("verify", "")).is_file():
         errors.append("graphics verification recipe is missing")
 
     # 6. the receipt records the same baseline the build verifies
     build = (ROOT / "platform/image/build.sh").read_text(encoding="utf-8")
     for token in ("build_baseline", "BASELINE DRIFT", "package-versions.txt",
-                  '"baseline"', "graphics", "seed_sha512"):
+                  '"baseline"', "graphics", "seed_sha512",
+                  "AUTOSTART VERIFY OK", '"autostart"'):
         if token not in build:
             errors.append("build.sh lost receipt/verification field: %s" % token)
     recipe = (ROOT / "platform/image/build-rootfs.sh").read_text(encoding="utf-8")

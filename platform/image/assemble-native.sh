@@ -179,12 +179,14 @@ SUBSYSTEM=="input", KERNEL=="event*", ENV{ID_PATH}=="pci-*", \
 UDEV
 # The session is a guest-owned systemd unit, not a root shell. seatd provides
 # the seat; both wlroots backends are mandatory -- WLR_BACKENDS=drm alone
-# excludes libinput and leaves swaymsg -t get_inputs empty.
+# excludes libinput and leaves swaymsg -t get_inputs empty. The unit is enabled
+# by the guest's own multi-user.target: a booted knix image has a desktop
+# without any host-side launcher or verification script.
 cat > "$MOUNT/etc/systemd/system/knix-session.service" <<'UNIT'
 [Unit]
 Description=Knix Wayland session
-After=systemd-logind.service seatd.service systemd-user-sessions.service
-Wants=seatd.service
+After=systemd-logind.service seatd.service systemd-user-sessions.service systemd-modules-load.service systemd-udev-settle.service
+Wants=seatd.service systemd-udev-settle.service
 ConditionPathExists=/dev/dri/card0
 ConditionPathExists=/dev/dri/renderD128
 
@@ -211,8 +213,8 @@ RestartSec=1
 [Install]
 WantedBy=multi-user.target
 UNIT
-# Disabled by default: the verification recipe starts it explicitly, and the
-# ConditionPathExists keeps GPU=none boots on the serial/ssh path.
+# Auto-start is a guest-owned enablement symlink, never a host service. The
+# ConditionPathExists pair keeps GPU=none boots on the serial/ssh fallback.
 cat > "$MOUNT/etc/systemd/network/20-virtio.network" <<'NET'
 [Match]
 Name=en*
@@ -223,6 +225,10 @@ for svc in systemd-networkd.service ssh.service; do
   ln -sf "/lib/systemd/system/$svc" \
     "$MOUNT/etc/systemd/system/multi-user.target.wants/$svc"
 done
+# session.json declares autostart for multi-user.target. The symlink is relative
+# so it resolves inside the guest root after the disk becomes /dev/vda.
+ln -sf ../knix-session.service \
+  "$MOUNT/etc/systemd/system/multi-user.target.wants/knix-session.service"
 : > "$MOUNT/etc/machine-id"
 
 # ssh-keygen needs /dev/urandom, which a bare rootfs does not provide. Reuse the
@@ -256,9 +262,14 @@ test -f "$MOUNT/etc/udev/rules.d/71-knix-virtio-input.rules" \
   || { echo "missing guest-owned virtio input rule" >&2; exit 1; }
 test -f "$MOUNT/etc/systemd/system/knix-session.service" \
   || { echo "missing guest-owned session unit" >&2; exit 1; }
-! test -e "$MOUNT/etc/systemd/system/multi-user.target.wants/knix-session.service" \
-  || { echo "session unit must stay disabled until verification starts it" >&2; exit 1; }
-echo "seat: seatd + drm,libinput + guest udev rule (unit disabled)"
+ENABLE_LINK="$MOUNT/etc/systemd/system/multi-user.target.wants/knix-session.service"
+test -L "$ENABLE_LINK" \
+  || { echo "session unit is not enabled by multi-user.target" >&2; exit 1; }
+[ "$(readlink "$ENABLE_LINK")" = "../knix-session.service" ] \
+  || { echo "session enablement symlink drifted" >&2; exit 1; }
+grep -q '^WantedBy=multi-user.target$' "$MOUNT/etc/systemd/system/knix-session.service" \
+  || { echo "session unit lost its [Install] target" >&2; exit 1; }
+echo "seat: seatd + drm,libinput + guest udev rule (autostart enabled)"
 echo -n "brand assets: "; ls -1 "$MOUNT/usr/share/knix/brand" | wc -l
 ls -lh "$MOUNT/boot/vmlinuz-$KVER-knix"
 echo -n "kernel modules on disk: "; find "$MOUNT/lib/modules/$KVER" -type f -name '*.ko*' | wc -l

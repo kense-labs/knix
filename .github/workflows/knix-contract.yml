@@ -99,12 +99,24 @@ jobs:
               bad.append(("session.json", "seat provider drifted"))
           if "known_limitation" in gfx:
               bad.append(("graphics", "stale get_inputs limitation still declared"))
+          au = session_doc.get("autostart", {})
+          if (au.get("enabled") is not True or au.get("owner") != "guest"
+                  or au.get("target") != "multi-user.target"
+                  or au.get("condition") != "/dev/dri/card0"):
+              bad.append(("session.json", "autostart contract drifted"))
+          if (gfx.get("autostart") is not True
+                  or gfx.get("autostart_target") != "multi-user.target"
+                  or gfx.get("autostart_condition") != "/dev/dri/card0"):
+              bad.append(("graphics", "autostart contract drifted"))
           verify_rel = gfx.get("verify", "")
           if not (root / verify_rel).is_file():
               bad.append(("graphics.verify", verify_rel, "missing"))
           else:
               v = (root / verify_rel).read_text()
               for token in ('GRAPHICS VERIFY OK', 'SESSION VERIFY OK',
+                            'AUTOSTART VERIFY OK', 'is-enabled', 'is-active',
+                            'systemctl restart',
+                            'multi-user.target.wants/knix-session.service',
                             'knix-session.service', 'seatd',
                             '71-knix-virtio-input.rules',
                             'QEMU Virtio Keyboard', 'QEMU Virtio Tablet',
@@ -112,6 +124,8 @@ jobs:
                             'Created GL FBO', '"app_id": "foot"', 'New wlr_surface'):
                   if token not in v:
                       bad.append(("verify-graphics.sh", token, "missing"))
+              if 'systemctl stop "$UNIT_NAME"' in v:
+                  bad.append(("verify-graphics.sh", "must not stop the boot-time session"))
           kernel_recipe = (root / "platform/image/build-kernel.sh").read_text()
           for token in ("CONFIG_DRM_VIRTIO_GPU=m", "CONFIG_VIRTIO_INPUT=m",
                         "CONFIG_DRM_VIRTIO_GPU_KMS=y"):
@@ -138,6 +152,20 @@ jobs:
                   or "knix-session.service" not in build
                   or '"session"' not in build):
               bad.append(("build.sh", "seatd session verification is not wired in"))
+          for token in ("AUTOSTART VERIFY OK", "is-enabled knix-session.service",
+                        "is-active knix-session.service", '"autostart"'):
+              if token not in build:
+                  bad.append(("build.sh", token, "missing"))
+          if "! systemctl is-enabled" in build:
+              bad.append(("build.sh", "still asserts the session is disabled"))
+          for token in ("ln -sf ../knix-session.service",
+                        "multi-user.target.wants/knix-session.service",
+                        "WantedBy=multi-user.target",
+                        "systemd-udev-settle.service"):
+              if token not in assemble:
+                  bad.append(("assemble-native.sh", token, "missing"))
+          if "session unit must stay disabled" in assemble:
+              bad.append(("assemble-native.sh", "stale disabled-by-default assertion"))
           if bad:
               for b in bad:
                   print("CONTRACT DRIFT:", b, file=sys.stderr)

@@ -468,6 +468,52 @@ def main() -> int:
             "guest-owned seatd session is verified with real libinput devices",
             "session contract: %s" % seat_errors[:4])
 
+    # I19 -- autologin is real: the guest's own target enables the session unit,
+    # and verification proves it was already active before any script touched it.
+    autostart_errors = []
+    try:
+        au = json.loads((ROOT / "platform" / "identity" / "session.json")
+                        .read_text(encoding="utf-8")).get("autostart", {})
+        if au.get("enabled") is not True or au.get("owner") != "guest":
+            autostart_errors.append("autostart is not a guest-owned enabled contract")
+        if au.get("target") != "multi-user.target":
+            autostart_errors.append("autostart target drifted")
+        if au.get("condition") != "/dev/dri/card0":
+            autostart_errors.append("autostart lost its DRM condition / GPU=none fallback")
+        gfx = json.loads((ROOT / "platform" / "image" / "manifest.json")
+                         .read_text(encoding="utf-8")).get("graphics", {})
+        if (gfx.get("autostart") is not True
+                or gfx.get("autostart_target") != "multi-user.target"
+                or gfx.get("autostart_condition") != "/dev/dri/card0"):
+            autostart_errors.append("image manifest lost the autostart contract")
+        asm = (ROOT / "platform" / "image" / "assemble-native.sh").read_text(
+            encoding="utf-8")
+        for token in ("multi-user.target.wants/knix-session.service",
+                      "ln -sf ../knix-session.service",
+                      "WantedBy=multi-user.target"):
+            if token not in asm:
+                autostart_errors.append("assemble-native.sh lost %s" % token)
+        vg = (ROOT / "platform" / "image" / "verify-graphics.sh").read_text(
+            encoding="utf-8")
+        for token in ("AUTOSTART VERIFY OK", "is-enabled", "is-active",
+                      "systemctl restart"):
+            if token not in vg:
+                autostart_errors.append("verify-graphics.sh lost %s" % token)
+        if 'systemctl stop "$UNIT_NAME"' in vg:
+            autostart_errors.append("verification must not stop the boot-time session")
+        bs = (ROOT / "platform" / "image" / "build.sh").read_text(encoding="utf-8")
+        for token in ("AUTOSTART VERIFY OK", "is-enabled knix-session.service",
+                      "is-active knix-session.service", '"autostart"'):
+            if token not in bs:
+                autostart_errors.append("build.sh lost %s" % token)
+    except (OSError, ValueError) as exc:
+        autostart_errors.append("unreadable autostart contract: %s" % exc)
+    if "| I19 |" not in readme:
+        autostart_errors.append("README lost I19")
+    require(not autostart_errors,
+            "the image boots into its own guest-owned desktop",
+            "autostart contract: %s" % autostart_errors[:4])
+
     # the only collection mechanism still parses
     try:
         ast.parse((ROOT / "scripts" / "collect-knix.py").read_text(encoding="utf-8"))
