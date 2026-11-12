@@ -13,9 +13,18 @@
     "QT_QPA_PLATFORM": "wayland",
     "MOZ_ENABLE_WAYLAND": "1"
   },
+  "seat_provider": {
+    "manager": "seatd",
+    "owner": "guest",
+    "unit": "/etc/systemd/system/knix-session.service",
+    "udev_rule": "/etc/udev/rules.d/71-knix-virtio-input.rules",
+    "backends": ["drm", "libinput"],
+    "groups": ["video", "input", "render"],
+    "rule": "the compositor runs as knix through the guest's own seatd; both wlroots backends must be listed or libinput is never loaded; virtio input devices need a guest-owned seat tag"
+  },
   "input": { "backend": "libinput", "owner": "guest" },
   "output": { "backend": "drm", "device": "virtio-gpu", "owner": "guest" },
   "authentication": { "owner": "guest" },
   "host_adapters": "none",
-  "fallback": "serial console and ssh remain available when no GPU is present"
+  "fallback": "the session unit requires /dev/dri/card0; GPU=none on boot-dev.sh keeps the serial console and ssh as the full fallback path"
 }

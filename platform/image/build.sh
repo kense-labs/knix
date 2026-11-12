@@ -242,6 +242,15 @@ lsmod | grep -q br_netfilter
 [ "$(systemctl --failed --no-legend | wc -l)" -eq 0 ]
 test ! -e /var/lib/cloud
 test -x /usr/bin/sway
+# The guest owns its seat: the compositor runs as knix through seatd, with a
+# guest-owned udev rule and a disabled-by-default session unit.
+systemctl is-active seatd.service | grep -qx active
+for grp in video input render; do
+  id -nG knix | tr ' ' '\n' | grep -qx "$grp"
+done
+test -f /etc/udev/rules.d/71-knix-virtio-input.rules
+test -f /etc/systemd/system/knix-session.service
+! systemctl is-enabled knix-session.service > /dev/null 2>&1
 # The self-boot path must be real: the kernel command line comes from the
 # loader entry on the ESP, not from QEMU, and the ESP payload is present.
 grep -q 'root=/dev/vda2' /proc/cmdline
@@ -287,8 +296,10 @@ GRAPHICS_RC=0
 $SSH knix@127.0.0.1 'sudo bash -s' \
   < "$ROOT/platform/image/verify-graphics.sh" > "$DEV/guest-graphics.log" 2>&1 || GRAPHICS_RC=$?
 cat "$DEV/guest-graphics.log"
-if [ "$GRAPHICS_RC" -ne 0 ] || ! grep -q 'GRAPHICS VERIFY OK' "$DEV/guest-graphics.log"; then
-  echo "GRAPHICS VERIFY FAILED (rc=$GRAPHICS_RC)" >&2
+if [ "$GRAPHICS_RC" -ne 0 ] \
+   || ! grep -q 'SESSION VERIFY OK' "$DEV/guest-graphics.log" \
+   || ! grep -q 'GRAPHICS VERIFY OK' "$DEV/guest-graphics.log"; then
+  echo "SESSION/GRAPHICS VERIFY FAILED (rc=$GRAPHICS_RC)" >&2
   exit 1
 fi
 stop_guest
@@ -335,6 +346,14 @@ receipt = {
         "owner": m["graphics"]["owner"],
         "verify": m["graphics"]["verify"],
         "verified": True,
+        "session": {
+            "user": m["graphics"]["session_user"],
+            "seat_manager": m["graphics"]["seat_manager"],
+            "unit": m["graphics"]["unit"],
+            "backends": m["graphics"]["backends"],
+            "input_devices": m["graphics"]["input_devices"],
+            "verified": True,
+        },
     },
     "baseline": {
         "sha256": baseline_sha,

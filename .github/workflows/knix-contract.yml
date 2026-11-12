@@ -87,12 +87,28 @@ jobs:
                   or gfx.get("device") != "virtio-gpu-pci"
                   or gfx.get("compositor") != "sway"):
               bad.append(("graphics", "guest-owned virtio-gpu/sway contract missing"))
+          if (gfx.get("seat_manager") != "seatd"
+                  or gfx.get("session_user") != "knix"
+                  or gfx.get("backends") != ["drm", "libinput"]):
+              bad.append(("graphics", "guest-owned seatd session contract missing"))
+          session_doc = json.loads((root / gfx.get("session", "")).read_text())
+          sp = session_doc.get("seat_provider", {})
+          if (sp.get("manager") != "seatd" or sp.get("owner") != "guest"
+                  or sp.get("backends") != ["drm", "libinput"]
+                  or sp.get("groups") != ["video", "input", "render"]):
+              bad.append(("session.json", "seat provider drifted"))
+          if "known_limitation" in gfx:
+              bad.append(("graphics", "stale get_inputs limitation still declared"))
           verify_rel = gfx.get("verify", "")
           if not (root / verify_rel).is_file():
               bad.append(("graphics.verify", verify_rel, "missing"))
           else:
               v = (root / verify_rel).read_text()
-              for token in ('GRAPHICS VERIFY OK', '/dev/dri/card0', 'GBM buffer',
+              for token in ('GRAPHICS VERIFY OK', 'SESSION VERIFY OK',
+                            'knix-session.service', 'seatd',
+                            '71-knix-virtio-input.rules',
+                            'QEMU Virtio Keyboard', 'QEMU Virtio Tablet',
+                            '/dev/dri/card0', 'GBM buffer',
                             'Created GL FBO', '"app_id": "foot"', 'New wlr_surface'):
                   if token not in v:
                       bad.append(("verify-graphics.sh", token, "missing"))
@@ -103,6 +119,11 @@ jobs:
                   bad.append(("build-kernel.sh", token, "missing"))
           if "knix-graphics.conf" not in assemble:
               bad.append(("assemble-native.sh", "graphics modules-load missing"))
+          for token in ("71-knix-virtio-input.rules", "knix-session.service",
+                        "WLR_BACKENDS=drm,libinput", "LIBSEAT_BACKEND=seatd",
+                        "sudo,video,input,render", "TAG+=\"seat\""):
+              if token not in assemble:
+                  bad.append(("assemble-native.sh", token, "missing"))
           if "virtio-gpu-pci" not in native or "GPU_INPUT" not in native:
               bad.append(("boot-native.sh", "graphics devices not enabled"))
           for token in ('GPU="${GPU-none}"', 'GPU_INPUT="${GPU_INPUT-none}"',
@@ -113,6 +134,10 @@ jobs:
           if ("verify-graphics.sh" not in build
                   or "GPU=none GPU_INPUT=none" not in build):
               bad.append(("build.sh", "graphics verification is not wired in"))
+          if ("SESSION VERIFY OK" not in build
+                  or "knix-session.service" not in build
+                  or '"session"' not in build):
+              bad.append(("build.sh", "seatd session verification is not wired in"))
           if bad:
               for b in bad:
                   print("CONTRACT DRIFT:", b, file=sys.stderr)

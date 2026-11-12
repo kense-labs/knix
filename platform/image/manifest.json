@@ -10,7 +10,7 @@
     "owner": "platform/image/",
     "location": "$KNIX_DEV_DIR/knix.img",
     "single": true,
-    "role": "GPT disk with a 512 MiB FAT32 EFI system partition and an ext4 root; native rootfs, self-built 7.2.15 kernel, 773 modules (including virtio-gpu and virtio-input), guest-owned initramfs, systemd-boot and a guest-owned DRM device"
+    "role": "GPT disk with a 512 MiB FAT32 EFI system partition and an ext4 root; native rootfs, self-built 7.2.15 kernel, 773 modules (including virtio-gpu and virtio-input), guest-owned initramfs, systemd-boot, a guest-owned DRM device and a guest-owned seatd session unit that runs sway as knix"
   },
   "inputs": {
     "seed": {
@@ -24,7 +24,7 @@
       "platform/identity/knix-release": "6f0d9eb37a09f1bbf9bb51241c9aa713b3f18566761b24dcd922fb1341c06535",
       "platform/identity/identity.json": "c216c0805f0dc4dd0976de4161786d4c3e16184fa4e63d24a0bab8e81659369b",
       "platform/identity/packages.json": "bb7996b818eda8521ab69b499037f6e63a20497cc737ecbcc328c60add389a2d",
-      "platform/identity/session.json": "a271f1e79b89397dae614e8351c2233e912365c03161271ef5d2698bb27078ff",
+      "platform/identity/session.json": "df64cf7c0043157e36a623841072836cdda03a0ab3f5c71e52ad64b6c5469582",
       "platform/identity/brand.manifest.json": "a6a3dbea169c6217d763ad9cf0898ca76425168994e9112982e8090de6c4db6f"
     },
     "brand_sha256": {
@@ -37,11 +37,11 @@
       "repos/linux/arch/arm64/configs/virt.config": "7cd8a9d570fd42fb3fce2724f7293f2f8e4bf24193acf315b5fbd676d1963319",
       "platform/image/build-kernel.sh": "b24314037ad1843e4055b210ad83fb6ad55631b56784a1df4f85acadc086e5f0",
       "platform/image/build-rootfs.sh": "1559ba0d87811baa4038e3a5ecadfa26b75e08603242ca76ec787328c92d0b94",
-      "platform/image/assemble-native.sh": "57b2892177bc06801a2431bf3a907f4a5ca1d21b306b6252beb7c0ecf2293bf6",
-      "platform/image/build.sh": "d2793c9d65b7bb684747c2b63bce69a50ad11a0456d7da0fdeabee8b1f3ad916"
+      "platform/image/assemble-native.sh": "32a24e2941bc819213d0da00c05cf777b84f82eb55cf56a0582f3565ff6ee120",
+      "platform/image/build.sh": "0f8d2bd0b48abe252c7ca11af1c81387b6aa4250250cac3a6a03998e944b2df0"
     },
     "verification_sha256": {
-      "platform/image/verify-graphics.sh": "d1461547c575b8fba088ffbdf8e3ed0d94b26712c84353982ed67ad6893d50d8"
+      "platform/image/verify-graphics.sh": "84df37d8a0ca0c2b75c97a783dad65b5b452116831a86c1a95fbac3e201ecea7"
     },
     "baseline_sha256": {
       "platform/image/package-versions.txt": "11417d90b6bfa1d8ad5e35e170fde4a4f5ec8c0a79c576bbabb617d37480e5bf"
@@ -60,8 +60,8 @@
       "graphics_modules": ["virtio-gpu", "virtio_input"]
     },
     "rootfs": {
-      "tarball_sha256": "96c54a3b0a802d5c43005dc62efc96372fbfa1d1a98148d9983f55c9f16abb89",
-      "tarball_bytes": 226808969,
+      "tarball_sha256": "c79bc430a9e7ac64467475b2e16bb3823c4ba79466ef95acbb41f36974df532f",
+      "tarball_bytes": 226810351,
       "package_set_sha256": "bb7996b818eda8521ab69b499037f6e63a20497cc737ecbcc328c60add389a2d",
       "package_count": 39,
       "package_versions_sha256": "11417d90b6bfa1d8ad5e35e170fde4a4f5ec8c0a79c576bbabb617d37480e5bf",
@@ -87,7 +87,9 @@
     "cfg80211 loads the upstream-signed regulatory.db without a rejection in dmesg",
     "/dev/dri/card0 and renderD128 are guest-owned DRM nodes bound to virtio_gpu",
     "card0-Virtual-1 exposes a 1280x800 mode and guest virtio keyboard/pointer nodes exist",
-    "sway 1.10.1 starts on the DRM backend; swaymsg reports Virtual-1 active",
+    "sway 1.10.1 starts as knix through the guest's seatd, from knix-session.service with WLR_BACKENDS=drm,libinput",
+    "swaymsg -t get_inputs reports the virtio keyboard and tablet; the guest udev rule tags both nodes seat+uaccess and knix holds video/input/render",
+    "swaymsg reports Virtual-1 active on the DRM backend",
     "the sway log shows an allocated GBM buffer and a created GL FBO",
     "foot connects as a Wayland client, appears in get_tree and commits wlr_surfaces",
     "serial console and ssh remain available with GPU=none on boot-dev.sh",
@@ -108,9 +110,14 @@
     "session": "platform/identity/session.json",
     "owner": "guest",
     "verify": "platform/image/verify-graphics.sh",
-    "fallback": "GPU=none on boot-dev.sh keeps the serial console and ssh",
-    "known_limitation": "the headless verification runs sway as root without a logind seat, so swaymsg -t get_inputs is empty; the guest kernel owns the virtio input nodes and a real seatd/logind session takes them over"
+    "fallback": "GPU=none on boot-dev.sh keeps the serial console and ssh; knix-session.service requires /dev/dri/card0",
+    "session_user": "knix",
+    "seat_manager": "seatd",
+    "unit": "/etc/systemd/system/knix-session.service",
+    "udev_rule": "/etc/udev/rules.d/71-knix-virtio-input.rules",
+    "backends": ["drm", "libinput"],
+    "input_devices": ["QEMU Virtio Keyboard", "QEMU Virtio Tablet"]
   },
-  "receipt": "platform/image/build.sh writes $KNIX_DEV_DIR/BUILD-RECEIPT.json (schema 3) with the artifact sha256, the canonical build_baseline sha256, graphics verification result and every build input digest",
+  "receipt": "platform/image/build.sh writes $KNIX_DEV_DIR/BUILD-RECEIPT.json (schema 3) with the artifact sha256, the canonical build_baseline sha256, the graphics.session verification result and every build input digest",
   "publish_surface": ["knix.img", "origin/main"]
 }

@@ -163,11 +163,56 @@ printf '127.0.0.1 localhost\n::1 localhost ip6-localhost ip6-loopback\n127.0.1.1
 printf 'nameserver 10.0.2.3\n' > "$MOUNT/etc/resolv.conf"
 install -d -m 0755 "$MOUNT/etc/systemd/network" \
                    "$MOUNT/etc/modules-load.d" \
-                   "$MOUNT/etc/systemd/system/multi-user.target.wants"
+                   "$MOUNT/etc/systemd/system" \
+                   "$MOUNT/etc/systemd/system/multi-user.target.wants" \
+                   "$MOUNT/etc/udev/rules.d"
 # The DRM and input devices are standard virtio, but explicitly loading their
 # modules keeps /dev/dri and /dev/input deterministic on a cold boot. The
 # compositor and the seat stay inside the guest.
 printf 'virtio-gpu\nvirtio_input\n' > "$MOUNT/etc/modules-load.d/knix-graphics.conf"
+# Generic seat rules leave PCI virtio keyboards and pointers without a seat
+# tag, so libinput's udev enumeration cannot see them. knix owns this rule.
+cat > "$MOUNT/etc/udev/rules.d/71-knix-virtio-input.rules" <<'UDEV'
+# knix owns the semantics of its virtio input devices.
+SUBSYSTEM=="input", KERNEL=="event*", ENV{ID_PATH}=="pci-*", \
+  ENV{ID_SEAT}="seat0", TAG+="seat", TAG+="uaccess"
+UDEV
+# The session is a guest-owned systemd unit, not a root shell. seatd provides
+# the seat; both wlroots backends are mandatory -- WLR_BACKENDS=drm alone
+# excludes libinput and leaves swaymsg -t get_inputs empty.
+cat > "$MOUNT/etc/systemd/system/knix-session.service" <<'UNIT'
+[Unit]
+Description=Knix Wayland session
+After=systemd-logind.service seatd.service systemd-user-sessions.service
+Wants=seatd.service
+ConditionPathExists=/dev/dri/card0
+ConditionPathExists=/dev/dri/renderD128
+
+[Service]
+Type=simple
+User=knix
+Group=knix
+ExecStartPre=+/usr/bin/install -d -m 0700 -o knix -g knix /run/user/1000
+ExecStartPre=+/usr/bin/sh -c ': > /run/knix-session.log'
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+Environment=XDG_SESSION_TYPE=wayland
+Environment=XDG_CURRENT_DESKTOP=Knix
+Environment=XDG_SESSION_DESKTOP=Knix
+Environment=QT_QPA_PLATFORM=wayland
+Environment=MOZ_ENABLE_WAYLAND=1
+Environment=WLR_BACKENDS=drm,libinput
+Environment=LIBSEAT_BACKEND=seatd
+ExecStart=/usr/bin/sway -d
+StandardOutput=append:/run/knix-session.log
+StandardError=append:/run/knix-session.log
+Restart=on-failure
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+# Disabled by default: the verification recipe starts it explicitly, and the
+# ConditionPathExists keeps GPU=none boots on the serial/ssh path.
 cat > "$MOUNT/etc/systemd/network/20-virtio.network" <<'NET'
 [Match]
 Name=en*
@@ -189,8 +234,11 @@ chmod 0644 "$MOUNT"/etc/ssh/ssh_host_*_key.pub
 chroot "$MOUNT" /bin/bash -s <<'CHROOT'
 set -e
 if ! id -u knix >/dev/null 2>&1; then
-  useradd -m -s /bin/bash -G sudo knix
+  useradd -m -s /bin/bash -G sudo,video,input,render knix
 fi
+# seatd's socket is root:video 0770; the input devices are root:input. These
+# groups let the non-root compositor take the fds from the guest's seat manager.
+usermod -aG sudo,video,input,render knix
 install -d -m 0700 /home/knix/.ssh
 chown -R knix:knix /home/knix/.ssh
 CHROOT
@@ -204,6 +252,13 @@ echo "=== verify assembled disk ==="
 grep -E '^(NAME|ID|VERSION)=' "$MOUNT/etc/os-release"
 test -x "$MOUNT/usr/bin/sway" && echo "sway: yes"
 test -f "$MOUNT/usr/share/wayland-sessions/knix.desktop" && echo "wayland session: yes"
+test -f "$MOUNT/etc/udev/rules.d/71-knix-virtio-input.rules" \
+  || { echo "missing guest-owned virtio input rule" >&2; exit 1; }
+test -f "$MOUNT/etc/systemd/system/knix-session.service" \
+  || { echo "missing guest-owned session unit" >&2; exit 1; }
+! test -e "$MOUNT/etc/systemd/system/multi-user.target.wants/knix-session.service" \
+  || { echo "session unit must stay disabled until verification starts it" >&2; exit 1; }
+echo "seat: seatd + drm,libinput + guest udev rule (unit disabled)"
 echo -n "brand assets: "; ls -1 "$MOUNT/usr/share/knix/brand" | wc -l
 ls -lh "$MOUNT/boot/vmlinuz-$KVER-knix"
 echo -n "kernel modules on disk: "; find "$MOUNT/lib/modules/$KVER" -type f -name '*.ko*' | wc -l

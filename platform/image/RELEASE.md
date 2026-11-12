@@ -99,15 +99,26 @@ method, the ESP path and the `root=` append.
 `virtio-tablet-pci` devices. The guest kernel loads its own `virtio-gpu` and
 `virtio_input` modules and owns `/dev/dri/card0`, `renderD128` and the
 `Virtual-1` connector; the compositor, session file and input semantics all
-live inside the image. `platform/image/verify-graphics.sh` runs as root inside
-the cold-booted guest and requires sway 1.10.1 to allocate a GBM buffer and a
-GL FBO, report an active 1280x800 output, and give `foot` a real Wayland window
-that commits `wlr_surface` surfaces. It is a hard gate of `build.sh --build`.
+live inside the image.
 
-The headless verification starts sway as root without a logind seat, so
-`swaymsg -t get_inputs` is empty. The virtio input nodes are still owned by the
-guest kernel; a real seatd/logind session takes them over. `GPU=none` on
-`boot-dev.sh` keeps the serial console and ssh as the full fallback path.
+The session is a guest-owned systemd unit, not a root shell.
+`assemble-native.sh` adds `knix` to the `video`, `input` and `render` groups,
+installs a guest-owned udev rule that tags PCI virtio input nodes `seat` and
+`uaccess`, and writes a disabled-by-default `knix-session.service`. The unit
+runs sway as `knix` through the guest's own `seatd` with
+`WLR_BACKENDS=drm,libinput` -- naming only `drm` excludes the libinput backend
+and leaves `swaymsg -t get_inputs` empty regardless of seat setup.
+`ConditionPathExists=/dev/dri/card0` keeps it off the `GPU=none` path.
+
+`platform/image/verify-graphics.sh` runs as root inside the cold-booted guest,
+starts that unit with `systemctl start`, and requires the sway process to belong
+to `knix`, `get_inputs` to report the QEMU Virtio Keyboard and Tablet, sway
+1.10.1 to allocate a GBM buffer and a GL FBO, an active 1280x800 output, and
+`foot` to get a real Wayland window that commits `wlr_surface` surfaces. It
+stops the unit on exit and is a hard gate of `build.sh --build`. The receipt
+records the device, the verification recipe, `graphics.verified` and a
+`graphics.session` section with the user, seat manager, unit, backends and
+input devices.
 
 ## Reproducibility baseline
 

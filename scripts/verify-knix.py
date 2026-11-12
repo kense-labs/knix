@@ -441,6 +441,33 @@ def main() -> int:
             "every run backend has a boundary-safe machine contract",
             "backend contract: %s" % backend_errors[:4])
 
+    # I18 -- the Wayland session is guest-owned, non-root and seat-backed.
+    # WLR_BACKENDS=drm alone excludes libinput and leaves get_inputs empty.
+    seat_errors = []
+    try:
+        sess = json.loads((ROOT / "platform" / "identity" / "session.json")
+                          .read_text(encoding="utf-8"))
+        sp = sess.get("seat_provider", {})
+        if sp.get("manager") != "seatd" or sp.get("owner") != "guest":
+            seat_errors.append("seat provider is not guest-owned seatd")
+        if sp.get("backends") != ["drm", "libinput"]:
+            seat_errors.append("wlroots backends lost libinput")
+        if sp.get("groups") != ["video", "input", "render"]:
+            seat_errors.append("session groups drifted")
+        vg = (ROOT / "platform" / "image" / "verify-graphics.sh").read_text(
+            encoding="utf-8")
+        for token in ("SESSION VERIFY OK", "QEMU Virtio Keyboard",
+                      "QEMU Virtio Tablet", "knix-session.service", "seatd"):
+            if token not in vg:
+                seat_errors.append("verify-graphics.sh lost %s" % token)
+    except (OSError, ValueError) as exc:
+        seat_errors.append("unreadable session contract: %s" % exc)
+    if "| I18 |" not in readme:
+        seat_errors.append("README lost I18")
+    require(not seat_errors,
+            "guest-owned seatd session is verified with real libinput devices",
+            "session contract: %s" % seat_errors[:4])
+
     # the only collection mechanism still parses
     try:
         ast.parse((ROOT / "scripts" / "collect-knix.py").read_text(encoding="utf-8"))
