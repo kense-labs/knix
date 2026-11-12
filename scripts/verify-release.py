@@ -56,6 +56,7 @@ CHECKS = (
     "diagnostics_persistence_verified",
     "diagnostics_operations_verified",
     "diagnostics_trends_verified",
+    "diagnostics_status_verified",
     "login_policy_verified",
     "framebuffer_pixels_verified",
     "single_publish_surface",
@@ -272,6 +273,23 @@ def check(image: pathlib.Path, receipt: pathlib.Path, checksum: pathlib.Path,
             or trend["total_events"] < minimum):
         errors.append("diagnostics trends drift: guest per-boot trend report was not proven")
 
+    # P18: the receipt must prove one guest-owned read-only health snapshot
+    # reconciled the same evidence, including after a real reboot. A host
+    # collector or a happy-path-only checker is not the verified product.
+    ms = mg.get("diagnostics", {}).get("status", {})
+    stat = diag.get("status", {})
+    min_status_boots = policy.get("min_status_boots", ms.get("min_boots_seen", 2))
+    if (stat.get("owner") != "guest"
+            or stat.get("verified") is not True
+            or stat.get("command") != ms.get("command")
+            or stat.get("consistency_checks") != policy.get("status_consistency_checks")
+            or stat.get("drill_refusals") != policy.get("status_drill_refusals")
+            or not isinstance(stat.get("boots_seen"), int)
+            or stat["boots_seen"] < min_status_boots
+            or not isinstance(stat.get("total_events"), int)
+            or stat["total_events"] < minimum):
+        errors.append("diagnostics status drift: guest health snapshot was not proven")
+
     # P16: the receipt must also prove the guest owns authentication. A release
     # whose sshd still accepts root or passwords is not the verified product.
     ma = mg.get("authentication", {})
@@ -329,6 +347,7 @@ def synthetic_receipt(m: dict, identity: dict, image_bytes: bytes) -> dict:
     mfb = mg["framebuffer"]
     ma = mg["authentication"]
     mt = mg["diagnostics"]["trends"]
+    ms = mg["diagnostics"]["status"]
     samples = m["release"]["framebuffer_samples"]
     kernel = dict(baseline["kernel"])
     kernel.update({"schema": 1, "source": "repos/linux",
@@ -435,6 +454,15 @@ def synthetic_receipt(m: dict, identity: dict, image_bytes: bytes) -> dict:
                                     "byte_limit": mt["byte_limit"],
                                     "per_boot_fields": mt["per_boot_fields"],
                                     "boots_seen": m["release"]["min_trend_boots"],
+                                    "total_events": m["release"]["min_diagnostics_events"] + 1,
+                                    "verified": True,
+                                },
+                                "status": {
+                                    "owner": "guest",
+                                    "command": ms["command"],
+                                    "consistency_checks": m["release"]["status_consistency_checks"],
+                                    "drill_refusals": m["release"]["status_drill_refusals"],
+                                    "boots_seen": m["release"]["min_status_boots"],
                                     "total_events": m["release"]["min_diagnostics_events"] + 1,
                                     "verified": True,
                                 }},
@@ -557,6 +585,30 @@ def self_test(m: dict, identity: dict) -> int:
     case("trends report path moved",
          nested("graphics", "session", "diagnostics", "trends", "report")("/tmp/trends"),
          "diagnostics trends drift")
+    case("status section removed",
+         lambda r, i, c: r["graphics"]["session"]["diagnostics"].pop(
+             "status", None), "diagnostics status drift")
+    case("status host-owned",
+         nested("graphics", "session", "diagnostics", "status", "owner")("host"),
+         "diagnostics status drift")
+    case("status unverified",
+         nested("graphics", "session", "diagnostics", "status", "verified")(False),
+         "diagnostics status drift")
+    case("status only one boot",
+         nested("graphics", "session", "diagnostics", "status", "boots_seen")(1),
+         "diagnostics status drift")
+    case("status events too few",
+         nested("graphics", "session", "diagnostics", "status", "total_events")(1),
+         "diagnostics status drift")
+    case("status command moved",
+         nested("graphics", "session", "diagnostics", "status", "command")("/tmp/status"),
+         "diagnostics status drift")
+    case("status consistency checks reduced",
+         nested("graphics", "session", "diagnostics", "status", "consistency_checks")(4),
+         "diagnostics status drift")
+    case("status drill refusals reduced",
+         nested("graphics", "session", "diagnostics", "status", "drill_refusals")(1),
+         "diagnostics status drift")
     case("login policy missing",
          lambda r, i, c: r["graphics"]["session"].pop("authentication", None),
          "login policy drift")

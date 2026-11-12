@@ -547,6 +547,179 @@ LOGIND
 chmod 0644 "$MOUNT/etc/systemd/logind.conf.d/10-knix-login.conf"
 chroot "$MOUNT" passwd -l root >/dev/null 2>&1 || true
 
+# P18: one guest-owned, read-only health snapshot command. It reconciles
+# identity, UEFI self-boot, the guest session, the guest sshd policy and the
+# whole diagnostics family into a single verdict. A verification drill may
+# redirect ONLY the diagnostics input directory under /run/knix; the shipped
+# /var/lib/knix evidence is never written by this command.
+cat > "$MOUNT/usr/lib/knix/knix-status.sh" <<'STATUS'
+#!/bin/bash
+# Guest-owned read-only health snapshot. No writes, no host state, no network.
+set -u
+DRILL="${KNIX_STATUS_DRILL_DIR:-}"
+if [ -n "$DRILL" ]; then
+  case "$DRILL" in
+    /run/knix/*) ;;
+    *) echo "knix-status: drill directory must be under /run/knix" >&2; exit 2 ;;
+  esac
+fi
+DATA="${DRILL:-/var/lib/knix}"
+JSON=0
+[ "${1:-}" = "--json" ] && JSON=1
+
+num() {
+  v="$(sed -n "s/^$2=\([0-9][0-9]*\)$/\1/p" "$1" 2>/dev/null | head -1)"
+  case "$v" in ''|*[!0-9]*) echo 0 ;; *) echo "$v" ;; esac
+}
+
+ARCHIVE="$DATA/session-failure.log"
+STATS="$DATA/session-failure.stats"
+TRENDS="$DATA/session-failure.trends"
+ALERT="$DATA/session-failure.alert"
+ARCHIVE_EVENTS=0
+if [ -r "$ARCHIVE" ]; then
+  n="$(grep -c 'active_state=' "$ARCHIVE" 2>/dev/null || true)"
+  case "$n" in ''|*[!0-9]*) ;; *) ARCHIVE_EVENTS=$n ;; esac
+fi
+STATS_TOTAL="$(num "$STATS" total_events)"
+STATS_BOOTS="$(num "$STATS" boots_seen)"
+TREND_TOTAL="$(num "$TRENDS" total_events)"
+TREND_BOOTS="$(num "$TRENDS" boots_seen)"
+TREND_SUM="$(num "$TRENDS" trend_events_sum)"
+TREND_KEPT="$(num "$TRENDS" trend_boots_kept)"
+# Derive the row sum from the rows themselves, never from a written field.
+# The field boundary matters: "limit_events=" must not be matched by "events=".
+ROW_SUM=0; ROW_N=0
+if [ -r "$TRENDS" ]; then
+  while IFS= read -r row; do
+    ev="$(printf '%s\n' "$row" | sed -n 's/.* events=\([0-9][0-9]*\) .*/\1/p')"
+    case "$ev" in ''|*[!0-9]*) ev=0 ;; esac
+    ROW_SUM=$((ROW_SUM + ev))
+    ROW_N=$((ROW_N + 1))
+  done < <(grep '^boot=' "$TRENDS" 2>/dev/null || true)
+fi
+
+PRODUCT="$(sed -n 's/^ID=//p' /etc/os-release 2>/dev/null | head -1)"
+KERNEL="$(uname -r)"
+BOOT=uefi-self
+[ -f /efi/EFI/BOOT/BOOTAA64.EFI ] || BOOT=missing-efi
+grep -q 'root=/dev/vda2' /proc/cmdline 2>/dev/null || BOOT=other-root
+SESSION="$(systemctl is-active knix-session.service 2>/dev/null || echo unknown)"
+ENABLED="$(systemctl is-enabled knix-session.service 2>/dev/null || echo unknown)"
+SWAY_USER="$(ps -o user= -C sway 2>/dev/null | head -1 | tr -d ' ')"
+[ -n "$SWAY_USER" ] || SWAY_USER=none
+SEAT="$(systemctl is-active seatd.service 2>/dev/null || echo unknown)"
+DRM=absent
+[ -e /dev/dri/card0 ] && DRM=present
+SSHD_T="$(sshd -T 2>/dev/null || true)"
+sshd_field() { printf '%s\n' "$SSHD_T" | sed -n "s/^$1 //p" | head -1; }
+SSHD_ROOT="$(sshd_field permitrootlogin)"; [ -n "$SSHD_ROOT" ] || SSHD_ROOT=unknown
+SSHD_PASS="$(sshd_field passwordauthentication)"; [ -n "$SSHD_PASS" ] || SSHD_PASS=unknown
+SSHD_PUBKEY="$(sshd_field pubkeyauthentication)"; [ -n "$SSHD_PUBKEY" ] || SSHD_PUBKEY=unknown
+ALERT_STATE=absent
+[ -r "$ALERT" ] && ALERT_STATE=present
+
+C1=drift; [ "$ARCHIVE_EVENTS" = "$STATS_TOTAL" ] && C1=ok
+C2=drift; [ "$STATS_TOTAL" = "$TREND_TOTAL" ] && C2=ok
+C3=drift; [ "$STATS_BOOTS" = "$TREND_BOOTS" ] && C3=ok
+C4=drift; [ "$ROW_SUM" = "$TREND_SUM" ] && C4=ok
+C5=ok
+if [ -r "$ARCHIVE" ] || [ -r "$STATS" ] || [ -r "$TRENDS" ]; then
+  C5=missing
+  [ -r "$ARCHIVE" ] && [ -r "$STATS" ] && [ -r "$TRENDS" ] && C5=ok
+fi
+CONS_OK=0
+for c in "$C1" "$C2" "$C3" "$C4" "$C5"; do
+  [ "$c" = ok ] && CONS_OK=$((CONS_OK + 1))
+done
+
+MODE=graphics; HEADLESS=0
+if [ "$DRM" != present ] && [ "$SESSION" != active ]; then
+  MODE=headless; HEADLESS=1
+fi
+REASONS=""
+add_reason() {
+  if [ -z "$REASONS" ]; then REASONS="$1"; else REASONS="$REASONS; $1"; fi
+}
+[ "$C1" = ok ] || add_reason "archive_vs_stats"
+[ "$C2" = ok ] || add_reason "stats_vs_trends"
+[ "$C3" = ok ] || add_reason "boots_vs_boots"
+[ "$C4" = ok ] || add_reason "rows_vs_sum"
+[ "$C5" = ok ] || add_reason "sources_present"
+[ "$BOOT" = uefi-self ] || add_reason "boot=$BOOT"
+[ "$PRODUCT" = knix ] || add_reason "product=$PRODUCT"
+[ "$SSHD_ROOT" = no ] || add_reason "permitrootlogin=$SSHD_ROOT"
+[ "$SSHD_PASS" = no ] || add_reason "passwordauthentication=$SSHD_PASS"
+[ "$SSHD_PUBKEY" = yes ] || add_reason "pubkeyauthentication=$SSHD_PUBKEY"
+if [ "$HEADLESS" = 0 ]; then
+  [ "$SESSION" = active ] || add_reason "session=$SESSION"
+  [ "$ENABLED" = enabled ] || add_reason "enabled=$ENABLED"
+  [ "$SWAY_USER" = knix ] || add_reason "compositor_user=$SWAY_USER"
+  [ "$SEAT" = active ] || add_reason "seat=$SEAT"
+  [ "$DRM" = present ] || add_reason "drm=$DRM"
+fi
+STATUS=ok
+[ -z "$REASONS" ] || STATUS=degraded
+[ "$HEADLESS" = 1 ] && [ -z "$REASONS" ] && STATUS=fallback
+REASON_TEXT="${REASONS:-none}"
+
+if [ "$JSON" = 1 ]; then
+  printf '{\n'
+  printf '  "owner": "guest",\n'
+  printf '  "status": "%s",\n' "$STATUS"
+  printf '  "mode": "%s",\n' "$MODE"
+  printf '  "reasons": "%s",\n' "$REASON_TEXT"
+  printf '  "product": "%s",\n' "$PRODUCT"
+  printf '  "kernel": "%s",\n' "$KERNEL"
+  printf '  "boot": "%s",\n' "$BOOT"
+  printf '  "session": "%s",\n' "$SESSION"
+  printf '  "compositor_user": "%s",\n' "$SWAY_USER"
+  printf '  "consistency": { "archive_vs_stats": "%s", "stats_vs_trends": "%s", "boots_vs_boots": "%s", "rows_vs_sum": "%s", "sources_present": "%s" },\n' \
+    "$C1" "$C2" "$C3" "$C4" "$C5"
+  printf '  "diagnostics": { "archive_events": %s, "stats_total_events": %s, "stats_boots_seen": %s, "trends_total_events": %s, "trends_boots_seen": %s, "trend_events_sum": %s, "trend_row_sum": %s, "trend_rows": %s }\n' \
+    "$ARCHIVE_EVENTS" "$STATS_TOTAL" "$STATS_BOOTS" "$TREND_TOTAL" "$TREND_BOOTS" "$TREND_SUM" "$ROW_SUM" "$ROW_N"
+  printf '}\n'
+else
+  echo "owner=guest"
+  echo "status=$STATUS"
+  echo "mode=$MODE"
+  echo "reasons=$REASON_TEXT"
+  echo "product=$PRODUCT"
+  echo "kernel=$KERNEL"
+  echo "boot=$BOOT"
+  echo "session=$SESSION"
+  echo "session_enabled=$ENABLED"
+  echo "compositor_user=$SWAY_USER"
+  echo "seat=$SEAT"
+  echo "drm=$DRM"
+  echo "permitrootlogin=$SSHD_ROOT"
+  echo "passwordauthentication=$SSHD_PASS"
+  echo "pubkeyauthentication=$SSHD_PUBKEY"
+  echo "archive_events=$ARCHIVE_EVENTS"
+  echo "stats_total_events=$STATS_TOTAL"
+  echo "stats_boots_seen=$STATS_BOOTS"
+  echo "trends_total_events=$TREND_TOTAL"
+  echo "trends_boots_seen=$TREND_BOOTS"
+  echo "trend_events_sum=$TREND_SUM"
+  echo "trend_row_sum=$ROW_SUM"
+  echo "trend_rows=$ROW_N"
+  echo "trend_boots_kept=$TREND_KEPT"
+  echo "alert=$ALERT_STATE"
+  echo "consistency_checks=5"
+  echo "consistency_ok=$CONS_OK"
+  echo "consistency_archive_vs_stats=$C1"
+  echo "consistency_stats_vs_trends=$C2"
+  echo "consistency_boots_vs_boots=$C3"
+  echo "consistency_rows_vs_sum=$C4"
+  echo "consistency_sources_present=$C5"
+fi
+[ "$STATUS" = degraded ] && exit 1
+exit 0
+STATUS
+chmod 0755 "$MOUNT/usr/lib/knix/knix-status.sh"
+install -d -m 0755 "$MOUNT/usr/local/bin"
+ln -s /usr/lib/knix/knix-status.sh "$MOUNT/usr/local/bin/knix-status"
+
 echo "=== verify assembled disk ==="
 grep -qx 'PermitRootLogin no' "$MOUNT/etc/ssh/sshd_config.d/10-knix-auth.conf" \
   || { echo "guest sshd policy lost PermitRootLogin" >&2; exit 1; }
@@ -617,6 +790,24 @@ for token in 'session-failure.trends' 'TREND_BOOTS=8' 'TREND_LIMIT=4096' \
   grep -q -- "$token" "$DIAG_SCRIPT" \
     || { echo "diagnostics script lost trends token: $token" >&2; exit 1; }
 done
+# session.json declares diagnostics.status: one guest-owned read-only command
+# reconciles every evidence source. Slice the installed heredoc at assembly
+# time so a validation-loop literal can never stand in for the real logic.
+STATUS_SCRIPT="$MOUNT/usr/lib/knix/knix-status.sh"
+STATUS_LINK="$MOUNT/usr/local/bin/knix-status"
+test -x "$STATUS_SCRIPT" \
+  || { echo "missing executable guest-owned health snapshot" >&2; exit 1; }
+test -L "$STATUS_LINK" \
+  || { echo "missing /usr/local/bin/knix-status entry point" >&2; exit 1; }
+[ "$(readlink "$STATUS_LINK")" = "/usr/lib/knix/knix-status.sh" ] \
+  || { echo "health snapshot entry point drifted" >&2; exit 1; }
+for token in 'owner=guest' 'KNIX_STATUS_DRILL_DIR' '/run/knix/*' \
+             'consistency_checks=5' 'consistency_ok=' 'trend_row_sum=' \
+             's/.* events=' 'STATUS=degraded' 'exit 1' '"consistency": {'; do
+  grep -q -- "$token" "$STATUS_SCRIPT" \
+    || { echo "health snapshot lost status token: $token" >&2; exit 1; }
+done
+echo "health: guest-owned knix-status reconciles 6 sources with 5 consistency checks"
 NOTICE="$MOUNT/etc/profile.d/10-knix-session-alert.sh"
 test -f "$NOTICE" \
   || { echo "missing guest-owned login-visible failure notice" >&2; exit 1; }

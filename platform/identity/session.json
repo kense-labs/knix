@@ -104,7 +104,21 @@
       "verification": "verify-graphics.sh requires TRENDS VERIFY OK: the report is guest-owned, its boots_seen and total_events equal the guest statistics, its per-boot rows sum exactly to trend_events_sum, every row carries all six fields, the row count stays within boot_limit and the byte size stays within byte_limit, while the production archive and statistics stay byte-identical; build.sh --build relaunches the same disk and requires DIAGNOSTICS TRENDS PERSISTENCE VERIFY OK after the guest itself reports a failure in the second boot, before any receipt is written",
       "fallback": "GPU=none produces no failed state, so no trend row is added; the serial console and ssh remain the full fallback path"
     },
-    "fallback": "the guest-owned archive, statistics, trends, alert and persistent journal keep the durable record; /run/knix is a runtime snapshot; GPU=none never produces a failure and keeps the serial console and ssh as the full fallback path"
+    "status": {
+      "owner": "guest",
+      "command": "/usr/local/bin/knix-status",
+      "script": "/usr/lib/knix/knix-status.sh",
+      "format": ["text", "json"],
+      "sources": ["os-release", "kernel", "uefi", "session", "authentication", "diagnostics"],
+      "consistency_checks": ["archive_vs_stats", "stats_vs_trends", "boots_vs_boots", "rows_vs_sum", "sources_present"],
+      "drill_directory": "/run/knix/status-drill",
+      "min_drill_refusals": 2,
+      "min_boots_seen": 2,
+      "rule": "one guest-owned read-only command reconciles identity, UEFI self-boot, the guest seatd session, the guest sshd policy and the guest diagnostics family into a single health verdict; it derives the trend row sum itself instead of trusting a written field, reports ok / fallback / degraded and exits non-zero when degraded; no host collector, network channel or external analytics service is involved",
+      "verification": "platform/image/verify-status.sh requires STATUS VERIFY OK with 5/5 consistency checks and a --json snapshot, then injects two inconsistencies into an isolated /run/knix/status-drill copy and requires the command to exit non-zero with status=degraded, while the production /var/lib/knix files stay byte-identical; build.sh --build relaunches the same disk and requires STATUS PERSISTENCE VERIFY OK with two boots before any receipt is written, receipt records graphics.session.diagnostics.status",
+      "fallback": "GPU=none yields mode=headless with status=fallback and an exit code of zero; the serial console and ssh remain the full fallback path"
+    },
+    "fallback": "the guest-owned archive, statistics, trends, health snapshot, alert and persistent journal keep the durable record; /run/knix is a runtime snapshot; GPU=none never produces a failure and keeps the serial console and ssh as the full fallback path"
   },
   "input": { "backend": "libinput", "owner": "guest" },
   "output": { "backend": "drm", "device": "virtio-gpu", "owner": "guest" },

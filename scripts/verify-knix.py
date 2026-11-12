@@ -750,8 +750,9 @@ def main() -> int:
                 or "not_a_build_input" not in rel):
             release_errors.append("manifest release policy drifted")
         checks = rel.get("checks", [])
-        if (len(checks) != 18
+        if (len(checks) != 19
                 or "diagnostics_trends_verified" not in checks
+                or "diagnostics_status_verified" not in checks
                 or "login_policy_verified" not in checks
                 or "image_sha256_and_bytes_match_receipt" not in checks
                 or "receipt_checksum_matches" not in checks
@@ -848,9 +849,10 @@ def main() -> int:
                 or "diagnostics persistence drift" not in prg):
             persistence_errors.append("release gate lost the persistence check")
         pchecks = pm.get("release", {}).get("checks", [])
-        if (len(pchecks) != 18
+        if (len(pchecks) != 19
                 or "diagnostics_persistence_verified" not in pchecks
                 or "diagnostics_trends_verified" not in pchecks
+                or "diagnostics_status_verified" not in pchecks
                 or "login_policy_verified" not in pchecks):
             persistence_errors.append("release policy lost the persistence check")
         pworkflow = (ROOT / ".github/workflows/knix-contract.yml").read_text(
@@ -1096,6 +1098,80 @@ def main() -> int:
     require(not trend_errors,
             "the guest owns a bounded cross-boot diagnostics trend report",
             "trends contract: %s" % trend_errors[:4])
+
+    # I30 -- one guest-owned read-only health snapshot reconciles identity,
+    # UEFI boot, session, authentication and diagnostics. It must derive the
+    # trend row sum itself and be able to refuse injected drift; no host
+    # collector, network channel or external analytics service is involved.
+    status_errors = []
+    checks_expected = ["archive_vs_stats", "stats_vs_trends",
+                       "boots_vs_boots", "rows_vs_sum", "sources_present"]
+    try:
+        sm = json.loads((ROOT / "platform/image/manifest.json").read_text(
+            encoding="utf-8"))
+        ss = json.loads((ROOT / "platform/identity/session.json").read_text(
+            encoding="utf-8"))
+        ms = sm.get("graphics", {}).get("diagnostics", {}).get("status", {})
+        st = ss.get("diagnostics", {}).get("status", {})
+        for doc in (ms, st):
+            if (doc.get("owner") != "guest"
+                    or doc.get("command") != "/usr/local/bin/knix-status"
+                    or doc.get("script") != "/usr/lib/knix/knix-status.sh"
+                    or doc.get("consistency_checks") != checks_expected
+                    or doc.get("min_boots_seen") != 2
+                    or doc.get("min_drill_refusals") != 2):
+                status_errors.append("guest health snapshot contract drifted")
+        srel = sm.get("release", {})
+        if ("diagnostics_status_verified" not in srel.get("checks", [])
+                or srel.get("min_status_boots") != 2
+                or srel.get("status_consistency_checks") != 5
+                or srel.get("status_drill_refusals") != 2):
+            status_errors.append("release policy lost the status check")
+        sa = (ROOT / "platform/image/assemble-native.sh").read_text(
+            encoding="utf-8")
+        heredoc = sa.split("<<'STATUS'\n", 1)[-1].split("\nSTATUS\n", 1)[0]
+        if "<<'STATUS'\n" not in sa or "\nSTATUS\n" not in sa:
+            status_errors.append("assemble-native.sh lost its STATUS heredoc")
+        for token in ("KNIX_STATUS_DRILL_DIR", "s/.* events=", "ROW_SUM=",
+                      "consistency_checks=5", '"consistency": {',
+                      '[ "$STATUS" = degraded ] && exit 1'):
+            if token not in heredoc:
+                status_errors.append("STATUS heredoc lost %s" % token)
+        sv = ROOT / "platform/image/verify-status.sh"
+        if not sv.is_file():
+            status_errors.append("verify-status.sh is missing")
+        else:
+            svt = sv.read_text(encoding="utf-8")
+            for token in ("STATUS VERIFY OK", "STATUS CONSISTENCY: 5/5",
+                          "STATUS DRILL: 2 refusals", "KNIX_STATUS_DRILL_DIR",
+                          "sha256sum", "--json"):
+                if token not in svt:
+                    status_errors.append("verify-status.sh lost %s" % token)
+        sb = (ROOT / "platform/image/build.sh").read_text(encoding="utf-8")
+        if (sb.count('sys.exit("STATUS DRIFT') < 2
+                or "STATUS VERIFY OK" not in sb
+                or "STATUS PERSISTENCE VERIFY OK" not in sb
+                or "guest-status.log" not in sb
+                or '"status": {' not in sb):
+            status_errors.append("build.sh lost the status verification gate")
+        sr = (ROOT / "scripts/verify-release.py").read_text(encoding="utf-8")
+        if ('errors.append("diagnostics status drift: guest health snapshot was not proven")'
+                not in sr):
+            status_errors.append("release gate lost the status check")
+        srp = (ROOT / "scripts/verify-repro.py").read_text(encoding="utf-8")
+        if "graphics.diagnostics.status contract drifted" not in srp:
+            status_errors.append("repro gate lost the status check")
+        sw = (ROOT / ".github/workflows/knix-contract.yml").read_text(
+            encoding="utf-8")
+        if 'ms = gfx.get("diagnostics", {}).get("status", {})' not in sw:
+            status_errors.append("CI contract lost the status check")
+        if "| I30 |" not in readme:
+            status_errors.append("README lost I30")
+    except (OSError, ValueError) as exc:
+        status_errors.append("unreadable status contract: %s" % exc)
+    require(not status_errors,
+            "the guest owns a unified, falsifiable health snapshot",
+            "status contract: %s" % status_errors[:4])
 
     # the only collection mechanism still parses
     try:

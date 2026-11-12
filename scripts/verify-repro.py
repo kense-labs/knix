@@ -493,6 +493,65 @@ def main() -> int:
             not in rg_text):
         errors.append("release gate lost the trends acceptance check")
 
+    # 5i. diagnostics status: one guest-owned read-only command reconciles all
+    # six evidence sources, derives the trend row sum itself and must be able
+    # to refuse injected drift. Slice the installed STATUS heredoc so a
+    # validation-loop literal cannot stand in for the guest command.
+    ms = gfx.get("diagnostics", {}).get("status", {})
+    expected_checks = ["archive_vs_stats", "stats_vs_trends", "boots_vs_boots",
+                       "rows_vs_sum", "sources_present"]
+    if (ms.get("owner") != "guest"
+            or ms.get("command") != "/usr/local/bin/knix-status"
+            or ms.get("script") != "/usr/lib/knix/knix-status.sh"
+            or ms.get("format") != ["text", "json"]
+            or len(ms.get("sources", [])) != 6
+            or ms.get("consistency_checks") != expected_checks
+            or ms.get("drill_directory") != "/run/knix/status-drill"
+            or ms.get("min_drill_refusals") != 2
+            or ms.get("min_boots_seen") != 2):
+        errors.append("graphics.diagnostics.status contract drifted")
+    ss = sd.get("status", {})
+    if (ss.get("owner") != "guest"
+            or ss.get("command") != ms.get("command")
+            or ss.get("script") != ms.get("script")
+            or ss.get("consistency_checks") != expected_checks
+            or ss.get("min_drill_refusals") != 2
+            or ss.get("min_boots_seen") != 2):
+        errors.append("session.json diagnostics.status contract drifted")
+    status_heredoc = asm.split("<<'STATUS'\n", 1)[-1].split("\nSTATUS\n", 1)[0]
+    if "<<'STATUS'\n" not in asm or "\nSTATUS\n" not in asm:
+        errors.append("assemble-native.sh lost its guest STATUS heredoc")
+    for token in ("KNIX_STATUS_DRILL_DIR", "/run/knix/*", 's/.* events=',
+                  "ROW_SUM=", "consistency_checks=5", "STATUS=degraded",
+                  '"consistency": {', "[ \"$STATUS\" = degraded ] && exit 1"):
+        if token not in status_heredoc:
+            errors.append("assemble-native.sh STATUS heredoc lost token: %s" % token)
+    vs_path = ROOT / "platform/image/verify-status.sh"
+    if not vs_path.is_file():
+        errors.append("platform/image/verify-status.sh is missing")
+        vs_text = ""
+    else:
+        vs_text = vs_path.read_text(encoding="utf-8")
+    for token in ("STATUS VERIFY OK", "STATUS CONSISTENCY: 5/5",
+                  "STATUS DRILL: 2 refusals", "KNIX_STATUS_DRILL_DIR",
+                  "archive_vs_stats", "rows_vs_sum", "sha256sum", "--json"):
+        if token not in vs_text:
+            errors.append("verify-status.sh lost status token: %s" % token)
+    for token in ("STATUS VERIFY OK", "STATUS CONSISTENCY: 5/5",
+                  "STATUS DRILL: 2 refusals", "guest-status.log",
+                  "STATUS PERSISTENCE VERIFY OK", '"status": {',
+                  "STATUS EVENTS:", "STATUS BOOTS:"):
+        if token not in build_text:
+            errors.append("build.sh lost status gate: %s" % token)
+    if build_text.count('sys.exit("STATUS DRIFT') < 2:
+        errors.append("build.sh receipt block lost a STATUS DRIFT refusal")
+    # The self-test also contains the drift label as an expected error; require
+    # the actual refusal statement rather than a bare substring.
+    if ("diagnostics_status_verified" not in rg_text
+            or 'errors.append("diagnostics status drift: guest health snapshot was not proven")'
+            not in rg_text):
+        errors.append("release gate lost the status acceptance check")
+
     # 6. the receipt records the same baseline the build verifies
     build = (ROOT / "platform/image/build.sh").read_text(encoding="utf-8")
     for token in ("build_baseline", "BASELINE DRIFT", "package-versions.txt",
@@ -534,16 +593,20 @@ def main() -> int:
     if (rel.get("tool") != "scripts/verify-release.py"
             or rel.get("read_only") is not True
             or rel.get("schema") != 3
-            or len(rel.get("checks", [])) != 18
+            or len(rel.get("checks", [])) != 19
             or "diagnostics_persistence_verified" not in rel.get("checks", [])
             or "diagnostics_operations_verified" not in rel.get("checks", [])
             or "diagnostics_trends_verified" not in rel.get("checks", [])
+            or "diagnostics_status_verified" not in rel.get("checks", [])
             or "login_policy_verified" not in rel.get("checks", [])
             or rel.get("min_diagnostics_events") != 2
             or rel.get("min_boots_seen") != 2
             or rel.get("min_trend_boots") != 2
             or rel.get("trend_boot_limit") != 8
             or rel.get("trend_byte_limit") != 4096
+            or rel.get("min_status_boots") != 2
+            or rel.get("status_consistency_checks") != 5
+            or rel.get("status_drill_refusals") != 2
             or rel.get("framebuffer_samples") != 9
             or rel.get("publish_surface") != ["knix.img", "origin/main"]):
         errors.append("manifest.release acceptance policy drifted")

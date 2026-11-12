@@ -6,6 +6,19 @@
 build artifact and is not stored in this repository; `origin/main` carries the
 identity, the build recipe and the verification gate that reproduce it.
 
+## Current state (2026-11-12, local development paused)
+
+The published image and receipt are still the P17 build. The P18 unified health
+snapshot (`knix-status`, I30, 19 checks, 60 self-test cases) is present as
+in-repo contract, assembly script, guest verifier and gates, and was
+pre-flighted inside a qcow2 overlay of the published image. It has **not** been
+built into a new image: rootfs was not rebuilt, `build.sh --build` was not run,
+and no new receipt was written. `verify-release.py` therefore refuses the
+current receipt with `diagnostics status drift`. That refusal is the correct
+behaviour, not a broken gate. Resuming work requires a rootfs rebuild, a
+three-stage baseline refresh, a full build with reboot proof, and a fresh
+release acceptance run.
+
 | 阶段 | 命令 | 产物 |
 | --- | --- | --- |
 | 输入校验 | `platform/image/build.sh --check` | 无 |
@@ -51,7 +64,7 @@ python3 scripts/verify-release.py \
 python3 scripts/verify-release.py --json
 ```
 
-It refuses the release unless all 18 checks in `manifest.json.release.checks`
+It refuses the release unless all 19 checks in `manifest.json.release.checks`
 pass: image bytes and sha256 equal the receipt; the `.sha256` openssl digest
 covers the exact receipt file; every pinned input group and `seed_sha512`
 equals `manifest.json.inputs`; `baseline.sha256` is the sha256 of the canonical
@@ -78,7 +91,7 @@ mismatch means the image was assembled from drifted inputs or skipped a
 verification stage.
 
 `--self-test` builds a policy-consistent synthetic receipt in a temporary
-directory and refuses 52 tampered variants (image swap, edited receipt, stale or
+directory and refuses 60 tampered variants (image swap, edited receipt, stale or
 missing checksum, input and baseline drift, missing evidence, a host-owned or
 non-reboot-proof crash archive, a host-owned / unverified / one-boot trend
 report with a moved path or loosened bounds, a receipt that re-enables root or

@@ -4,7 +4,7 @@
 
 | 文件 | 角色 |
 | --- | --- |
-| `manifest.json` | 构建配方：seed SHA512、19 个输入哈希（6 身份 / 4 品牌 / 5 配方 / 3 验证 / 1 锁定基线）、`build_baseline` 内核与 rootfs 锁定值，三阶段构建顺序、UEFI / 图形 / 帧缓冲契约与发布面 |
+| `manifest.json` | 构建配方：seed SHA512、20 个输入哈希（6 身份 / 4 品牌 / 5 配方 / 4 验证 / 1 锁定基线）、`build_baseline` 内核与 rootfs 锁定值，三阶段构建顺序、UEFI / 图形 / 帧缓冲契约与发布面 |
 | `package-versions.txt` | 388 个已安装包的版本锁定清单（`dpkg-query` + `LC_ALL=C sort`），文本构建输入，不是二进制产物 |
 | `build.sh` | 顶层编排；`--check` 校验全部输入哈希并运行 `verify-repro.py`，`--build` 建空白盘 → 逐字段校验锁定基线 → guest 内组装 → 冷启复验 → 写含 `baseline` 段的 receipt |
 | `inject-identity.sh` | 把身份与品牌字节原样装进运行中的 guest |
@@ -14,8 +14,11 @@
 | `verify-graphics.sh` | 在冷启后的 guest 内以 root 证明 `knix-session.service` 已由 `multi-user.target` 开机启用且 active（脚本不负责启动），restart 取干净日志后验证 sway 以 `knix` 非 root 运行、seatd 提供 seat、`get_inputs` 返回 virtio 键鼠、virtio-gpu DRM 节点、GBM / GL 实际渲染与 `foot` Wayland 窗口；SIGKILL 后要求 guest systemd 恢复会话，再连续 SIGKILL 直到 guest systemd 触发 start limit 并观察可管理的失败态，清场前硬校验 guest systemd 自己写出的失败诊断报告与崩溃时间线并输出 `DIAGNOSTICS VERIFY OK` / `DIAGNOSTICS EVENTS: N`，清场后要求完整会话恢复，最后让恢复后的 sway 画出 guest 自选的纯色图案；纯 shell，不依赖 guest 内的 python3 / jq |
 | `verify-framebuffer.py` | 主机侧只读像素门禁：从 `guest-graphics.log` 读 guest 自选颜色，经 QMP `screendump format=ppm` 导出 P6 帧缓冲，硬校验 1280×800、9/9 采样点与 swaybar 像素；`--self-test` 用合成 PPM 跑 12 个用例，不需要 QEMU |
 | `sign.sh` | 生成 receipt 校验和；提供密钥时追加 detached 签名 |
-| `scripts/verify-release.py` | 仓内发布验收门禁（主机侧只读）：校验镜像 sha256 / bytes、receipt 的 openssl 校验和、19 个锁定输入、规范化 `build_baseline`、UEFI 自举链与 graphics / session / autostart / resilience / crash_loop / diagnostics / diagnostics.persistence / diagnostics.operations / diagnostics.trends / authentication / framebuffer 全部证据段（18 个具名 check）；`--self-test` 在临时目录跑 52 个篡改用例。策略真源在 `manifest.json.release`，工具刻意不进入构建输入 |
+| `scripts/verify-release.py` | 仓内发布验收门禁（主机侧只读）：校验镜像 sha256 / bytes、receipt 的 openssl 校验和、20 个锁定输入、规范化 `build_baseline`、UEFI 自举链与 graphics / session / autostart / resilience / crash_loop / diagnostics / diagnostics.persistence / diagnostics.operations / diagnostics.trends / authentication / framebuffer 全部证据段（19 个具名 check）；`--self-test` 在临时目录跑 60 个篡改用例。策略真源在 `manifest.json.release`，工具刻意不进入构建输入 |
+| `verify-status.sh` | guest 自有只读健康自检验收：要求 `STATUS VERIFY OK`、5/5 跨源一致性与 `--json` 快照，在隔离 `/run/knix/status-drill` 副本注入两类不一致并要求 `knix-status` 以 `degraded` 拒绝，生产 `/var/lib/knix` 证据逐字不变；`build.sh` 重启同一张盘后要求 `STATUS PERSISTENCE VERIFY OK` |
 | `RELEASE.md` | 发布面、校验与回滚 |
+
+> **当前状态（2026-11-12，本机开发暂停）**：P18 的代码、契约、门禁与 guest overlay 预检已完成，但 rootfs、镜像与 receipt 仍是 P17 产物。`scripts/verify-release.py` 会按设计拒绝缺少 `graphics.session.diagnostics.status` 的旧 receipt；恢复开发须重建 rootfs、刷新锁定基线、跑完整 `build.sh --build` 与真实重启复验后再做发布验收。
 
 `build-kernel.sh` 在 `olddefconfig` 之后把 virtio-blk / virtio-net / virtio-pci / ext4 / PL011 / devtmpfs 六项硬校验为 `=y`：自举路径在挂载根分区前不能依赖可加载模块，initramfs 也不打包这些驱动。图形驱动由脚本自己追加 `CONFIG_DRM_VIRTIO_GPU=m` / `CONFIG_VIRTIO_INPUT=m` 并硬校验 `CONFIG_DRM_VIRTIO_GPU_KMS=y`，不改写 `repos/linux/arch/arm64/configs/virt.config` 快照；模块文件是 `virtio-gpu.ko` / `virtio_input.ko`，`assemble-native.sh` 写 `/etc/modules-load.d/knix-graphics.conf` 让冷启自动加载，`kernel-build.json` 记录 `graphics_drivers` 与 `graphics_modules`。`modules_install` 落在构建盘的 `modules/` 下，由 `assemble-native.sh` 装进目标盘；`kernel-build.json` 记录内核版本、两个内核镜像的 sha256 与模块数量。编译前后都检查 `vmlinux.o` 的 ELF section header 表是否落在文件内，避免截断对象让 `modpost` 失败。`assemble-native.sh` 把 `modules/lib/modules/$KVER` 整目录复制进目标盘，版本从 `kernel-build.json` 读取，并用目标盘自身 rootfs 的 `depmod` 生成 `modules.dep`；模块缺失时组装直接失败。
 
@@ -45,7 +48,7 @@ P12 让 guest 自己报告失败：主 unit 的 `[Unit]` 段写 `OnFailure=knix-
 
 镜像与 receipt 落在 `$KNIX_DEV_DIR`（默认仓外同级 `knix-m0/`），不入库。仓内只有可复现的定义与哈希；`origin/main` 是唯一发布面。receipt 的 `sha256` / `bytes` 对应构建完成那一刻的镜像：qcow2 可写，任何后续启动都会改变字节，所以写完 receipt 后不再启动发布镜像；额外验收用 `qemu-img create -b knix.img -F qcow2` 的 overlay 副本，并复核 backing 镜像哈希未变。
 
-发布验收是构建之后的一道独立判定：`scripts/verify-release.py` 只读核对 `knix.img` 的 sha256 / bytes、receipt 文件的 `.sha256`、19 个锁定输入与 seed SHA512、规范化 `build_baseline`、内核 / rootfs 摘要、UEFI 自举链，以及 receipt 的 graphics / session / autostart / resilience / crash_loop / diagnostics / diagnostics.persistence / diagnostics.operations / diagnostics.trends / authentication / framebuffer 证据段（共 18 项）；诊断事件数、跨 boot 趋势 boot 数、guest 自有登录策略、9/9 像素采样与 swaybar 像素都按 `manifest.json.release` 的策略下限判定。真产物输出 `RELEASE VERIFY OK`，任何漂移逐条 `RELEASE FAILED:`。该工具不进入构建输入、不启动 VM、不改写镜像或 receipt 字节——否则它会改变自己要判定的对象；`--self-test` 只写临时目录，CI 的 `Release verification gate` 步骤、I25 与 `verify-repro.py` 保证策略不被削弱。仓外 `p13-release-drift.log` 记录 15 个真实产物越界用例全部被拒。
+发布验收是构建之后的一道独立判定：`scripts/verify-release.py` 只读核对 `knix.img` 的 sha256 / bytes、receipt 文件的 `.sha256`、20 个锁定输入与 seed SHA512、规范化 `build_baseline`、内核 / rootfs 摘要、UEFI 自举链，以及 receipt 的 graphics / session / autostart / resilience / crash_loop / diagnostics / diagnostics.persistence / diagnostics.operations / diagnostics.trends / authentication / framebuffer 证据段（共 18 项）；诊断事件数、跨 boot 趋势 boot 数、guest 自有登录策略、9/9 像素采样与 swaybar 像素都按 `manifest.json.release` 的策略下限判定。真产物输出 `RELEASE VERIFY OK`，任何漂移逐条 `RELEASE FAILED:`。该工具不进入构建输入、不启动 VM、不改写镜像或 receipt 字节——否则它会改变自己要判定的对象；`--self-test` 只写临时目录，CI 的 `Release verification gate` 步骤、I25 与 `verify-repro.py` 保证策略不被削弱。仓外 `p13-release-drift.log` 记录 15 个真实产物越界用例全部被拒。
 
 崩溃诊断不只活在 `/run`：`assemble-native.sh` 固定 `/etc/systemd/journald.conf.d/knix-persistence.conf`（`Storage=persistent`），在根盘建 `/var/lib/knix`，guest 的 `OnFailure=` 脚本把每次失败以 `boot=<id>` 与全部字段追加到 `session-failure.log`，并镜像最新快照到 `session-failure.txt`；报告单元仍以 `exit 0` 收尾，不会变成第二个失败单元。`verify-graphics.sh` 在失败态硬校验档案与快照并输出 `PERSISTENCE VERIFY OK`。`build.sh --build` 在 QMP 抓帧与第一次 clean power-off 之后，用同一张 `knix.img`、`KNIX_KEEP_VARS=1` 再启动一次（独立 `serial-persistence.log` / `qmp-persistence.sock`），要求档案仍有终态与 ≥2 事件、`/run/knix/session-failure.*` 已消失、快照里的 boot id 与当前不同、`journalctl --list-boots` 仍列出上一次 boot、零失败单元且串口 / SSH 完好，输出 `DIAGNOSTICS PERSISTENCE VERIFY OK` / `PERSISTENCE EVENTS: N`；第二次 power-off 之后才计算镜像 sha256 并写 receipt，因此发布字节仍对应最终镜像。receipt 的 `graphics.session.diagnostics.persistence` 与 `verify-release.py` 的 `diagnostics_persistence_verified` check 共同保证这条证据链不被跳过；主机不写、不收集、不回放任何诊断数据。`GPU=none` 不产生失败态，也不写档案条目。
 

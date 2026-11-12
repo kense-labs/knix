@@ -24,7 +24,7 @@
       "platform/identity/knix-release": "6f0d9eb37a09f1bbf9bb51241c9aa713b3f18566761b24dcd922fb1341c06535",
       "platform/identity/identity.json": "c216c0805f0dc4dd0976de4161786d4c3e16184fa4e63d24a0bab8e81659369b",
       "platform/identity/packages.json": "bb7996b818eda8521ab69b499037f6e63a20497cc737ecbcc328c60add389a2d",
-      "platform/identity/session.json": "d059c45678954ab272b3272f6b8a1cf9eefdd2c76353318eb28d4250c9cc1334",
+      "platform/identity/session.json": "11fb45f5b036c32c9bb7ff30324df9dce62e8face6bd00e59e70e314a668ddd1",
       "platform/identity/brand.manifest.json": "a6a3dbea169c6217d763ad9cf0898ca76425168994e9112982e8090de6c4db6f"
     },
     "brand_sha256": {
@@ -37,13 +37,14 @@
       "repos/linux/arch/arm64/configs/virt.config": "7cd8a9d570fd42fb3fce2724f7293f2f8e4bf24193acf315b5fbd676d1963319",
       "platform/image/build-kernel.sh": "b24314037ad1843e4055b210ad83fb6ad55631b56784a1df4f85acadc086e5f0",
       "platform/image/build-rootfs.sh": "1559ba0d87811baa4038e3a5ecadfa26b75e08603242ca76ec787328c92d0b94",
-      "platform/image/assemble-native.sh": "63538d8200eee4d70ef9ef22c4927e17e3895aa03cf762f5b224d6384264e93b",
-      "platform/image/build.sh": "e39250b8021df5146742b131b2ac95bf9bc208c63ea89c481060fb0d1a97e06b"
+      "platform/image/assemble-native.sh": "38716b1df40171756b65ad23efdb0b7f27e16a25f3cf7d14ab78967f8a985caa",
+      "platform/image/build.sh": "131e11f4164e98cd5ffd074c3b297b4f042f39e6e4c4c6a97006c003d7eca91c"
     },
     "verification_sha256": {
       "platform/image/verify-graphics.sh": "8113413a8df2414e1c53ba1559622dc5b0dae4ee87a3717af666301672e58a5f",
       "platform/image/verify-framebuffer.py": "ba40bede3ed7ceac7dccffa14ee9f23472625c052d531ae9774b8effec4fe1d2",
-      "platform/image/verify-login.sh": "4e41402298a7f257d5acb27851b5b5240921fd319a19c8ec505b212f79a6fa9f"
+      "platform/image/verify-login.sh": "4e41402298a7f257d5acb27851b5b5240921fd319a19c8ec505b212f79a6fa9f",
+      "platform/image/verify-status.sh": "1d8153351ad20f33860f3c3d2c7be3a8854a7f8aed8def22dfb52dc4af1cecbe"
     },
     "baseline_sha256": {
       "platform/image/package-versions.txt": "11417d90b6bfa1d8ad5e35e170fde4a4f5ec8c0a79c576bbabb617d37480e5bf"
@@ -109,6 +110,8 @@
     "the same guest OnFailure= script recomputes a bounded per-boot trend report from its own archive family: events, failed states, start-limit hits, restart peak and first/last timestamps per boot, plus cumulative boots_seen / total_events / limit_boots / max_events_per_boot",
     "verify-graphics.sh requires TRENDS VERIFY OK: the trend report matches the guest statistics, its rows sum exactly, stays within 8 boots / 4096 bytes and never rewrites the production archive",
     "build.sh requires DIAGNOSTICS TRENDS PERSISTENCE VERIFY OK: after the guest reports a failure in the second boot the trend report must carry both boots before any receipt is written",
+    "one guest-owned read-only command knix-status reconciles identity, UEFI self-boot, session, authentication and the diagnostics family into a single health verdict, deriving the trend row sum itself instead of trusting a written field",
+    "verify-status.sh requires STATUS VERIFY OK with 5/5 consistency checks and two refusals from an isolated /run drill, while production diagnostics stay byte-identical; build.sh requires STATUS PERSISTENCE VERIFY OK across the reboot",
     "GPU=none leaves the autostart condition unmet and keeps the serial console and ssh as the full fallback path, with zero failed units",
     "build.sh compares every kernel/rootfs summary field and both lockfiles against build_baseline before assembling",
     "scripts/verify-repro.py checks all pinned inputs, the lockfile and the absence of binary build artifacts"
@@ -244,7 +247,21 @@
         "verification": "verify-graphics.sh requires TRENDS VERIFY OK: guest-owned report, boots_seen and total_events equal the guest statistics, per-boot rows sum to trend_events_sum, all six fields present, rows within boot_limit and bytes within byte_limit, with the production archive and statistics byte-identical; build.sh --build relaunches the same disk and requires DIAGNOSTICS TRENDS PERSISTENCE VERIFY OK after a guest-triggered failure in the second boot",
         "fallback": "GPU=none produces no failed state, so no trend row is added; the serial console and ssh remain the full fallback path"
       },
-      "fallback": "the guest-owned archive, statistics, trends, alert and persistent journal keep the durable record; /run/knix is only a runtime snapshot; GPU=none produces no failure and keeps the serial console and ssh as the full fallback path"
+      "status": {
+        "owner": "guest",
+        "command": "/usr/local/bin/knix-status",
+        "script": "/usr/lib/knix/knix-status.sh",
+        "format": ["text", "json"],
+        "sources": ["os-release", "kernel", "uefi", "session", "authentication", "diagnostics"],
+        "consistency_checks": ["archive_vs_stats", "stats_vs_trends", "boots_vs_boots", "rows_vs_sum", "sources_present"],
+        "drill_directory": "/run/knix/status-drill",
+        "min_drill_refusals": 2,
+        "min_boots_seen": 2,
+        "rule": "one guest-owned read-only command reconciles identity, UEFI self-boot, the guest seatd session, the guest sshd policy and the guest diagnostics family into a single health verdict; it derives the trend row sum itself, reports ok / fallback / degraded and exits non-zero when degraded",
+        "verification": "verify-status.sh requires STATUS VERIFY OK with 5/5 consistency checks, a --json snapshot and two refusals from an isolated /run drill; build.sh --build requires STATUS PERSISTENCE VERIFY OK with two boots on the same disk before writing the receipt",
+        "fallback": "GPU=none yields mode=headless with status=fallback and an exit code of zero; the serial console and ssh remain the full fallback path"
+      },
+      "fallback": "the guest-owned archive, statistics, trends, health snapshot, alert and persistent journal keep the durable record; /run/knix is only a runtime snapshot; GPU=none produces no failure and keeps the serial console and ssh as the full fallback path"
     }
   },
   "baseline_refresh": {
@@ -257,7 +274,7 @@
     "kernel_drift_never_refreshed": "rebuild with build-kernel.sh --apply instead",
     "ci_gate": "--self-test exercises the policy without guest artifacts"
   },
-  "receipt": "platform/image/build.sh writes $KNIX_DEV_DIR/BUILD-RECEIPT.json (schema 3) with the artifact sha256, the canonical build_baseline sha256, the graphics.session verification result including autostart, crash recovery, crash-loop limiting, the number of guest-reported failure diagnostics, the guest-owned persistence and cross-boot operations proof, the graphics.framebuffer pixel proof, the guest-owned per-boot diagnostics trend report, and every build input digest",
+  "receipt": "platform/image/build.sh writes $KNIX_DEV_DIR/BUILD-RECEIPT.json (schema 3) with the artifact sha256, the canonical build_baseline sha256, the graphics.session verification result including autostart, crash recovery, crash-loop limiting, the number of guest-reported failure diagnostics, the guest-owned persistence and cross-boot operations proof, the graphics.framebuffer pixel proof, the guest-owned per-boot diagnostics trend report, the guest-owned unified health snapshot with its cross-source consistency proof, and every build input digest",
   "release": {
     "tool": "scripts/verify-release.py",
     "schema": 3,
@@ -281,6 +298,7 @@
       "diagnostics_persistence_verified",
       "diagnostics_operations_verified",
       "diagnostics_trends_verified",
+      "diagnostics_status_verified",
       "login_policy_verified",
       "framebuffer_pixels_verified",
       "single_publish_surface"
@@ -290,6 +308,9 @@
     "min_trend_boots": 2,
     "trend_boot_limit": 8,
     "trend_byte_limit": 4096,
+    "min_status_boots": 2,
+    "status_consistency_checks": 5,
+    "status_drill_refusals": 2,
     "framebuffer_samples": 9,
     "min_framebuffer_bar_pixels": 100,
     "publish_surface": ["knix.img", "origin/main"],

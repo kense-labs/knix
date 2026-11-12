@@ -328,6 +328,22 @@ if [ "$GRAPHICS_RC" -ne 0 ] \
   exit 1
 fi
 
+# P18: one guest-owned command must reconcile every evidence source, and the
+# verification must prove it refuses injected drift. This runs before the QMP
+# framebuffer read; the snapshot is strictly read-only.
+echo "=== guest-owned health snapshot verification ==="
+STATUS_RC=0
+$SSH knix@127.0.0.1 'sudo bash -s' \
+  < "$ROOT/platform/image/verify-status.sh" > "$DEV/guest-status.log" 2>&1 || STATUS_RC=$?
+cat "$DEV/guest-status.log"
+if [ "$STATUS_RC" -ne 0 ] \
+   || ! grep -q 'STATUS VERIFY OK' "$DEV/guest-status.log" \
+   || ! grep -q 'STATUS CONSISTENCY: 5/5' "$DEV/guest-status.log" \
+   || ! grep -q 'STATUS DRILL: 2 refusals' "$DEV/guest-status.log"; then
+  echo "STATUS VERIFY FAILED (rc=$STATUS_RC)" >&2
+  exit 1
+fi
+
 echo "=== framebuffer verification (guest-drawn pixels via QMP) ==="
 # The guest chose a colour from its own entropy and sway painted it. Read the
 # standard virtio-gpu scanout headlessly and require those exact pixels plus
@@ -514,14 +530,51 @@ fi
 echo "TRENDS EVENTS: $TREND_TOTAL"
 echo "TRENDS BOOTS: $TREND_BOOTS"
 echo "DIAGNOSTICS TRENDS PERSISTENCE VERIFY OK: guest trend report advanced across reboot ($TREND_TOTAL events / $TREND_BOOTS boots, $TREND_KEPT rows, rows sum to $TREND_SUM)"
+
+# P18: the guest's own read-only health command must now reconcile the same
+# evidence with TWO boots. The host only reads its output; nothing is computed,
+# collected or written on the host side.
+STATUS_TXT="$(/usr/local/bin/knix-status)" \
+  || { echo "guest health snapshot reported a degraded status after reboot" >&2; exit 1; }
+printf '%s\n' "$STATUS_TXT" | grep -qx 'status=ok' \
+  || { echo "guest health snapshot is not ok after reboot" >&2; exit 1; }
+printf '%s\n' "$STATUS_TXT" | grep -qx 'boot=uefi-self' \
+  || { echo "guest health snapshot lost the UEFI self-boot evidence" >&2; exit 1; }
+printf '%s\n' "$STATUS_TXT" | grep -qx 'compositor_user=knix' \
+  || { echo "guest health snapshot lost the knix-owned session" >&2; exit 1; }
+printf '%s\n' "$STATUS_TXT" | grep -qx 'permitrootlogin=no' \
+  || { echo "guest health snapshot lost the guest sshd policy" >&2; exit 1; }
+STAT_EVENTS="$(printf '%s\n' "$STATUS_TXT" | sed -n 's/^stats_total_events=//p' | head -1)"
+STAT_BOOTS="$(printf '%s\n' "$STATUS_TXT" | sed -n 's/^trends_boots_seen=//p' | head -1)"
+STAT_CONS="$(printf '%s\n' "$STATUS_TXT" | sed -n 's/^consistency_ok=//p' | head -1)"
+[ "$STAT_CONS" = 5 ] \
+  || { echo "guest health snapshot lost a consistency check after reboot" >&2; exit 1; }
+[ -n "$STAT_EVENTS" ] && [ "$STAT_EVENTS" = "$AFTER_EVENTS" ] \
+  || { echo "guest health snapshot disagrees with guest statistics ($STAT_EVENTS != $AFTER_EVENTS)" >&2; exit 1; }
+[ -n "$STAT_BOOTS" ] && [ "$STAT_BOOTS" -ge 2 ] \
+  || { echo "guest health snapshot did not reach two boots (${STAT_BOOTS:-none})" >&2; exit 1; }
+[ "$STAT_BOOTS" = "$TREND_BOOTS" ] \
+  || { echo "guest health snapshot disagrees with the guest trend report" >&2; exit 1; }
+STATUS_JSON="$(/usr/local/bin/knix-status --json)" \
+  || { echo "guest --json snapshot failed after reboot" >&2; exit 1; }
+printf '%s\n' "$STATUS_JSON" | grep -q '"status": "ok"' \
+  || { echo "guest --json snapshot lost its verdict after reboot" >&2; exit 1; }
+printf '%s\n' "$STATUS_JSON" | grep -q '"consistency": {' \
+  || { echo "guest --json snapshot lost its consistency section" >&2; exit 1; }
+echo "STATUS EVENTS: $STAT_EVENTS"
+echo "STATUS BOOTS: $STAT_BOOTS"
+echo "STATUS PERSISTENCE VERIFY OK: guest health snapshot reconciles archive/stats/trends across reboot ($STAT_EVENTS events / $STAT_BOOTS boots, 5/5 consistency checks)"
 PERSIST
 cat "$DEV/guest-persistence.log"
 if [ "$PERSIST_RC" -ne 0 ] \
    || ! grep -q 'DIAGNOSTICS PERSISTENCE VERIFY OK' "$DEV/guest-persistence.log" \
    || ! grep -q '^PERSISTENCE EVENTS: ' "$DEV/guest-persistence.log" \
    || ! grep -q 'DIAGNOSTICS OPS PERSISTENCE VERIFY OK' "$DEV/guest-persistence.log" \
-   || ! grep -q '^OPS EVENTS: ' "$DEV/guest-persistence.log"; then
-  echo "DIAGNOSTICS PERSISTENCE/OPS VERIFY FAILED (rc=$PERSIST_RC)" >&2
+   || ! grep -q '^OPS EVENTS: ' "$DEV/guest-persistence.log" \
+   || ! grep -q '^STATUS EVENTS: ' "$DEV/guest-persistence.log" \
+   || ! grep -q '^STATUS BOOTS: ' "$DEV/guest-persistence.log" \
+   || ! grep -q 'STATUS PERSISTENCE VERIFY OK' "$DEV/guest-persistence.log"; then
+  echo "DIAGNOSTICS PERSISTENCE/OPS/STATUS VERIFY FAILED (rc=$PERSIST_RC)" >&2
   exit 1
 fi
 stop_guest
@@ -584,6 +637,23 @@ if (not trend_events_match or not trend_boots_match
     sys.exit("TRENDS DRIFT: the guest trend report did not advance across a reboot")
 trend_events = int(trend_events_match.group(1))
 trend_boots = int(trend_boots_match.group(1))
+# P18: the receipt must describe one guest-owned health snapshot that proved
+# its checks can refuse injected drift and still reconciled after the reboot.
+status_log = (dev / "guest-status.log").read_text()
+if ("STATUS VERIFY OK" not in status_log
+        or "STATUS DRILL: 2 refusals" not in status_log
+        or "STATUS CONSISTENCY: 5/5" not in status_log
+        or "STATUS PERSISTENCE VERIFY OK" not in persist_log):
+    sys.exit("STATUS DRIFT: the guest did not verify its health snapshot")
+status_events_match = re.search(r"^STATUS EVENTS: (\d+)$", persist_log, re.M)
+status_boots_match = re.search(r"^STATUS BOOTS: (\d+)$", persist_log, re.M)
+min_status_boots = m["graphics"]["diagnostics"]["status"]["min_boots_seen"]
+if (not status_events_match or not status_boots_match
+        or int(status_events_match.group(1)) <= persist_events
+        or int(status_boots_match.group(1)) < min_status_boots):
+    sys.exit("STATUS DRIFT: the guest health snapshot did not advance across a reboot")
+status_events = int(status_events_match.group(1))
+status_boots = int(status_boots_match.group(1))
 identity = json.loads((root / "platform/identity/identity.json").read_text())
 kernel = json.loads((dev / "kernel-build.json").read_text())
 rootfs = json.loads((dev / "rootfs-build.json").read_text())
@@ -721,6 +791,15 @@ receipt = {
                     "per_boot_fields": m["graphics"]["diagnostics"]["trends"]["per_boot_fields"],
                     "boots_seen": trend_boots,
                     "total_events": trend_events,
+                    "verified": True,
+                },
+                "status": {
+                    "owner": m["graphics"]["diagnostics"]["status"]["owner"],
+                    "command": m["graphics"]["diagnostics"]["status"]["command"],
+                    "consistency_checks": len(m["graphics"]["diagnostics"]["status"]["consistency_checks"]),
+                    "drill_refusals": m["release"]["status_drill_refusals"],
+                    "boots_seen": status_boots,
+                    "total_events": status_events,
                     "verified": True,
                 },
             },

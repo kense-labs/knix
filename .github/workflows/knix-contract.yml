@@ -82,16 +82,20 @@ jobs:
           if (rel.get("tool") != "scripts/verify-release.py"
                   or rel.get("read_only") is not True
                   or rel.get("schema") != 3
-                  or len(rel.get("checks", [])) != 18
+                  or len(rel.get("checks", [])) != 19
                   or "diagnostics_persistence_verified" not in rel.get("checks", [])
                   or "diagnostics_operations_verified" not in rel.get("checks", [])
                   or "diagnostics_trends_verified" not in rel.get("checks", [])
+                  or "diagnostics_status_verified" not in rel.get("checks", [])
                   or "login_policy_verified" not in rel.get("checks", [])
                   or rel.get("min_diagnostics_events") != 2
                   or rel.get("min_boots_seen") != 2
                   or rel.get("min_trend_boots") != 2
                   or rel.get("trend_boot_limit") != 8
                   or rel.get("trend_byte_limit") != 4096
+                  or rel.get("min_status_boots") != 2
+                  or rel.get("status_consistency_checks") != 5
+                  or rel.get("status_drill_refusals") != 2
                   or rel.get("framebuffer_samples") != 9
                   or rel.get("publish_surface") != ["knix.img", "origin/main"]):
               bad.append(("manifest.release", "acceptance policy drifted"))
@@ -108,7 +112,9 @@ jobs:
                             "diagnostics operations drift",
                             "diagnostics_operations_verified",
                             "diagnostics trends drift",
-                            "diagnostics_trends_verified"):
+                            "diagnostics_trends_verified",
+                            "diagnostics status drift",
+                            "diagnostics_status_verified"):
                   if token not in gate:
                       bad.append(("verify-release.py", token, "missing"))
           for group, entries in m["inputs"].items():
@@ -414,6 +420,60 @@ jobs:
               bad.append(("verify-release.py", "trends check", "missing"))
           if "diagnostics_trends_verified" not in m.get("release", {}).get("checks", []):
               bad.append(("release.checks", "diagnostics_trends_verified", "missing"))
+          # diagnostics status: one guest-owned read-only command reconciles all
+          # evidence sources, derives the row sum itself and must refuse drift.
+          ms = gfx.get("diagnostics", {}).get("status", {})
+          expected_checks = ["archive_vs_stats", "stats_vs_trends",
+                            "boots_vs_boots", "rows_vs_sum", "sources_present"]
+          if (ms.get("owner") != "guest"
+                  or ms.get("command") != "/usr/local/bin/knix-status"
+                  or ms.get("script") != "/usr/lib/knix/knix-status.sh"
+                  or ms.get("format") != ["text", "json"]
+                  or len(ms.get("sources", [])) != 6
+                  or ms.get("consistency_checks") != expected_checks
+                  or ms.get("drill_directory") != "/run/knix/status-drill"
+                  or ms.get("min_drill_refusals") != 2
+                  or ms.get("min_boots_seen") != 2):
+              bad.append(("graphics.diagnostics.status", "guest status contract", "missing"))
+          sstat = session_doc.get("diagnostics", {}).get("status", {})
+          if (sstat.get("owner") != "guest"
+                  or sstat.get("command") != ms.get("command")
+                  or sstat.get("consistency_checks") != expected_checks
+                  or sstat.get("min_drill_refusals") != 2
+                  or sstat.get("min_boots_seen") != 2):
+              bad.append(("session.json diagnostics.status", "guest status contract", "missing"))
+          status_heredoc = pasm.split("<<'STATUS'\n", 1)[-1].split("\nSTATUS\n", 1)[0]
+          if "<<'STATUS'\n" not in pasm or "\nSTATUS\n" not in pasm:
+              bad.append(("assemble-native.sh", "STATUS heredoc", "missing"))
+          for token in ("KNIX_STATUS_DRILL_DIR", "s/.* events=", "ROW_SUM=",
+                        "consistency_checks=5", '"consistency": {',
+                        '[ "$STATUS" = degraded ] && exit 1'):
+              if token not in status_heredoc:
+                  bad.append(("assemble-native.sh STATUS", token, "missing"))
+          vstatus = root / "platform/image/verify-status.sh"
+          if not vstatus.is_file():
+              bad.append(("verify-status.sh", "guest status verifier", "missing"))
+          else:
+              pvs = vstatus.read_text()
+              for token in ("STATUS VERIFY OK", "STATUS CONSISTENCY: 5/5",
+                            "STATUS DRILL: 2 refusals", "KNIX_STATUS_DRILL_DIR",
+                            "sha256sum", "--json"):
+                  if token not in pvs:
+                      bad.append(("verify-status.sh", token, "missing"))
+          for token in ("STATUS VERIFY OK", "STATUS CONSISTENCY: 5/5",
+                        "STATUS DRILL: 2 refusals", "guest-status.log",
+                        "STATUS PERSISTENCE VERIFY OK", '"status": {',
+                        "STATUS EVENTS:", "STATUS BOOTS:"):
+              if token not in pbuild:
+                  bad.append(("build.sh", token, "missing"))
+          if pbuild.count('sys.exit("STATUS DRIFT') < 2:
+              bad.append(("build.sh receipt block", "STATUS DRIFT refusal", "missing"))
+          if ("diagnostics_status_verified" not in gate
+                  or 'errors.append("diagnostics status drift: guest health snapshot was not proven")'
+                  not in gate):
+              bad.append(("verify-release.py", "status check", "missing"))
+          if "diagnostics_status_verified" not in m.get("release", {}).get("checks", []):
+              bad.append(("release.checks", "diagnostics_status_verified", "missing"))
           verify_rel = gfx.get("verify", "")
           if not (root / verify_rel).is_file():
               bad.append(("graphics.verify", verify_rel, "missing"))
@@ -512,7 +572,7 @@ jobs:
                   print("CONTRACT DRIFT:", b, file=sys.stderr)
               sys.exit(1)
           print("CONTRACT OK: %d inputs, locked kernel/rootfs baseline, one artifact, "
-                "%d build stages, UEFI self-boot + graphics + framebuffer + crash loop + diagnostics + persistence + operations + trends + login policy + release gate" %
+                "%d build stages, UEFI self-boot + graphics + framebuffer + crash loop + diagnostics + persistence + operations + trends + status + login policy + release gate" %
                 (checked, len(m.get("build_stages", []))))
           PY
 
