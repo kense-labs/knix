@@ -55,6 +55,7 @@ CHECKS = (
     "session_diagnostics_verified",
     "diagnostics_persistence_verified",
     "diagnostics_operations_verified",
+    "login_policy_verified",
     "framebuffer_pixels_verified",
     "single_publish_surface",
 )
@@ -250,6 +251,24 @@ def check(image: pathlib.Path, receipt: pathlib.Path, checksum: pathlib.Path,
             or ops["total_events"] < minimum):
         errors.append("diagnostics operations drift: guest rotation, cross-boot stats or local alert was not proven")
 
+    # P16: the receipt must also prove the guest owns authentication. A release
+    # whose sshd still accepts root or passwords is not the verified product.
+    ma = mg.get("authentication", {})
+    auth = session.get("authentication", {})
+    if (auth.get("owner") != "guest"
+            or auth.get("verified") is not True
+            or auth.get("manager") != ma.get("manager")
+            or auth.get("policy") != ma.get("policy")
+            or auth.get("logind_policy") != ma.get("logind_policy")
+            or auth.get("accounts") != ma.get("accounts")
+            or auth.get("root_login") is not False
+            or auth.get("password_authentication") is not False
+            or auth.get("public_key_authentication") is not True
+            or auth.get("autologin") is not True
+            or auth.get("idle_action") != ma.get("idle_action")
+            or auth.get("idle_action_sec") != ma.get("idle_action_sec")):
+        errors.append("login policy drift: guest-owned authentication was not proven")
+
     fb = gfx.get("framebuffer", {})
     mfb = mg.get("framebuffer", {})
     samples = policy.get("framebuffer_samples", mfb.get("samples", 9))
@@ -287,6 +306,7 @@ def synthetic_receipt(m: dict, identity: dict, image_bytes: bytes) -> dict:
     baseline = m["build_baseline"]
     mg = m["graphics"]
     mfb = mg["framebuffer"]
+    ma = mg["authentication"]
     samples = m["release"]["framebuffer_samples"]
     kernel = dict(baseline["kernel"])
     kernel.update({"schema": 1, "source": "repos/linux",
@@ -332,6 +352,19 @@ def synthetic_receipt(m: dict, identity: dict, image_bytes: bytes) -> dict:
                 "user": mg["session_user"], "seat_manager": mg["seat_manager"],
                 "unit": mg["unit"], "backends": mg["backends"],
                 "input_devices": mg["input_devices"], "verified": True,
+                "authentication": {
+                    "owner": "guest", "manager": ma["manager"],
+                    "policy": ma["policy"],
+                    "logind_policy": ma["logind_policy"],
+                    "accounts": ma["accounts"],
+                    "root_login": False,
+                    "password_authentication": False,
+                    "public_key_authentication": True,
+                    "autologin": True,
+                    "idle_action": ma["idle_action"],
+                    "idle_action_sec": ma["idle_action_sec"],
+                    "verified": True,
+                },
                 "autostart": {"enabled": True, "target": mg["autostart_target"],
                               "condition": mg["autostart_condition"], "verified": True},
                 "resilience": {"owner": "guest", "manager": "systemd",
@@ -472,6 +505,24 @@ def self_test(m: dict, identity: dict) -> int:
     case("operations host-owned",
          nested("graphics", "session", "diagnostics", "operations", "owner")("host"),
          "diagnostics operations drift")
+    case("login policy missing",
+         lambda r, i, c: r["graphics"]["session"].pop("authentication", None),
+         "login policy drift")
+    case("login policy host-owned",
+         nested("graphics", "session", "authentication", "owner")("host"),
+         "login policy drift")
+    case("root login re-enabled",
+         nested("graphics", "session", "authentication", "root_login")(True),
+         "login policy drift")
+    case("password authentication re-enabled",
+         nested("graphics", "session", "authentication",
+                "password_authentication")(True), "login policy drift")
+    case("login policy unverified",
+         nested("graphics", "session", "authentication", "verified")(False),
+         "login policy drift")
+    case("idle action changed",
+         nested("graphics", "session", "authentication", "idle_action")("suspend"),
+         "login policy drift")
     case("rotation drill unverified",
          nested("graphics", "session", "diagnostics", "operations",
                 "rotation_drill_verified")(False), "diagnostics operations drift")

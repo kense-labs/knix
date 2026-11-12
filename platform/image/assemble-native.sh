@@ -431,7 +431,40 @@ chroot "$MOUNT" chown -R knix:knix /home/knix/.ssh
 printf 'knix ALL=(ALL) NOPASSWD:ALL\n' > "$MOUNT/etc/sudoers.d/knix"
 chmod 0440 "$MOUNT/etc/sudoers.d/knix"
 
+# P16: the guest owns every account, credential and login decision. sshd must
+# refuse root and every password path, and logind must carry an explicit idle
+# policy so a single kiosk seat never auto-suspends. No host adapter is involved.
+install -d -m 0755 "$MOUNT/etc/ssh/sshd_config.d"
+cat > "$MOUNT/etc/ssh/sshd_config.d/10-knix-auth.conf" <<'SSHD'
+# Owned by knix: public keys for knix only. No root, no passwords, no host login.
+PermitRootLogin no
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PubkeyAuthentication yes
+PermitEmptyPasswords no
+AuthenticationMethods publickey
+SSHD
+chmod 0644 "$MOUNT/etc/ssh/sshd_config.d/10-knix-auth.conf"
+
+install -d -m 0755 "$MOUNT/etc/systemd/logind.conf.d"
+cat > "$MOUNT/etc/systemd/logind.conf.d/10-knix-login.conf" <<'LOGIND'
+# Owned by knix: the kiosk seat must never auto-suspend or lock itself.
+[Login]
+NAutoVTs=2
+ReserveVT=1
+IdleAction=ignore
+IdleActionSec=30min
+LOGIND
+chmod 0644 "$MOUNT/etc/systemd/logind.conf.d/10-knix-login.conf"
+chroot "$MOUNT" passwd -l root >/dev/null 2>&1 || true
+
 echo "=== verify assembled disk ==="
+grep -qx 'PermitRootLogin no' "$MOUNT/etc/ssh/sshd_config.d/10-knix-auth.conf" \
+  || { echo "guest sshd policy lost PermitRootLogin" >&2; exit 1; }
+grep -qx 'AuthenticationMethods publickey' "$MOUNT/etc/ssh/sshd_config.d/10-knix-auth.conf" \
+  || { echo "guest sshd policy lost AuthenticationMethods" >&2; exit 1; }
+grep -qx 'IdleAction=ignore' "$MOUNT/etc/systemd/logind.conf.d/10-knix-login.conf" \
+  || { echo "guest logind idle policy lost IdleAction" >&2; exit 1; }
 grep -E '^(NAME|ID|VERSION)=' "$MOUNT/etc/os-release"
 test -x "$MOUNT/usr/bin/sway" && echo "sway: yes"
 test -f "$MOUNT/usr/share/wayland-sessions/knix.desktop" && echo "wayland session: yes"

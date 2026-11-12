@@ -82,9 +82,10 @@ jobs:
           if (rel.get("tool") != "scripts/verify-release.py"
                   or rel.get("read_only") is not True
                   or rel.get("schema") != 3
-                  or len(rel.get("checks", [])) != 16
+                  or len(rel.get("checks", [])) != 17
                   or "diagnostics_persistence_verified" not in rel.get("checks", [])
                   or "diagnostics_operations_verified" not in rel.get("checks", [])
+                  or "login_policy_verified" not in rel.get("checks", [])
                   or rel.get("min_diagnostics_events") != 2
                   or rel.get("min_boots_seen") != 2
                   or rel.get("framebuffer_samples") != 9
@@ -294,6 +295,76 @@ jobs:
                         "knix-diagnostics"):
               if token not in pvg:
                   bad.append(("verify-graphics.sh", token, "missing"))
+          # login policy: accounts, credentials and login decisions are the
+          # guest's own. sshd refuses root and every password path; logind
+          # carries an explicit idle policy; no getty autologin override.
+          la = gfx.get("authentication", {})
+          if (la.get("owner") != "guest" or la.get("manager") != "systemd-logind"
+                  or la.get("policy") != "/etc/ssh/sshd_config.d/10-knix-auth.conf"
+                  or la.get("logind_policy") != "/etc/systemd/logind.conf.d/10-knix-login.conf"
+                  or la.get("verify") != "platform/image/verify-login.sh"
+                  or la.get("accounts") != ["knix"]
+                  or la.get("root_login") is not False
+                  or la.get("password_authentication") is not False
+                  or la.get("public_key_authentication") is not True
+                  or la.get("autologin") is not True
+                  or la.get("no_getty_autologin") is not True
+                  or la.get("idle_action") != "ignore"
+                  or la.get("idle_action_sec") != "30min"):
+              bad.append(("graphics.authentication", "guest login policy missing"))
+          sau = session_doc.get("authentication", {})
+          if (sau.get("owner") != "guest"
+                  or session_doc.get("autologin") is not True
+                  or sau.get("root_login") is not False
+                  or sau.get("password_authentication") is not False
+                  or sau.get("public_key_authentication") is not True
+                  or sau.get("autologin") is not True
+                  or sau.get("accounts") != ["knix"]
+                  or sau.get("idle_action") != "ignore"
+                  or sau.get("idle_action_sec") != "30min"):
+              bad.append(("session.json", "authentication contract drifted"))
+          plogin = (root / "platform/image/verify-login.sh").read_text()
+          for token in ("LOGIN POLICY OK", "LOGIN VERIFY OK", "permitrootlogin no",
+                        "authenticationmethods publickey",
+                        "PreferredAuthentications=password", "root@127.0.0.1"):
+              if token not in plogin:
+                  bad.append(("verify-login.sh", token, "missing"))
+          for token in ("10-knix-auth.conf", "10-knix-login.conf",
+                        "AuthenticationMethods publickey", "passwd -l root"):
+              if token not in pasm:
+                  bad.append(("assemble-native.sh", token, "missing"))
+          # The installed policy must live in the heredoc itself; a validation
+          # grep that repeats the same literal cannot stand in for it.
+          sshd = pasm.split("<<'SSHD'\n", 1)[-1].split("\nSSHD\n", 1)[0]
+          logind = pasm.split("<<'LOGIND'\n", 1)[-1].split("\nLOGIND\n", 1)[0]
+          if ("<<'SSHD'\n" not in pasm or "\nSSHD\n" not in pasm
+                  or "<<'LOGIND'\n" not in pasm or "\nLOGIND\n" not in pasm):
+              bad.append(("assemble-native.sh", "guest login heredocs", "missing"))
+          sshd_lines = [line.strip() for line in sshd.splitlines()]
+          logind_lines = [line.strip() for line in logind.splitlines()]
+          for token in ("PermitRootLogin no", "PasswordAuthentication no",
+                        "KbdInteractiveAuthentication no", "PubkeyAuthentication yes",
+                        "PermitEmptyPasswords no", "AuthenticationMethods publickey"):
+              if token not in sshd_lines:
+                  bad.append(("assemble-native.sh SSHD", token, "missing"))
+          for token in ("IdleAction=ignore", "IdleActionSec=30min"):
+              if token not in logind_lines:
+                  bad.append(("assemble-native.sh LOGIND", token, "missing"))
+          for token in ("LOGIN POLICY OK", "LOGIN VERIFY OK", "guest-login.log",
+                        '"authentication": {'):
+              if token not in pbuild:
+                  bad.append(("build.sh", token, "missing"))
+          for token in ('> "$DEV/guest-login.log" 2>&1 || LOGIN_RC=$?',
+                        'cat "$DEV/guest-login.log"',
+                        "grep -q 'LOGIN POLICY OK' \"$DEV/guest-login.log\"",
+                        "grep -q 'LOGIN VERIFY OK' \"$DEV/guest-login.log\"",
+                        'login_log = (dev / "guest-login.log").read_text()'):
+              if token not in pbuild:
+                  bad.append(("build.sh login wiring", token, "missing"))
+          if pbuild.count('sys.exit("LOGIN DRIFT') < 2:
+              bad.append(("build.sh receipt block", "LOGIN DRIFT refusal", "missing"))
+          if "login_policy_verified" not in m.get("release", {}).get("checks", []):
+              bad.append(("release.checks", "login_policy_verified", "missing"))
           verify_rel = gfx.get("verify", "")
           if not (root / verify_rel).is_file():
               bad.append(("graphics.verify", verify_rel, "missing"))
@@ -392,7 +463,7 @@ jobs:
                   print("CONTRACT DRIFT:", b, file=sys.stderr)
               sys.exit(1)
           print("CONTRACT OK: %d inputs, locked kernel/rootfs baseline, one artifact, "
-                "%d build stages, UEFI self-boot + graphics + framebuffer + crash loop + diagnostics + persistence + operations + release gate" %
+                "%d build stages, UEFI self-boot + graphics + framebuffer + crash loop + diagnostics + persistence + operations + login policy + release gate" %
                 (checked, len(m.get("build_stages", []))))
           PY
 

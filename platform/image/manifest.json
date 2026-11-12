@@ -24,7 +24,7 @@
       "platform/identity/knix-release": "6f0d9eb37a09f1bbf9bb51241c9aa713b3f18566761b24dcd922fb1341c06535",
       "platform/identity/identity.json": "c216c0805f0dc4dd0976de4161786d4c3e16184fa4e63d24a0bab8e81659369b",
       "platform/identity/packages.json": "bb7996b818eda8521ab69b499037f6e63a20497cc737ecbcc328c60add389a2d",
-      "platform/identity/session.json": "d36bdc34b3b326ebcb34b8cfc75e930e2819d72626ef353f2a29c0f2240eebc3",
+      "platform/identity/session.json": "e7345ec3b46b2bd42a28d8e822f2527913587cb62037bae6cf21574bf42103b6",
       "platform/identity/brand.manifest.json": "a6a3dbea169c6217d763ad9cf0898ca76425168994e9112982e8090de6c4db6f"
     },
     "brand_sha256": {
@@ -37,12 +37,13 @@
       "repos/linux/arch/arm64/configs/virt.config": "7cd8a9d570fd42fb3fce2724f7293f2f8e4bf24193acf315b5fbd676d1963319",
       "platform/image/build-kernel.sh": "b24314037ad1843e4055b210ad83fb6ad55631b56784a1df4f85acadc086e5f0",
       "platform/image/build-rootfs.sh": "1559ba0d87811baa4038e3a5ecadfa26b75e08603242ca76ec787328c92d0b94",
-      "platform/image/assemble-native.sh": "957495ad84e0fb52e0f0b5a3d0e7643a896c3288857c5f00841dbafffbc1850f",
-      "platform/image/build.sh": "32ff4d3bf8014b02f1cb1c56d060db8cf9339c903f0aa644e6ed94e649b709e2"
+      "platform/image/assemble-native.sh": "b660d87cdab8aa562ddabeaacbad21a6d86c2298d9ae16002898df6ec02b5bdd",
+      "platform/image/build.sh": "995107a72c693601ef576252559b28f0e03256cc1391add06300f6f136952cc1"
     },
     "verification_sha256": {
       "platform/image/verify-graphics.sh": "4a62245dc26311becc203e6007f00d752494f1e6dac69f6889558a0eac7d4282",
-      "platform/image/verify-framebuffer.py": "ba40bede3ed7ceac7dccffa14ee9f23472625c052d531ae9774b8effec4fe1d2"
+      "platform/image/verify-framebuffer.py": "ba40bede3ed7ceac7dccffa14ee9f23472625c052d531ae9774b8effec4fe1d2",
+      "platform/image/verify-login.sh": "4e41402298a7f257d5acb27851b5b5240921fd319a19c8ec505b212f79a6fa9f"
     },
     "baseline_sha256": {
       "platform/image/package-versions.txt": "11417d90b6bfa1d8ad5e35e170fde4a4f5ec8c0a79c576bbabb617d37480e5bf"
@@ -61,8 +62,8 @@
       "graphics_modules": ["virtio-gpu", "virtio_input"]
     },
     "rootfs": {
-      "tarball_sha256": "e2941e9ae1c47525815fa770ea6f853ffa25c4b4002231da0ccc708eef585566",
-      "tarball_bytes": 226773254,
+      "tarball_sha256": "067ffe6427c50e22f35bbb9a6d22dcad3de23dfaa9924f4ba55c0b2bd36f6fd6",
+      "tarball_bytes": 226778666,
       "package_set_sha256": "bb7996b818eda8521ab69b499037f6e63a20497cc737ecbcc328c60add389a2d",
       "package_count": 39,
       "package_versions_sha256": "11417d90b6bfa1d8ad5e35e170fde4a4f5ec8c0a79c576bbabb617d37480e5bf",
@@ -96,6 +97,9 @@
     "after SIGKILL the guest's own systemd restarts sway as knix and the restarted session again provides DRM, libinput, GBM/GL and a Wayland client window",
     "the restarted sway paints a guest-chosen 24-bit colour on the standard virtio-gpu scanout",
     "QMP screendump (P6) of that scanout shows the guest colour at 9/9 sample points plus guest swaybar pixels before any receipt is written",
+    "sshd -T refuses root, password, keyboard-interactive and empty passwords and requires public keys; a real password login attempt and a root login attempt are both rejected by the guest sshd",
+    "knix is the only interactive account, root and knix passwords are locked, no root login session exists and loginctl reports knix active on a graphical seat0",
+    "the guest logind carries an explicit IdleAction=ignore policy, no getty autologin override exists and the kiosk session is started by multi-user.target before any verification script touches it",
     "a deliberate crash loop makes guest systemd refuse further restarts, leaving ActiveState=failed, zero sway processes, exactly one failed unit (the session unit) and ssh plus the serial console intact",
     "after the crash loop the guest's own systemd recovers a knix-owned sway with DRM, libinput, GBM/GL and a Wayland client, which then paints the verified framebuffer pattern",
     "the guest's own systemd OnFailure= unit writes /run/knix/session-failure.txt from guest unit state, journal and local device nodes, with no host input",
@@ -120,6 +124,29 @@
     "session": "platform/identity/session.json",
     "owner": "guest",
     "verify": "platform/image/verify-graphics.sh",
+    "authentication": {
+      "owner": "guest",
+      "manager": "systemd-logind",
+      "policy": "/etc/ssh/sshd_config.d/10-knix-auth.conf",
+      "logind_policy": "/etc/systemd/logind.conf.d/10-knix-login.conf",
+      "sudoers": "/etc/sudoers.d/knix",
+      "verify": "platform/image/verify-login.sh",
+      "accounts": ["knix"],
+      "interactive_account": "knix",
+      "root_login": false,
+      "password_authentication": false,
+      "public_key_authentication": true,
+      "empty_passwords": false,
+      "autologin": true,
+      "autologin_manager": "systemd",
+      "autologin_unit": "/etc/systemd/system/knix-session.service",
+      "no_getty_autologin": true,
+      "idle_action": "ignore",
+      "idle_action_sec": "30min",
+      "rule": "the guest owns every account, credential and login decision; sshd accepts public keys only for knix, root and every password path are refused, the kiosk session is started by the guest's own target without a getty autologin override, and logind keeps an explicit no-auto-suspend idle policy",
+      "verification": "build.sh --build runs verify-login.sh before the graphics gate and refuses a receipt unless LOGIN POLICY OK and LOGIN VERIFY OK are both present",
+      "fallback": "GPU=none keeps the serial console and key-based ssh; no password, root or host-supplied login is ever enabled"
+    },
     "fallback": "GPU=none leaves the session unit's /dev/dri/card0 condition unmet; the serial console and ssh remain the full fallback path",
     "session_user": "knix",
     "seat_manager": "seatd",
@@ -237,6 +264,7 @@
       "session_diagnostics_verified",
       "diagnostics_persistence_verified",
       "diagnostics_operations_verified",
+      "login_policy_verified",
       "framebuffer_pixels_verified",
       "single_publish_surface"
     ],

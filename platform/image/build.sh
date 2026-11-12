@@ -296,6 +296,18 @@ else
   echo "REGULATORY DB OK"
 fi
 
+echo "=== login verification (guest-owned accounts and authentication) ==="
+LOGIN_RC=0
+$SSH knix@127.0.0.1 'sudo bash -s' \
+  < "$ROOT/platform/image/verify-login.sh" > "$DEV/guest-login.log" 2>&1 || LOGIN_RC=$?
+cat "$DEV/guest-login.log"
+if [ "$LOGIN_RC" -ne 0 ] \
+   || ! grep -q 'LOGIN POLICY OK' "$DEV/guest-login.log" \
+   || ! grep -q 'LOGIN VERIFY OK' "$DEV/guest-login.log"; then
+  echo "LOGIN VERIFY FAILED (rc=$LOGIN_RC)" >&2
+  exit 1
+fi
+
 echo "=== graphics verification (guest-owned DRM + sway) ==="
 GRAPHICS_RC=0
 $SSH knix@127.0.0.1 'sudo bash -s' \
@@ -470,6 +482,13 @@ dev, img_sha, root = pathlib.Path(sys.argv[1]), sys.argv[2], pathlib.Path(sys.ar
 # The receipt records how many crashes the guest itself reported. Refuse to
 # write a receipt when the guest-produced verification log lacks that line.
 guest_log = (dev / "guest-graphics.log").read_text()
+# P16: the receipt must not exist unless the guest itself proved its login
+# policy with both the static assertions and the real authentication refusal.
+login_log = (dev / "guest-login.log").read_text()
+if "LOGIN POLICY OK" not in login_log:
+    sys.exit("LOGIN DRIFT: the guest did not assert its login policy")
+if "LOGIN VERIFY OK" not in login_log:
+    sys.exit("LOGIN DRIFT: the guest did not refuse root and password logins")
 diag_match = re.search(r"^DIAGNOSTICS EVENTS: (\d+)$", guest_log, re.M)
 if not diag_match or int(diag_match.group(1)) < 2:
     sys.exit("DIAGNOSTICS DRIFT: guest systemd did not report its crash timeline")
@@ -557,6 +576,20 @@ receipt = {
             "backends": m["graphics"]["backends"],
             "input_devices": m["graphics"]["input_devices"],
             "verified": True,
+            "authentication": {
+                "owner": m["graphics"]["authentication"]["owner"],
+                "manager": m["graphics"]["authentication"]["manager"],
+                "policy": m["graphics"]["authentication"]["policy"],
+                "logind_policy": m["graphics"]["authentication"]["logind_policy"],
+                "accounts": m["graphics"]["authentication"]["accounts"],
+                "root_login": False,
+                "password_authentication": False,
+                "public_key_authentication": True,
+                "autologin": True,
+                "idle_action": m["graphics"]["authentication"]["idle_action"],
+                "idle_action_sec": m["graphics"]["authentication"]["idle_action_sec"],
+                "verified": True,
+            },
             "autostart": {
                 "enabled": m["graphics"]["autostart"],
                 "target": m["graphics"]["autostart_target"],

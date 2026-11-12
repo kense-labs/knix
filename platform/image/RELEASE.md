@@ -51,18 +51,19 @@ python3 scripts/verify-release.py \
 python3 scripts/verify-release.py --json
 ```
 
-It refuses the release unless all 16 checks in `manifest.json.release.checks`
+It refuses the release unless all 17 checks in `manifest.json.release.checks`
 pass: image bytes and sha256 equal the receipt; the `.sha256` openssl digest
 covers the exact receipt file; every pinned input group and `seed_sha512`
 equals `manifest.json.inputs`; `baseline.sha256` is the sha256 of the canonical
 `build_baseline` object; the kernel and rootfs summaries carry every locked
 field; the boot chain is UEFI self-boot with no seed ISO; `graphics` and its
 `session`, `autostart`, `resilience`, `crash_loop`, `diagnostics`,
-`diagnostics.persistence`, `diagnostics.operations` and `framebuffer` sections
-are all verified (at least 2 guest-reported diagnostics events, a
-reboot-surviving guest-owned archive, a bounded rotation drill plus a
-cross-boot statistics proof over 2 boots, and 9/9 framebuffer samples plus
-swaybar pixels); and the publish surface is exactly `knix.img` plus
+`diagnostics.persistence`, `diagnostics.operations`, `authentication` and
+`framebuffer` sections are all verified (at least 2 guest-reported diagnostics
+events, a reboot-surviving guest-owned archive, a bounded rotation drill plus
+a cross-boot statistics proof over 2 boots, guest-owned accounts with root and
+password logins refused, and 9/9 framebuffer samples plus swaybar pixels); and
+the publish surface is exactly `knix.img` plus
 `origin/main`.
 
 A successful run prints `RELEASE VERIFY OK`; any drift prints one
@@ -75,9 +76,10 @@ mismatch means the image was assembled from drifted inputs or skipped a
 verification stage.
 
 `--self-test` builds a policy-consistent synthetic receipt in a temporary
-directory and refuses 34 tampered variants (image swap, edited receipt, stale or
+directory and refuses 46 tampered variants (image swap, edited receipt, stale or
 missing checksum, input and baseline drift, missing evidence, a host-owned or
-non-reboot-proof crash archive, extra publish surface) without QEMU or a build
+non-reboot-proof crash archive, a receipt that re-enables root or password
+logins, extra publish surface) without QEMU or a build
 artifact; CI runs it as the `Release verification gate` step. `scripts/verify-repro.py`, I25 and the CI
 single-image contract block keep the policy itself from drifting.
 
@@ -288,6 +290,36 @@ receipt records `graphics.session.diagnostics.operations`; `verify-release.py`
 refuses a release without the rotation drill, the cross-boot proof and the
 guest ownership fields. `GPU=none` produces no failed state and therefore no
 alert or archive entry.
+
+## Login and authentication policy
+
+The image ships its own accounts, credentials and login decisions. `session.json.authentication`
+and `manifest.json.graphics.authentication` are the two machine truths.
+`assemble-native.sh` writes `/etc/ssh/sshd_config.d/10-knix-auth.conf`
+(`PermitRootLogin no`, `PasswordAuthentication no`,
+`KbdInteractiveAuthentication no`, `PubkeyAuthentication yes`,
+`PermitEmptyPasswords no`, `AuthenticationMethods publickey`),
+`/etc/systemd/logind.conf.d/10-knix-login.conf` (`IdleAction=ignore`,
+`IdleActionSec=30min`, `NAutoVTs=2`), locks `root` and keeps sudo in the
+guest-owned `/etc/sudoers.d/knix`. No host supplies an account, a credential,
+a login manager or a getty autologin override.
+
+`platform/image/verify-login.sh` runs inside the guest before the graphics
+gate. It asserts every `sshd -T` line, checks that shadow holds no usable
+password, that `knix` is the only interactive account with an active logind
+state, that no root session exists and `seat0` is graphical, that
+`knix-session.service` is already enabled and active with sway owned by
+`knix`, and that `IdleAction=ignore` is in effect. It then uses the guest's own
+ssh client to make one real password login attempt and one real root login
+attempt; both must be refused. `LOGIN POLICY OK` and `LOGIN VERIFY OK` are hard
+gates, the receipt records `graphics.session.authentication`, and
+`verify-release.py` refuses any receipt that re-enables root or passwords.
+`GPU=none` keeps the serial console and key-based ssh as the full fallback.
+
+The current seatd kiosk session is started by a system unit rather than a
+display manager, so logind has no seat0 graphical login session. That is
+deferred, not silently claimed: the policy proves a single guest-owned account
+without a host-supplied login, not a multi-user display-manager session.
 
 ## Framebuffer pixel proof
 

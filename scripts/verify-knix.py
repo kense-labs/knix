@@ -750,7 +750,8 @@ def main() -> int:
                 or "not_a_build_input" not in rel):
             release_errors.append("manifest release policy drifted")
         checks = rel.get("checks", [])
-        if (len(checks) != 16
+        if (len(checks) != 17
+                or "login_policy_verified" not in checks
                 or "image_sha256_and_bytes_match_receipt" not in checks
                 or "receipt_checksum_matches" not in checks
                 or "baseline_matches_manifest" not in checks
@@ -846,7 +847,9 @@ def main() -> int:
                 or "diagnostics persistence drift" not in prg):
             persistence_errors.append("release gate lost the persistence check")
         pchecks = pm.get("release", {}).get("checks", [])
-        if len(pchecks) != 16 or "diagnostics_persistence_verified" not in pchecks:
+        if (len(pchecks) != 17
+                or "diagnostics_persistence_verified" not in pchecks
+                or "login_policy_verified" not in pchecks):
             persistence_errors.append("release policy lost the persistence check")
         pworkflow = (ROOT / ".github/workflows/knix-contract.yml").read_text(
             encoding="utf-8")
@@ -945,6 +948,85 @@ def main() -> int:
     require(not ops_errors,
             "guest diagnostics are bounded, counted across boots and locally alerted",
             "operations contract: %s" % ops_errors[:4])
+
+    # I28 -- the guest owns accounts, credentials, autologin and its idle
+    # policy. No host adapter, no root login, no password path.
+    login_errors = []
+    try:
+        lm = json.loads((ROOT / "platform/image/manifest.json").read_text(encoding="utf-8"))
+        ls = json.loads((ROOT / "platform/identity/session.json").read_text(encoding="utf-8"))
+        la = lm.get("graphics", {}).get("authentication", {})
+        sa = ls.get("authentication", {})
+        if (la.get("owner") != "guest" or sa.get("owner") != "guest"
+                or ls.get("autologin") is not True
+                or sa.get("autologin") is not True
+                or la.get("root_login") is not False or sa.get("root_login") is not False
+                or la.get("password_authentication") is not False
+                or sa.get("password_authentication") is not False
+                or la.get("public_key_authentication") is not True
+                or la.get("autologin") is not True
+                or la.get("idle_action") != "ignore"
+                or sa.get("idle_action") != "ignore"
+                or la.get("idle_action_sec") != "30min"):
+            login_errors.append("guest login policy contract drifted")
+        if "login_policy_verified" not in lm.get("release", {}).get("checks", []):
+            login_errors.append("release checks lost login_policy_verified")
+        lv = (ROOT / "platform/image/verify-login.sh").read_text(encoding="utf-8")
+        for token in ("LOGIN POLICY OK", "LOGIN VERIFY OK", "permitrootlogin no",
+                      "authenticationmethods publickey",
+                      "PreferredAuthentications=password"):
+            if token not in lv:
+                login_errors.append("verify-login.sh lost %s" % token)
+        pa = (ROOT / "platform/image/assemble-native.sh").read_text(encoding="utf-8")
+        for token in ("10-knix-auth.conf", "10-knix-login.conf",
+                      "AuthenticationMethods publickey"):
+            if token not in pa:
+                login_errors.append("assemble-native.sh lost %s" % token)
+        # A directive must live in the installed heredoc, not only in the
+        # assembly-time grep assertion that repeats the same literal.
+        sshd = pa.split("<<'SSHD'\n", 1)[-1].split("\nSSHD\n", 1)[0]
+        logind = pa.split("<<'LOGIND'\n", 1)[-1].split("\nLOGIND\n", 1)[0]
+        if ("<<'SSHD'\n" not in pa or "\nSSHD\n" not in pa
+                or "<<'LOGIND'\n" not in pa or "\nLOGIND\n" not in pa):
+            login_errors.append("assemble-native.sh lost its guest login heredocs")
+        sshd_lines = [line.strip() for line in sshd.splitlines()]
+        logind_lines = [line.strip() for line in logind.splitlines()]
+        for token in ("PermitRootLogin no", "PasswordAuthentication no",
+                      "KbdInteractiveAuthentication no", "PubkeyAuthentication yes",
+                      "PermitEmptyPasswords no", "AuthenticationMethods publickey"):
+            if token not in sshd_lines:
+                login_errors.append("assemble-native.sh SSHD heredoc lost %s" % token)
+        for token in ("IdleAction=ignore", "IdleActionSec=30min"):
+            if token not in logind_lines:
+                login_errors.append("assemble-native.sh LOGIND heredoc lost %s" % token)
+        pb = (ROOT / "platform/image/build.sh").read_text(encoding="utf-8")
+        if (pb.count('sys.exit("LOGIN DRIFT') < 2
+                or "LOGIN VERIFY OK" not in pb
+                or "guest-login.log" not in pb):
+            login_errors.append("build.sh lost the login verification gate")
+        for token in ('> "$DEV/guest-login.log" 2>&1 || LOGIN_RC=$?',
+                      'cat "$DEV/guest-login.log"',
+                      "grep -q 'LOGIN POLICY OK' \"$DEV/guest-login.log\"",
+                      "grep -q 'LOGIN VERIFY OK' \"$DEV/guest-login.log\"",
+                      'login_log = (dev / "guest-login.log").read_text()'):
+            if token not in pb:
+                login_errors.append("build.sh login wiring lost %s" % token)
+        pr = (ROOT / "scripts/verify-release.py").read_text(encoding="utf-8")
+        if "login policy drift" not in pr:
+            login_errors.append("release gate lost the login check")
+        prp = (ROOT / "scripts/verify-repro.py").read_text(encoding="utf-8")
+        if "graphics.authentication contract drifted" not in prp:
+            login_errors.append("repro gate lost the login check")
+        pw = (ROOT / ".github/workflows/knix-contract.yml").read_text(encoding="utf-8")
+        if 'la = gfx.get("authentication", {})' not in pw:
+            login_errors.append("CI contract lost the login check")
+        if "| I28 |" not in readme:
+            login_errors.append("README lost I28")
+    except (OSError, ValueError) as exc:
+        login_errors.append("unreadable login contract: %s" % exc)
+    require(not login_errors,
+            "the guest owns authentication, autologin and its idle policy",
+            "login contract: %s" % login_errors[:4])
 
     # the only collection mechanism still parses
     try:
