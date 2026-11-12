@@ -412,6 +412,35 @@ def main() -> int:
             "locked build baseline is present and the repro gate parses",
             "repro contract: %s" % repro_errors[:4])
 
+    # I17 -- every declared run backend owns a machine-readable launch-path
+    # contract; scripts/verify-backends.py makes the boundary executable.
+    backend_errors = []
+    backend_gate = ROOT / "scripts" / "verify-backends.py"
+    if backend_gate.is_file():
+        try:
+            ast.parse(backend_gate.read_text(encoding="utf-8"))
+        except SyntaxError as exc:
+            backend_errors.append("verify-backends.py does not parse: %s" % exc)
+    else:
+        backend_errors.append("missing scripts/verify-backends.py")
+    try:
+        backend_rules = json.loads(
+            (ROOT / "platform" / "contract.json").read_text(encoding="utf-8"))
+        truth = str(backend_rules.get("backend_truth", ""))
+        for name in backend_rules.get("backends", []):
+            rel = truth.replace("<name>", str(name))
+            if not rel or not (ROOT / rel).is_file():
+                backend_errors.append("backend machine truth missing: %s" % name)
+        if not backend_rules.get("backend_ownership_fields"):
+            backend_errors.append("contract lost backend ownership fields")
+    except (OSError, ValueError) as exc:
+        backend_errors.append("unreadable backend contract: %s" % exc)
+    if "| I17 |" not in readme:
+        backend_errors.append("README lost I17")
+    require(not backend_errors,
+            "every run backend has a boundary-safe machine contract",
+            "backend contract: %s" % backend_errors[:4])
+
     # the only collection mechanism still parses
     try:
         ast.parse((ROOT / "scripts" / "collect-knix.py").read_text(encoding="utf-8"))

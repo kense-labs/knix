@@ -135,6 +135,20 @@ the receipt contract and the absence of binary artifacts under `platform/`,
 full QEMU/HVF build in CI remains out of scope: the seed is not in the
 repository and HVF only exists on macOS.
 
+## Run backends
+
+`platform/contract.json` declares `native-apple` and `vm-virt`. Each owns a
+schema-1 `backend.json`; `scripts/verify-backends.py` proves they are launch
+paths: guest-owned capability, device, authentication, interface and input
+semantics, one `knix.img`, one publish surface, read-only kernel-fragment and
+boot-chain references, no host adapters and no build artifacts. Backend truths
+are deliberately absent from `manifest.json.inputs`, so switching launch paths
+never changes the 17 pinned inputs, `build_baseline` or the receipt.
+
+`vm-virt` is the verified path. `native-apple` stays `contract-only` with
+`verified: false` and no boot entry; bare-metal boot, the external ABI mapping,
+image assembly and the install flow remain deferred.
+
 ## Identity ownership
 
 `platform/identity/` owns the name, version, kernel baseline, package set,

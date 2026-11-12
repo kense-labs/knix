@@ -18,19 +18,21 @@
 
 ## Run backends
 
-| 后端 | 内核基线 | 设备语义 |
-| --- | --- | --- |
-| `native-apple` | `knix.config` · `CONFIG_ARCH_APPLE` | `m1n1` · `u-boot` · `devicetrees` |
-| `vm-virt` | `virt.config` | 标准 virtio · QEMU |
+| 后端 | 内核基线 | 设备语义 | 状态 |
+| --- | --- | --- | --- |
+| `native-apple` | `knix.config` · `CONFIG_ARCH_APPLE` | `m1n1` · `u-boot` · `devicetrees` | contract-only |
+| `vm-virt` | `virt.config` | 标准 virtio · QEMU | verified |
 
-后端是启动方式，不是能力来源。
+后端是启动方式，不是能力来源。`platform/contract.json` 的 `backend_truth` 指向每个后端同 schema 的机器真源。
 
 ## Backend rules
 
 - 一个 `knix.img`、一个 `origin/main`、一套品牌；后端不改变其中任何一个。
 - 后端切换不得改写 `repos.json` 的 `count`、`snapshot_sha`、`snapshot_files`、`snapshot_bytes` 与 `totals`。
 - `repos/` 是只读派生产物；`platform/` 不写入 `repos/`。
-- 新增后端须同时更新 `platform/contract.json` 的 `backends` 与本节的表格。
+- 新增后端须同时更新 `platform/contract.json` 的 `backends`、本节的表格与 `platform/backends/<name>/backend.json`。
+- 后端真源不是镜像构建输入，不得进入 `platform/image/manifest.json` 的 `inputs`；切换后端不改变 17 个输入哈希、锁定基线与 receipt。
+- `unverified_backends` 列出的后端保持 `verified: false`、`status: contract-only`、无 `boot_entry`，并声明 deferred 项；门禁拒绝其假称完成。
 
 ## Capability rules
 
@@ -55,3 +57,5 @@
 ## Gate
 
 I14 断言：契约文件与必需条款齐全、README 引用 `platform/CONTRACT.md`、后端目录存在、`repos/` 无宿主命名空间、可发布代码与配置中无禁止名、单一 origin 且与 `platform/contract.json` 一致。
+
+I17 断言：每个声明的后端都有 `backend.json`，`scripts/verify-backends.py` 可解析。该独立门禁校验 launch-path 语义、Guest 对能力/设备/认证/界面/输入的完整归属、单一 `knix.img` 与发布面、引导链的只读快照引用、内核基线哈希、无宿主依赖与私有框架名、后端目录无构建产物，以及未实测后端不得声明 `verified: true`。

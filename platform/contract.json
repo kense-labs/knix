@@ -8,6 +8,12 @@
   "publish_surface": ["knix.img", "origin/main"],
   "non_normative": ["platform/host-adapters/"],
   "publishable_dirs": ["platform/identity/", "platform/image/", "platform/backends/", "scripts/"],
+  "backend_truth": "platform/backends/<name>/backend.json",
+  "backend_schema": 1,
+  "backend_kind": "launch-path",
+  "backend_capability_source": "guest",
+  "backend_ownership_fields": ["capability_source", "device_semantics", "authentication", "interface", "input_semantics"],
+  "unverified_backends": ["native-apple"],
   "host_namespace": "org.knix.host",
   "deny_in_publishable_code": [
     "CoreWLAN",

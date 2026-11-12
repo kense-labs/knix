@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "name": "native-apple",
+  "kind": "launch-path",
+  "status": "contract-only",
+  "verified": false,
+  "artifact": "knix.img",
+  "publish_surface": ["knix.img", "origin/main"],
+  "kernel": {
+    "fragment": "repos/linux/arch/arm64/configs/knix.config",
+    "fragment_sha256": "008807dd66f3863fad4a14688a598796a2d5161ddee3e4e5f369e7cb29f11e19",
+    "arch": "arm64",
+    "baseline": "CONFIG_ARCH_APPLE, 16K pages, Apple SoC drivers"
+  },
+  "boot_chain": ["repos/m1n1", "repos/u-boot", "repos/devicetrees"],
+  "boot_entry": null,
+  "ownership": {
+    "capability_source": "guest",
+    "device_semantics": "guest",
+    "authentication": "guest",
+    "interface": "guest",
+    "input_semantics": "guest"
+  },
+  "host_adapters": "none",
+  "fallback": "vm-virt",
+  "deferred": [
+    "bare-metal boot on Apple Silicon hardware",
+    "external ABI mapping for renamed UAPI and device-tree compatibles",
+    "image assembly, install flow and reproducible build inputs for this backend"
+  ],
+  "boundary": "selects a launch path only; knix.img, identity, authentication, interface, input and device semantics stay in the guest"
+}

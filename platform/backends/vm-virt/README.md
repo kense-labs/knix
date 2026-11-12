@@ -1,5 +1,7 @@
 # Backend: vm-virt
 
+机器真源 `backend.json`（schema 1，`status: verified`）；规则所有者 `platform/contract.json`，执行者 `scripts/verify-backends.py`。后端真源不是镜像构建输入，不进入 `platform/image/manifest.json` 的 `inputs`。
+
 标准 virtio 虚拟化启动后端。内核基线 `repos/linux/arch/arm64/configs/virt.config`（`# CONFIG_ARCH_APPLE is not set`）；设备语义为 `virtio-blk` / `virtio-net` / `virtio-gpu` / `virtio-input` / `virtio-balloon`，由 QEMU 或兼容 VMM 提供。
 
 只使用标准 compatible，不依赖专有 UAPI，因此不受品牌化改名的 ABI 影响，是当前零冲突的可执行路径。图形加速走标准 Mesa virtio-gpu（virgl / Venus）；宿主侧实现不属于 knix。

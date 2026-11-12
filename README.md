@@ -43,12 +43,12 @@
 
 ## Run backends
 
-| 后端 | 内核基线 | 设备语义 |
-| --- | --- | --- |
-| `native-apple` | `knix.config` · `CONFIG_ARCH_APPLE` | `m1n1` · `u-boot` · `devicetrees` |
-| `vm-virt` | `virt.config` | 标准 virtio · QEMU |
+| 后端 | 内核基线 | 设备语义 | 机器真源 · 状态 |
+| --- | --- | --- | --- |
+| `native-apple` | `knix.config` · `CONFIG_ARCH_APPLE` | `m1n1` · `u-boot` · `devicetrees` | `native-apple/backend.json` · contract-only |
+| `vm-virt` | `virt.config` | 标准 virtio · QEMU | `vm-virt/backend.json` · verified |
 
-`platform/CONTRACT.md` 拥有产品边界；后端是启动方式，不是能力来源。`platform/host-adapters/` 为非规范资产，可选、默认关闭、不进入镜像。
+`platform/CONTRACT.md` 拥有产品边界；后端是启动方式，不是能力来源。`platform/host-adapters/` 为非规范资产，可选、默认关闭、不进入镜像。`platform/contract.json` 的 `backend_truth` 定义每个后端的机器真源；`scripts/verify-backends.py` 校验 launch-path 语义、Guest 归属、单一 `knix.img`、引导链的只读快照引用、内核基线哈希与未实测状态。
 
 | 规则 | 内容 |
 | --- | --- |
@@ -79,12 +79,14 @@
 | I14 | 运行后端不越产品边界；宿主适配器不进入镜像与发布清单 |
 | I15 | 身份、镜像清单与品牌哈希与全部构建输入一致 |
 | I16 | 内核与 rootfs 的构建基线锁定在仓内；`verify-repro.py` 可解析，仓内无二进制构建产物 |
+| I17 | 每个运行后端都有机器真源；`verify-backends.py` 校验后端只是启动路径，Guest 拥有全部能力 |
 
 ## Operations
 
 ```bash
 python3 scripts/verify-knix.py
 python3 scripts/verify-repro.py
+python3 scripts/verify-backends.py
 
 python3 scripts/collect-knix.py --list
 python3 scripts/collect-knix.py
@@ -138,7 +140,7 @@ python3 scripts/verify-knix.py && git add -A && git commit -m "chore: refresh sn
 - 内核 UAPI 与设备树 compatible 已重命名；`repos/linux` 已在 arm64 Linux guest 内编译出 7.2.15 内核，其余快照不保证与上游 ABI 对齐或可编译。
 - 第三方插画、横幅与启动图保留原始构图；`artwork/logos/` 已由官方 mark 派生。
 - `repos/mesa-nightly/mesa` 为未拉取的 submodule，用户态图形栈源码不在快照内。
-- `vm-virt` 已跑通 QEMU/HVF 启动、单镜像构建与 UEFI 自举冷启复验；`native-apple` 仍只有契约定义。
+- `vm-virt` 已跑通 QEMU/HVF 启动、单镜像构建与 UEFI 自举冷启复验；`native-apple` 有机器真源与门禁，裸机启动、外部 ABI 映射、镜像构建与安装流程仍是 deferred。
 - 内核在 Linux guest 内原生编译；macOS 宿主只提供标准 virtio，构建工具、源码副本与产物都在仓外构建盘中。
 - `knix.img` 是唯一发布产物：`build.sh --build` 在 guest 内把原生 rootfs、自编译 7.2.15 内核、773 个模块、身份与品牌装进新建空白 GPT 盘，seed 只作一次性包源与 helper 引导。receipt 记录镜像 sha256 与内核、rootfs、身份、品牌、`virt.config`、组装脚本与验证脚本的全部输入摘要。
 - `knix.img` 自引导：GPT 双分区（512 MiB FAT32 ESP `/dev/vda1` + ext4 root `/dev/vda2），ESP 上 `EFI/BOOT/BOOTAA64.EFI` 是 systemd-boot、`EFI/knix/` 放自编译内核与 guest 内生成的 initramfs，`loader/entries/knix.conf` 提供 `root=/dev/vda2 rw console=ttyAMA0`。`boot-native.sh` 用干净 EDK2 变量副本、不挂 `-kernel` 与 seed ISO，冷启复验通过。
@@ -149,7 +151,8 @@ python3 scripts/verify-knix.py && git add -A && git commit -m "chore: refresh sn
 - headless 验证会话以 root 启动 sway，没有 logind seat，`swaymsg -t get_inputs` 为空；virtio 输入节点由 guest 内核拥有，正式会话由 seatd / logind 接管。`GPU=none` 时串口与 SSH 仍是完整降级路径。
 - `manifest.json` 的 `build_baseline` 锁定 guest 侧内核与 rootfs 的全部摘要；`platform/image/package-versions.txt` 是 388 个已安装包的版本锁定清单，属于构建输入而非构建产物。`build.sh --build` 在组装前逐字段比对两份摘要与 lockfile 字节，任一漂移即中止并提示刷新基线；receipt 记录 `baseline.sha256` 与 `baseline.verified`。
 - `scripts/verify-repro.py` 是仓内可复现性门禁：校验全部 17 个输入哈希、基线字段完整性、lockfile 排序与唯一性、构建阶段脚本可执行、UEFI / 图形契约、receipt 字段，以及 `platform/` / `scripts/` / `docs/` / `.github/` 内没有 `.img` / `.qcow2` / `.zst` 等二进制构建产物。
-- CI 校验仓内契约、输入哈希、锁定基线与脚本语法；seed qcow2、QEMU/HVF 启动、镜像组装、UEFI 冷启与 sway 实际渲染仍在本机执行，CI 不跑完整构建。
+- 两个后端的 `backend.json` 不是镜像构建输入：切换后端不改变 17 个输入哈希、锁定基线与 receipt。`native-apple` 的 `verified` 为 false 且无 `boot_entry`，门禁拒绝它假称完成；两个后端的能力、设备、认证、界面与输入语义都归 Guest。
+- CI 校验仓内契约、输入哈希、锁定基线、后端边界与脚本语法；seed qcow2、QEMU/HVF 启动、镜像组装、UEFI 冷启与 sway 实际渲染仍在本机执行，CI 不跑完整构建。
 - Deferred：能力协商清单、宿主适配器参考实现、统计与清单生成器入库、定期重采调度、增量 diff 报告、CI 内完整构建与基线自动刷新。
 
 ## Scale and status
@@ -180,15 +183,16 @@ knix/
 │   ├── make-knix-architecture.py
 │   ├── make-knix-logos.py
 │   ├── verify-knix.py
-│   └── verify-repro.py
+│   ├── verify-repro.py
+│   └── verify-backends.py
 ├── platform/
 │   ├── CONTRACT.md
 │   ├── contract.json
 │   ├── identity/                     # identity.json · os-release · packages.json · session.json
 │   ├── image/                        # build.sh · build-kernel.sh · build-rootfs.sh · assemble-native.sh · verify-graphics.sh · package-versions.txt（锁定基线）· inject-identity.sh · sign.sh · RELEASE.md
 │   ├── backends/
-│   │   ├── native-apple/
-│   │   └── vm-virt/                  # boot-dev.sh · boot-native.sh
+│   │   ├── native-apple/             # backend.json（contract-only）· README.md
+│   │   └── vm-virt/                  # backend.json（verified）· boot-dev.sh · boot-native.sh
 │   └── host-adapters/                # non-normative
 ├── docs/
 │   ├── knix-architecture.svg

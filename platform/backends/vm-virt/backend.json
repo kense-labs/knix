@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "name": "vm-virt",
+  "kind": "launch-path",
+  "status": "verified",
+  "verified": true,
+  "artifact": "knix.img",
+  "publish_surface": ["knix.img", "origin/main"],
+  "kernel": {
+    "fragment": "repos/linux/arch/arm64/configs/virt.config",
+    "fragment_sha256": "7cd8a9d570fd42fb3fce2724f7293f2f8e4bf24193acf315b5fbd676d1963319",
+    "arch": "arm64",
+    "baseline": "standard virtio; boot drivers built in, graphics as modules"
+  },
+  "boot_chain": [],
+  "boot_entry": "platform/backends/vm-virt/boot-native.sh",
+  "ownership": {
+    "capability_source": "guest",
+    "device_semantics": "guest",
+    "authentication": "guest",
+    "interface": "guest",
+    "input_semantics": "guest"
+  },
+  "host_adapters": "none",
+  "fallback": null,
+  "verification": [
+    "platform/image/build.sh --build",
+    "platform/image/verify-graphics.sh",
+    "platform/image/manifest.json"
+  ],
+  "boundary": "selects a launch path only; knix.img, identity, authentication, interface, input and device semantics stay in the guest"
+}
