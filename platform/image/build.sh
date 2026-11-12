@@ -320,10 +320,11 @@ if [ "$GRAPHICS_RC" -ne 0 ] \
    || ! grep -q 'DIAGNOSTICS VERIFY OK' "$DEV/guest-graphics.log" \
    || ! grep -q 'PERSISTENCE VERIFY OK' "$DEV/guest-graphics.log" \
    || ! grep -q 'DIAGNOSTICS OPS VERIFY OK' "$DEV/guest-graphics.log" \
+   || ! grep -q 'TRENDS VERIFY OK' "$DEV/guest-graphics.log" \
    || ! grep -q 'ROTATION VERIFY OK' "$DEV/guest-graphics.log" \
    || ! grep -q 'SESSION VERIFY OK' "$DEV/guest-graphics.log" \
    || ! grep -q 'GRAPHICS VERIFY OK' "$DEV/guest-graphics.log"; then
-  echo "AUTOSTART/RESILIENCE/LIMIT/DIAGNOSTICS/PERSISTENCE/OPS/ROTATION/SESSION/GRAPHICS VERIFY FAILED (rc=$GRAPHICS_RC)" >&2
+  echo "AUTOSTART/RESILIENCE/LIMIT/DIAGNOSTICS/PERSISTENCE/OPS/TRENDS/ROTATION/SESSION/GRAPHICS VERIFY FAILED (rc=$GRAPHICS_RC)" >&2
   exit 1
 fi
 
@@ -462,6 +463,57 @@ done
 echo "OPS EVENTS: $AFTER_EVENTS"
 echo "OPS BOOTS: $AFTER_BOOTS"
 echo "DIAGNOSTICS OPS PERSISTENCE VERIFY OK: guest archive and stats advanced across reboot ($BEFORE_EVENTS -> $AFTER_EVENTS events, $AFTER_BOOTS boots), alert + err journal intact, session recovered as knix"
+
+# P17: the same guest script must also recompute a bounded per-boot trend
+# report from its own archive. Prove it advanced to a second boot before any
+# receipt is written. No host collector or external analytics is involved.
+TRENDS="$PDIR/session-failure.trends"
+test -s "$TRENDS" || { echo "guest trend report did not survive" >&2; exit 1; }
+grep -q '^owner=guest$' "$TRENDS" \
+  || { echo "surviving trend report is not guest-owned" >&2; exit 1; }
+grep -q '^source=session-failure.log family$' "$TRENDS" \
+  || { echo "surviving trend report lost its archive-family source" >&2; exit 1; }
+TREND_BOOTS="$(sed -n 's/^boots_seen=//p' "$TRENDS" | head -1)"
+TREND_KEPT="$(sed -n 's/^trend_boots_kept=//p' "$TRENDS" | head -1)"
+TREND_SUM="$(sed -n 's/^trend_events_sum=//p' "$TRENDS" | head -1)"
+TREND_TOTAL="$(sed -n 's/^total_events=//p' "$TRENDS" | head -1)"
+[ -n "$TREND_BOOTS" ] && [ "$TREND_BOOTS" -ge 2 ] \
+  || { echo "guest trend report did not reach two boots (${TREND_BOOTS:-none})" >&2; exit 1; }
+[ -n "$TREND_KEPT" ] && [ "$TREND_KEPT" -ge 2 ] \
+  || { echo "guest trend report kept too few boot rows (${TREND_KEPT:-none})" >&2; exit 1; }
+[ "$TREND_KEPT" -le 8 ] \
+  || { echo "guest trend report exceeded its 8-boot bound" >&2; exit 1; }
+TSIZE="$(wc -c < "$TRENDS")"
+[ "$TSIZE" -le 4096 ] \
+  || { echo "guest trend report exceeded its 4096-byte bound ($TSIZE bytes)" >&2; exit 1; }
+[ "$TREND_TOTAL" = "$AFTER_EVENTS" ] \
+  || { echo "guest trend total does not match guest statistics ($TREND_TOTAL != $AFTER_EVENTS)" >&2; exit 1; }
+grep -q "^last_boot=$CURRENT_BOOT\$" "$TRENDS" \
+  || { echo "guest trend report was not refreshed in this boot" >&2; exit 1; }
+grep -q "^boot=$STORED_BOOT " "$TRENDS" \
+  || { echo "the previous boot vanished from the guest trend report" >&2; exit 1; }
+grep -q "^boot=$CURRENT_BOOT " "$TRENDS" \
+  || { echo "the current boot is missing from the guest trend report" >&2; exit 1; }
+ROWS="$(grep '^boot=' "$TRENDS" || true)"
+RSUM=0
+while IFS= read -r row; do
+  # Field-boundary anchored: a greedy ".*events=" would hit limit_events=.
+  ev="$(printf '%s\n' "$row" | sed -n 's/.* events=\([0-9][0-9]*\) .*/\1/p')"
+  [ -n "$ev" ] || { echo "guest trend row has no event count" >&2; exit 1; }
+  RSUM=$((RSUM + ev))
+done <<< "$ROWS"
+[ "$RSUM" = "$TREND_SUM" ] \
+  || { echo "guest trend rows do not sum to trend_events_sum ($RSUM != $TREND_SUM)" >&2; exit 1; }
+[ "$RSUM" -gt 0 ] \
+  || { echo "guest trend rows carry no events (field parsing drifted)" >&2; exit 1; }
+# With every boot retained, the rows must account for the whole archive.
+if [ "$TREND_KEPT" = "$TREND_BOOTS" ]; then
+  [ "$TREND_SUM" = "$TREND_TOTAL" ] \
+    || { echo "guest trend rows do not account for all events ($TREND_SUM != $TREND_TOTAL)" >&2; exit 1; }
+fi
+echo "TRENDS EVENTS: $TREND_TOTAL"
+echo "TRENDS BOOTS: $TREND_BOOTS"
+echo "DIAGNOSTICS TRENDS PERSISTENCE VERIFY OK: guest trend report advanced across reboot ($TREND_TOTAL events / $TREND_BOOTS boots, $TREND_KEPT rows, rows sum to $TREND_SUM)"
 PERSIST
 cat "$DEV/guest-persistence.log"
 if [ "$PERSIST_RC" -ne 0 ] \
@@ -518,6 +570,20 @@ if (not ops_match or not boots_match
     sys.exit("OPS DRIFT: guest diagnostics operations did not advance across a reboot")
 ops_events = int(ops_match.group(1))
 ops_boots = int(boots_match.group(1))
+# P17: the receipt must describe a guest-owned per-boot trend report that
+# advanced across the reboot, not a promise or a host-computed summary.
+if ("TRENDS VERIFY OK" not in guest_log
+        or "DIAGNOSTICS TRENDS PERSISTENCE VERIFY OK" not in persist_log):
+    sys.exit("TRENDS DRIFT: the guest did not verify its diagnostics trends")
+trend_events_match = re.search(r"^TRENDS EVENTS: (\d+)$", persist_log, re.M)
+trend_boots_match = re.search(r"^TRENDS BOOTS: (\d+)$", persist_log, re.M)
+min_trend_boots = m["graphics"]["diagnostics"]["trends"]["min_boots_seen"]
+if (not trend_events_match or not trend_boots_match
+        or int(trend_events_match.group(1)) <= persist_events
+        or int(trend_boots_match.group(1)) < min_trend_boots):
+    sys.exit("TRENDS DRIFT: the guest trend report did not advance across a reboot")
+trend_events = int(trend_events_match.group(1))
+trend_boots = int(trend_boots_match.group(1))
 identity = json.loads((root / "platform/identity/identity.json").read_text())
 kernel = json.loads((dev / "kernel-build.json").read_text())
 rootfs = json.loads((dev / "rootfs-build.json").read_text())
@@ -643,6 +709,18 @@ receipt = {
                     "cross_boot_verified": True,
                     "total_events": ops_events,
                     "boots_seen": ops_boots,
+                    "verified": True,
+                },
+                "trends": {
+                    "owner": m["graphics"]["diagnostics"]["trends"]["owner"],
+                    "manager": m["graphics"]["diagnostics"]["trends"]["manager"],
+                    "report": m["graphics"]["diagnostics"]["trends"]["report"],
+                    "source": m["graphics"]["diagnostics"]["trends"]["source"],
+                    "boot_limit": m["graphics"]["diagnostics"]["trends"]["boot_limit"],
+                    "byte_limit": m["graphics"]["diagnostics"]["trends"]["byte_limit"],
+                    "per_boot_fields": m["graphics"]["diagnostics"]["trends"]["per_boot_fields"],
+                    "boots_seen": trend_boots,
+                    "total_events": trend_events,
                     "verified": True,
                 },
             },

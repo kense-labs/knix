@@ -359,6 +359,95 @@ ROT="$(cat "$PDIR/session-failure.rotations" 2>/dev/null || echo 0)"
   echo "generations=$GENS"
 } > "$PDIR/session-failure.stats" || true
 
+# Cross-boot trends: the SAME guest-written archive family also yields a
+# bounded per-boot profile. This is a local report on the guest root disk;
+# there is no host collector, network channel or external analytics service.
+TREND="$PDIR/session-failure.trends"
+TREND_BOOTS=8
+TREND_LIMIT=4096
+TREND_ROWS="$PDIR/.trends.rows"
+TREND_KEEP="$PDIR/.trends.keep"
+printf '%b' "$BOOT_SET" | grep '^boot=' | awk -v max="$TREND_BOOTS" '
+{
+  boot=""; ts=""; state=""; limit=""; restarts=""
+  for (i = 1; i <= NF; i++) {
+    split($i, kv, "=")
+    if (kv[1] == "boot") boot = kv[2]
+    else if (kv[1] == "timestamp") ts = kv[2]
+    else if (kv[1] == "active_state") state = kv[2]
+    else if (kv[1] == "start_limit_lines") limit = kv[2]
+    else if (kv[1] == "restarts") restarts = kv[2]
+  }
+  if (boot == "") next
+  n[boot]++
+  if (state == "failed") failed[boot]++
+  if ((limit + 0) > 0) limited[boot]++
+  if ((restarts + 0) > peak[boot]) peak[boot] = restarts + 0
+  if (first[boot] == "" || ts < first[boot]) first[boot] = ts
+  if (last[boot] == "" || ts > last[boot]) last[boot] = ts
+  if (!(boot in seen)) { seen[boot] = 1; order[++k] = boot }
+}
+END {
+  for (j = k; j >= 1 && j > k - max; j--) {
+    b = order[j]
+    printf "boot=%s events=%d failed_states=%d limit_events=%d restarts_peak=%d first_seen=%s last_seen=%s\n", \
+      b, n[b], failed[b], limited[b], peak[b], first[b], last[b]
+  }
+}' > "$TREND_ROWS" || true
+
+write_trends() {
+  rows="$1"
+  tsum=0; tmax=0; tlim=0; tkept=0
+  while IFS= read -r row; do
+    case "$row" in boot=*) ;; *) continue ;; esac
+    # Anchor on the field boundary: a greedy ".*events=" would match the
+    # later "limit_events=" field and silently zero every row's event count.
+    ev="$(printf '%s\n' "$row" | sed -n 's/.* events=\([0-9][0-9]*\) .*/\1/p')"
+    le="$(printf '%s\n' "$row" | sed -n 's/.* limit_events=\([0-9][0-9]*\) .*/\1/p')"
+    tsum=$((tsum + ${ev:-0}))
+    [ "${ev:-0}" -gt "$tmax" ] && tmax=${ev:-0}
+    [ "${le:-0}" -gt 0 ] && tlim=$((tlim + 1))
+    tkept=$((tkept + 1))
+  done < "$rows"
+  {
+    echo "owner=guest"
+    echo "manager=systemd"
+    echo "source=session-failure.log family"
+    echo "boots_seen=${BOOTS:-0}"
+    echo "total_events=$TOTAL"
+    echo "trend_boots_kept=$tkept"
+    echo "trend_events_sum=$tsum"
+    echo "limit_boots=$tlim"
+    echo "max_events_per_boot=$tmax"
+    echo "trend_boot_limit=$TREND_BOOTS"
+    echo "trend_byte_limit=$TREND_LIMIT"
+    echo "last_boot=$BOOT_ID"
+    echo "--- per-boot (newest first, guest-owned) ---"
+    cat "$rows"
+  } > "$TREND"
+}
+ROWS_N="$(grep -c '^boot=' "$TREND_ROWS" 2>/dev/null || true)"
+KEEP=${ROWS_N:-0}
+[ "$KEEP" -gt "$TREND_BOOTS" ] && KEEP=$TREND_BOOTS
+if [ "$KEEP" -lt 1 ]; then
+  : > "$TREND_KEEP"
+else
+  head -n "$KEEP" "$TREND_ROWS" > "$TREND_KEEP" || true
+fi
+write_trends "$TREND_KEEP"
+TSIZE="$(wc -c < "$TREND" 2>/dev/null || echo 0)"
+TSIZE="${TSIZE//[^0-9]/}"
+[ -n "$TSIZE" ] || TSIZE=0
+while [ "$TSIZE" -gt "$TREND_LIMIT" ] && [ "$KEEP" -gt 1 ]; do
+  KEEP=$((KEEP - 1))
+  head -n "$KEEP" "$TREND_ROWS" > "$TREND_KEEP" || true
+  write_trends "$TREND_KEEP"
+  TSIZE="$(wc -c < "$TREND" 2>/dev/null || echo 0)"
+  TSIZE="${TSIZE//[^0-9]/}"
+  [ -n "$TSIZE" ] || TSIZE=0
+done
+rm -f "$TREND_ROWS" "$TREND_KEEP" || true
+
 # Local alert: the guest raises an err-priority journal message, keeps a
 # persistent notice on its root disk and exposes it to interactive logins.
 # There is no network, no host channel and no external service involved.
@@ -517,6 +606,16 @@ for token in 'LIMIT=8192' 'GENS=3' 'TAG=knix-diagnostics' \
              'session-failure.alert' 'systemd-cat -p err'; do
   grep -q -- "$token" "$DIAG_SCRIPT" \
     || { echo "diagnostics script lost operations token: $token" >&2; exit 1; }
+done
+# session.json declares diagnostics.trends: the same guest script recomputes
+# a bounded per-boot profile from its own archive family, with no host input.
+for token in 'session-failure.trends' 'TREND_BOOTS=8' 'TREND_LIMIT=4096' \
+             'write_trends()' 'trend_boots_kept=' 'trend_events_sum=' \
+             'limit_boots=' 'max_events_per_boot=' 'restarts_peak=' \
+             'first_seen=' 'last_seen=' 'boots_seen=${BOOTS:-0}' \
+             '--- per-boot (newest first, guest-owned) ---'; do
+  grep -q -- "$token" "$DIAG_SCRIPT" \
+    || { echo "diagnostics script lost trends token: $token" >&2; exit 1; }
 done
 NOTICE="$MOUNT/etc/profile.d/10-knix-session-alert.sh"
 test -f "$NOTICE" \

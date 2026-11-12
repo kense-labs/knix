@@ -51,18 +51,20 @@ python3 scripts/verify-release.py \
 python3 scripts/verify-release.py --json
 ```
 
-It refuses the release unless all 17 checks in `manifest.json.release.checks`
+It refuses the release unless all 18 checks in `manifest.json.release.checks`
 pass: image bytes and sha256 equal the receipt; the `.sha256` openssl digest
 covers the exact receipt file; every pinned input group and `seed_sha512`
 equals `manifest.json.inputs`; `baseline.sha256` is the sha256 of the canonical
 `build_baseline` object; the kernel and rootfs summaries carry every locked
 field; the boot chain is UEFI self-boot with no seed ISO; `graphics` and its
 `session`, `autostart`, `resilience`, `crash_loop`, `diagnostics`,
-`diagnostics.persistence`, `diagnostics.operations`, `authentication` and
-`framebuffer` sections are all verified (at least 2 guest-reported diagnostics
-events, a reboot-surviving guest-owned archive, a bounded rotation drill plus
-a cross-boot statistics proof over 2 boots, guest-owned accounts with root and
-password logins refused, and 9/9 framebuffer samples plus swaybar pixels); and
+`diagnostics.persistence`, `diagnostics.operations`, `diagnostics.trends`,
+`authentication` and `framebuffer` sections are all verified (at least 2
+guest-reported diagnostics events, a reboot-surviving guest-owned archive, a
+bounded rotation drill plus a cross-boot statistics proof over 2 boots, a
+guest-recomputed per-boot trend report that also spans 2 boots and stays within
+8 boots / 4096 bytes, guest-owned accounts with root and password logins
+refused, and 9/9 framebuffer samples plus swaybar pixels); and
 the publish surface is exactly `knix.img` plus
 `origin/main`.
 
@@ -76,10 +78,11 @@ mismatch means the image was assembled from drifted inputs or skipped a
 verification stage.
 
 `--self-test` builds a policy-consistent synthetic receipt in a temporary
-directory and refuses 46 tampered variants (image swap, edited receipt, stale or
+directory and refuses 52 tampered variants (image swap, edited receipt, stale or
 missing checksum, input and baseline drift, missing evidence, a host-owned or
-non-reboot-proof crash archive, a receipt that re-enables root or password
-logins, extra publish surface) without QEMU or a build
+non-reboot-proof crash archive, a host-owned / unverified / one-boot trend
+report with a moved path or loosened bounds, a receipt that re-enables root or
+password logins, extra publish surface) without QEMU or a build
 artifact; CI runs it as the `Release verification gate` step. `scripts/verify-repro.py`, I25 and the CI
 single-image contract block keep the policy itself from drifting.
 

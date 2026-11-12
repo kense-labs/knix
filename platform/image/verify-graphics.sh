@@ -394,6 +394,76 @@ journalctl -t knix-diagnostics -p err --no-pager -n 40 2>/dev/null \
   || fail "guest systemd raised no err-priority diagnostic alert"
 echo "DIAGNOSTICS OPS VERIFY OK: guest stats ($OPS_EVENTS events, $OPS_BOOTS boots), persistent alert, login notice and err-priority journal message"
 
+echo "=== guest-owned cross-boot trend report ==="
+TRENDS="$OPS_PDIR/session-failure.trends"
+[ -s "$TRENDS" ] || fail "guest wrote no cross-boot trend report"
+for kv in 'owner=guest' 'manager=systemd' 'source=session-failure.log family' \
+          'trend_boot_limit=8' 'trend_byte_limit=4096'; do
+  grep -q "^$kv\$" "$TRENDS" \
+    || fail "guest trend report missing: $kv"
+done
+T_BOOTS="$(sed -n 's/^boots_seen=//p' "$TRENDS" | head -1)"
+T_TOTAL="$(sed -n 's/^total_events=//p' "$TRENDS" | head -1)"
+T_KEPT="$(sed -n 's/^trend_boots_kept=//p' "$TRENDS" | head -1)"
+T_SUM="$(sed -n 's/^trend_events_sum=//p' "$TRENDS" | head -1)"
+T_LIM="$(sed -n 's/^limit_boots=//p' "$TRENDS" | head -1)"
+T_MAX="$(sed -n 's/^max_events_per_boot=//p' "$TRENDS" | head -1)"
+for v in "$T_BOOTS" "$T_TOTAL" "$T_KEPT" "$T_SUM" "$T_LIM" "$T_MAX"; do
+  [ -n "$v" ] || fail "guest trend report lost a summary field"
+done
+[ "$T_BOOTS" = "$OPS_BOOTS" ] \
+  || fail "trend boots_seen does not match guest statistics ($T_BOOTS != $OPS_BOOTS)"
+[ "$T_TOTAL" = "$OPS_EVENTS" ] \
+  || fail "trend total_events does not match guest statistics ($T_TOTAL != $OPS_EVENTS)"
+[ "$T_KEPT" -ge 1 ] || fail "guest trend report kept no boot rows"
+[ "$T_KEPT" -le 8 ] || fail "guest trend report exceeded its 8-boot bound"
+TSIZE="$(wc -c < "$TRENDS")"
+[ "$TSIZE" -le 4096 ] \
+  || fail "guest trend report exceeded its 4096-byte bound ($TSIZE bytes)"
+grep -q "^last_boot=$(cat /proc/sys/kernel/random/boot_id)\$" "$TRENDS" \
+  || fail "guest trend report was not written by this boot"
+ROWS="$(grep '^boot=' "$TRENDS" || true)"
+[ -n "$ROWS" ] || fail "guest trend report has no per-boot rows"
+RSUM=0; RMAX=0; RLIM=0; RN=0
+while IFS= read -r row; do
+  for field in events failed_states limit_events restarts_peak first_seen last_seen; do
+    printf '%s\n' "$row" | grep -q "$field=" \
+      || fail "guest trend row lost field: $field"
+  done
+  # Field-boundary anchored: "limit_events=" must never be mistaken for
+  # "events=" by a greedy match.
+  ev="$(printf '%s\n' "$row" | sed -n 's/.* events=\([0-9][0-9]*\) .*/\1/p')"
+  le="$(printf '%s\n' "$row" | sed -n 's/.* limit_events=\([0-9][0-9]*\) .*/\1/p')"
+  [ -n "$ev" ] || fail "guest trend row has no event count"
+  RSUM=$((RSUM + ev))
+  if [ "$ev" -gt "$RMAX" ]; then RMAX=$ev; fi
+  if [ "${le:-0}" -gt 0 ]; then RLIM=$((RLIM + 1)); fi
+  RN=$((RN + 1))
+done <<< "$ROWS"
+[ "$RN" = "$T_KEPT" ] \
+  || fail "guest trend row count != trend_boots_kept ($RN != $T_KEPT)"
+[ "$RSUM" = "$T_SUM" ] \
+  || fail "guest trend rows do not sum to trend_events_sum ($RSUM != $T_SUM)"
+[ "$RSUM" -gt 0 ] \
+  || fail "guest trend rows carry no events (field parsing drifted)"
+[ "$RMAX" -gt 0 ] \
+  || fail "guest trend max_events_per_boot is zero"
+# When every boot is retained, the per-boot rows must account for every event
+# in the guest archive. A greedy field match used to zero these sums silently.
+if [ "$T_KEPT" = "$T_BOOTS" ]; then
+  [ "$T_SUM" = "$T_TOTAL" ] \
+    || fail "guest trend rows do not account for all events ($T_SUM != $T_TOTAL)"
+fi
+[ "$RMAX" = "$T_MAX" ] \
+  || fail "guest trend max_events_per_boot is not derived from its rows"
+[ "$RLIM" = "$T_LIM" ] \
+  || fail "guest trend limit_boots is not derived from its rows"
+grep -q 'active_state=failed' "$DIAG_ARCHIVE" \
+  || fail "the trend report touched the production crash archive"
+echo "TRENDS VERIFY OK: guest trends ($T_TOTAL events / $T_BOOTS boots), $RN boot rows bounded by 8 boots / 4096 bytes, rows sum to $T_SUM"
+echo "TRENDS BOOTS: $T_BOOTS"
+echo "TRENDS EVENTS: $T_TOTAL"
+
 echo "=== guest-owned archive rotation drill (isolated /run) ==="
 # Rotating the shipped archive from a verification step would destroy the P14
 # proof, so the drill redirects the guest script into /run/knix. The script is
@@ -433,6 +503,10 @@ grep -q 'active_state=failed' "$DIAG_ARCHIVE" \
   || fail "the rotation drill touched the production crash archive"
 grep -q "^last_boot=$(cat /proc/sys/kernel/random/boot_id)\$" "$OPS_STATS" \
   || fail "the rotation drill rewrote the production statistics"
+grep -q "^last_boot=$(cat /proc/sys/kernel/random/boot_id)\$" "$TRENDS" \
+  || fail "the rotation drill rewrote the production trend report"
+grep -q "^total_events=$OPS_EVENTS\$" "$TRENDS" \
+  || fail "the rotation drill changed the production trend totals"
 echo "ROTATION VERIFY OK: $DROTS rotations, 3 generations, main archive $DSIZE bytes, $DRECOUNT events kept (isolated /run drill)"
 
 # Cleaning up the test is NOT the recovery proof: P9's SIGKILL segment above is.

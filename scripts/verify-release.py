@@ -55,6 +55,7 @@ CHECKS = (
     "session_diagnostics_verified",
     "diagnostics_persistence_verified",
     "diagnostics_operations_verified",
+    "diagnostics_trends_verified",
     "login_policy_verified",
     "framebuffer_pixels_verified",
     "single_publish_surface",
@@ -251,6 +252,26 @@ def check(image: pathlib.Path, receipt: pathlib.Path, checksum: pathlib.Path,
             or ops["total_events"] < minimum):
         errors.append("diagnostics operations drift: guest rotation, cross-boot stats or local alert was not proven")
 
+    # P17: the same guest-written archive must also yield a bounded per-boot
+    # trend report that advanced across the reboot. A release whose trend
+    # report was host-computed or never crossed a second boot is not verified.
+    mtrend = mg.get("diagnostics", {}).get("trends", {})
+    trend = diag.get("trends", {})
+    min_trend_boots = policy.get("min_trend_boots", mtrend.get("min_boots_seen", 2))
+    if (trend.get("owner") != "guest"
+            or trend.get("verified") is not True
+            or trend.get("manager") != mtrend.get("manager")
+            or trend.get("report") != mtrend.get("report")
+            or trend.get("source") != mtrend.get("source")
+            or trend.get("boot_limit") != mtrend.get("boot_limit")
+            or trend.get("byte_limit") != mtrend.get("byte_limit")
+            or trend.get("per_boot_fields") != mtrend.get("per_boot_fields")
+            or not isinstance(trend.get("boots_seen"), int)
+            or trend["boots_seen"] < min_trend_boots
+            or not isinstance(trend.get("total_events"), int)
+            or trend["total_events"] < minimum):
+        errors.append("diagnostics trends drift: guest per-boot trend report was not proven")
+
     # P16: the receipt must also prove the guest owns authentication. A release
     # whose sshd still accepts root or passwords is not the verified product.
     ma = mg.get("authentication", {})
@@ -307,6 +328,7 @@ def synthetic_receipt(m: dict, identity: dict, image_bytes: bytes) -> dict:
     mg = m["graphics"]
     mfb = mg["framebuffer"]
     ma = mg["authentication"]
+    mt = mg["diagnostics"]["trends"]
     samples = m["release"]["framebuffer_samples"]
     kernel = dict(baseline["kernel"])
     kernel.update({"schema": 1, "source": "repos/linux",
@@ -402,6 +424,18 @@ def synthetic_receipt(m: dict, identity: dict, image_bytes: bytes) -> dict:
                                     "cross_boot_verified": True,
                                     "total_events": m["release"]["min_diagnostics_events"] + 1,
                                     "boots_seen": m["release"]["min_boots_seen"],
+                                    "verified": True,
+                                },
+                                "trends": {
+                                    "owner": "guest",
+                                    "manager": mt["manager"],
+                                    "report": mt["report"],
+                                    "source": mt["source"],
+                                    "boot_limit": mt["boot_limit"],
+                                    "byte_limit": mt["byte_limit"],
+                                    "per_boot_fields": mt["per_boot_fields"],
+                                    "boots_seen": m["release"]["min_trend_boots"],
+                                    "total_events": m["release"]["min_diagnostics_events"] + 1,
                                     "verified": True,
                                 }},
             },
@@ -505,6 +539,24 @@ def self_test(m: dict, identity: dict) -> int:
     case("operations host-owned",
          nested("graphics", "session", "diagnostics", "operations", "owner")("host"),
          "diagnostics operations drift")
+    case("trends report missing",
+         lambda r, i, c: r["graphics"]["session"]["diagnostics"].pop(
+             "trends", None), "diagnostics trends drift")
+    case("trends host-owned",
+         nested("graphics", "session", "diagnostics", "trends", "owner")("host"),
+         "diagnostics trends drift")
+    case("trends unverified",
+         nested("graphics", "session", "diagnostics", "trends", "verified")(False),
+         "diagnostics trends drift")
+    case("trends only one boot",
+         nested("graphics", "session", "diagnostics", "trends", "boots_seen")(1),
+         "diagnostics trends drift")
+    case("trends events too few",
+         nested("graphics", "session", "diagnostics", "trends", "total_events")(1),
+         "diagnostics trends drift")
+    case("trends report path moved",
+         nested("graphics", "session", "diagnostics", "trends", "report")("/tmp/trends"),
+         "diagnostics trends drift")
     case("login policy missing",
          lambda r, i, c: r["graphics"]["session"].pop("authentication", None),
          "login policy drift")

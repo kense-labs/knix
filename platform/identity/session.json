@@ -91,7 +91,20 @@
       "verification": "verify-graphics.sh requires DIAGNOSTICS OPS VERIFY OK plus ROTATION VERIFY OK from a drill in an isolated /run directory; build.sh --build relaunches the same disk and requires DIAGNOSTICS OPS PERSISTENCE VERIFY OK after a guest-triggered failure in the second boot, before any receipt is written",
       "fallback": "GPU=none produces no failed state, so no alert is raised; the serial console and ssh remain the full fallback path"
     },
-    "fallback": "the guest-owned archive, statistics, alert and persistent journal keep the durable record; /run/knix is a runtime snapshot; GPU=none never produces a failure and keeps the serial console and ssh as the full fallback path"
+    "trends": {
+      "owner": "guest",
+      "manager": "systemd",
+      "report": "/var/lib/knix/session-failure.trends",
+      "source": "the same guest-owned session-failure.log archive family that produces the statistics",
+      "boot_limit": 8,
+      "byte_limit": 4096,
+      "per_boot_fields": ["events", "failed_states", "limit_events", "restarts_peak", "first_seen", "last_seen"],
+      "min_boots_seen": 2,
+      "rule": "the same guest OnFailure= script recomputes a bounded per-boot profile from its own archive family on every failure: events, terminal failed states, start-limit hits, restart peak and first/last timestamps per boot, plus cumulative boots_seen / total_events / limit_boots / max_events_per_boot; the report is derived only from guest-written archive lines, never from a host collector, a network service or an external analytics channel",
+      "verification": "verify-graphics.sh requires TRENDS VERIFY OK: the report is guest-owned, its boots_seen and total_events equal the guest statistics, its per-boot rows sum exactly to trend_events_sum, every row carries all six fields, the row count stays within boot_limit and the byte size stays within byte_limit, while the production archive and statistics stay byte-identical; build.sh --build relaunches the same disk and requires DIAGNOSTICS TRENDS PERSISTENCE VERIFY OK after the guest itself reports a failure in the second boot, before any receipt is written",
+      "fallback": "GPU=none produces no failed state, so no trend row is added; the serial console and ssh remain the full fallback path"
+    },
+    "fallback": "the guest-owned archive, statistics, trends, alert and persistent journal keep the durable record; /run/knix is a runtime snapshot; GPU=none never produces a failure and keeps the serial console and ssh as the full fallback path"
   },
   "input": { "backend": "libinput", "owner": "guest" },
   "output": { "backend": "drm", "device": "virtio-gpu", "owner": "guest" },

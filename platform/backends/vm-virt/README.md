@@ -51,8 +51,10 @@ KNIX_DEV_DIR=../knix-m0 platform/backends/vm-virt/boot-native.sh
 
 P14 的重启复验也走本后端：`build.sh --build` 在第一次 clean power-off 之后用 `KNIX_KEEP_VARS=1` 保留 EFI 变量、用**同一张** `knix.img` 再启动一次，验证 guest 自有的持久崩溃档案跨 boot 保留；串行日志与 QMP socket 使用独立文件，避免覆盖冷启证据。镜像 sha256 在第二次 power-off 之后才计算，因此 receipt 仍对应最终发布字节。切换后端不改变这条验收链，后端真源始终不在 `manifest.json.inputs` 里。
 
-P15 复用同一次重启：guest 自己的 `OnFailure=` 单元在新 boot 里再报一次失败，验收只通过 guest systemd 发一个 SIGKILL，随后硬校验跨 boot 统计推进到 2 个 boot、档案仍含两个 boot id、持久告警与 `err` 级 journal 消息仍在，并由 guest systemd 自己恢复零失败单元的 `knix` 会话。轮转演练完全发生在 guest 的 `/run/knix/rotation-drill`，本后端不提供任何诊断写入或转发能力；发布验收升级为 17 项证据检查。
+P15 复用同一次重启：guest 自己的 `OnFailure=` 单元在新 boot 里再报一次失败，验收只通过 guest systemd 发一个 SIGKILL，随后硬校验跨 boot 统计推进到 2 个 boot、档案仍含两个 boot id、持久告警与 `err` 级 journal 消息仍在，并由 guest systemd 自己恢复零失败单元的 `knix` 会话。轮转演练完全发生在 guest 的 `/run/knix/rotation-drill`，本后端不提供任何诊断写入或转发能力；发布验收升级为 18 项证据检查。
 
 P16 的登录与认证同样完全在 Guest：`boot-native.sh` 只提供标准 virtio 启动路径，不注入账号、凭据或登录器。guest 自有 sshd 策略拒绝 root 与所有密码路径、logind 显式 `IdleAction=ignore`，冷启时 `verify-login.sh` 由 guest 自己逐行断言 `sshd -T` 并真实拒绝一次密码与一次 root 登录，输出 `LOGIN POLICY OK` / `LOGIN VERIFY OK` 才写 receipt。本后端不参与任何认证决策，也不读取 guest 的登录状态。
+
+P17 仍复用这同一个第二次启动：guest 的 `OnFailure=` 单元在新 boot 再报一次失败时，也由自己从 `/var/lib/knix` 的档案族重算有界的每-boot 趋势报告；验收要求两个 boot 的行都在、行总和非零且等于档案总事件数、报告不超过 8 个 boot / 4096 字节，输出 `DIAGNOSTICS TRENDS PERSISTENCE VERIFY OK` 才写 receipt。本后端只提供标准 virtio 启动路径，不采集、不回放、不分析 guest 诊断数据，也不接触趋势报告；趋势的外部导出通道仍 deferred。
 
 Deferred：能力协商清单与 `knix check` 后端探测。

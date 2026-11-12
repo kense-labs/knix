@@ -750,7 +750,8 @@ def main() -> int:
                 or "not_a_build_input" not in rel):
             release_errors.append("manifest release policy drifted")
         checks = rel.get("checks", [])
-        if (len(checks) != 17
+        if (len(checks) != 18
+                or "diagnostics_trends_verified" not in checks
                 or "login_policy_verified" not in checks
                 or "image_sha256_and_bytes_match_receipt" not in checks
                 or "receipt_checksum_matches" not in checks
@@ -847,8 +848,9 @@ def main() -> int:
                 or "diagnostics persistence drift" not in prg):
             persistence_errors.append("release gate lost the persistence check")
         pchecks = pm.get("release", {}).get("checks", [])
-        if (len(pchecks) != 17
+        if (len(pchecks) != 18
                 or "diagnostics_persistence_verified" not in pchecks
+                or "diagnostics_trends_verified" not in pchecks
                 or "login_policy_verified" not in pchecks):
             persistence_errors.append("release policy lost the persistence check")
         pworkflow = (ROOT / ".github/workflows/knix-contract.yml").read_text(
@@ -1027,6 +1029,73 @@ def main() -> int:
     require(not login_errors,
             "the guest owns authentication, autologin and its idle policy",
             "login contract: %s" % login_errors[:4])
+
+    # I29 -- the guest owns a bounded cross-boot diagnostics trend report,
+    # recomputed by the same OnFailure= script from the same archive family.
+    # No host collector, network channel or external analytics service.
+    trend_errors = []
+    fields = ["events", "failed_states", "limit_events", "restarts_peak",
+              "first_seen", "last_seen"]
+    try:
+        tm = json.loads((ROOT / "platform/image/manifest.json").read_text(encoding="utf-8"))
+        ts = json.loads((ROOT / "platform/identity/session.json").read_text(encoding="utf-8"))
+        tma = tm.get("graphics", {}).get("diagnostics", {}).get("trends", {})
+        tsa = ts.get("diagnostics", {}).get("trends", {})
+        if (tma.get("owner") != "guest" or tsa.get("owner") != "guest"
+                or tma.get("manager") != "systemd"
+                or tma.get("report") != "/var/lib/knix/session-failure.trends"
+                or tsa.get("report") != tma.get("report")
+                or tma.get("boot_limit") != 8 or tsa.get("boot_limit") != 8
+                or tma.get("byte_limit") != 4096 or tsa.get("byte_limit") != 4096
+                or tma.get("per_boot_fields") != fields
+                or tsa.get("per_boot_fields") != fields
+                or tma.get("min_boots_seen") != 2
+                or tsa.get("min_boots_seen") != 2):
+            trend_errors.append("guest diagnostics trend contract drifted")
+        if "diagnostics_trends_verified" not in tm.get("release", {}).get("checks", []):
+            trend_errors.append("release checks lost diagnostics_trends_verified")
+        if tm.get("release", {}).get("min_trend_boots") != 2:
+            trend_errors.append("release policy lost min_trend_boots")
+        ta = (ROOT / "platform/image/assemble-native.sh").read_text(encoding="utf-8")
+        report = ta.split("<<'REPORT'\n", 1)[-1].split("\nREPORT\n", 1)[0]
+        if "<<'REPORT'\n" not in ta or "\nREPORT\n" not in ta:
+            trend_errors.append("assemble-native.sh lost its guest REPORT heredoc")
+        for token in ("session-failure.trends", "TREND_BOOTS=8",
+                      "TREND_LIMIT=4096", "write_trends()",
+                      "trend_events_sum=", "restarts_peak=", "s/.* events="):
+            if token not in report:
+                trend_errors.append("REPORT heredoc lost %s" % token)
+        tv = (ROOT / "platform/image/verify-graphics.sh").read_text(encoding="utf-8")
+        for token in ("TRENDS VERIFY OK", "TRENDS BOOTS:", "TRENDS EVENTS:",
+                      "trend_boots_kept=", "trend_events_sum=", "s/.* events=",
+                      "guest trend rows carry no events"):
+            if token not in tv:
+                trend_errors.append("verify-graphics.sh lost %s" % token)
+        tb = (ROOT / "platform/image/build.sh").read_text(encoding="utf-8")
+        if (tb.count('sys.exit("TRENDS DRIFT') < 2
+                or "TRENDS VERIFY OK" not in tb
+                or "DIAGNOSTICS TRENDS PERSISTENCE VERIFY OK" not in tb
+                or "s/.* events=" not in tb
+                or "guest trend rows carry no events" not in tb
+                or '"trends": {' not in tb):
+            trend_errors.append("build.sh lost the trends verification gate")
+        tr = (ROOT / "scripts/verify-release.py").read_text(encoding="utf-8")
+        if ('errors.append("diagnostics trends drift: guest per-boot trend report was not proven")'
+                not in tr):
+            trend_errors.append("release gate lost the trends check")
+        trp = (ROOT / "scripts/verify-repro.py").read_text(encoding="utf-8")
+        if "graphics.diagnostics.trends contract drifted" not in trp:
+            trend_errors.append("repro gate lost the trends check")
+        tw = (ROOT / ".github/workflows/knix-contract.yml").read_text(encoding="utf-8")
+        if 'dt = gfx.get("diagnostics", {}).get("trends", {})' not in tw:
+            trend_errors.append("CI contract lost the trends check")
+        if "| I29 |" not in readme:
+            trend_errors.append("README lost I29")
+    except (OSError, ValueError) as exc:
+        trend_errors.append("unreadable trends contract: %s" % exc)
+    require(not trend_errors,
+            "the guest owns a bounded cross-boot diagnostics trend report",
+            "trends contract: %s" % trend_errors[:4])
 
     # the only collection mechanism still parses
     try:

@@ -444,6 +444,55 @@ def main() -> int:
             or "login policy drift" not in rg_text):
         errors.append("release gate lost the login policy check")
 
+    # 5h. diagnostics trends: the same guest OnFailure= script recomputes a
+    # bounded per-boot profile from its own archive. No host collector, no
+    # network channel and no external analytics service may appear here.
+    mt = gfx.get("diagnostics", {}).get("trends", {})
+    expected_fields = ["events", "failed_states", "limit_events",
+                       "restarts_peak", "first_seen", "last_seen"]
+    if (mt.get("owner") != "guest" or mt.get("manager") != "systemd"
+            or mt.get("report") != "/var/lib/knix/session-failure.trends"
+            or "session-failure.log" not in mt.get("source", "")
+            or mt.get("boot_limit") != 8 or mt.get("byte_limit") != 4096
+            or mt.get("per_boot_fields") != expected_fields
+            or mt.get("min_boots_seen") != 2):
+        errors.append("graphics.diagnostics.trends contract drifted")
+    st = sd.get("trends", {})
+    if (st.get("owner") != "guest" or st.get("manager") != "systemd"
+            or st.get("report") != mt.get("report")
+            or st.get("boot_limit") != 8 or st.get("byte_limit") != 4096
+            or st.get("per_boot_fields") != expected_fields
+            or st.get("min_boots_seen") != 2):
+        errors.append("session.json diagnostics.trends contract drifted")
+    # Slice the real guest script heredoc: validation-loop literals elsewhere
+    # in the recipe must not be able to stand in for the installed logic.
+    report = asm.split("<<'REPORT'\n", 1)[-1].split("\nREPORT\n", 1)[0]
+    if "<<'REPORT'\n" not in asm or "\nREPORT\n" not in asm:
+        errors.append("assemble-native.sh lost its guest REPORT heredoc")
+    for token in ("session-failure.trends", "TREND_BOOTS=8", "TREND_LIMIT=4096",
+                  "write_trends()", "trend_events_sum=", "restarts_peak=",
+                  "s/.* events=", "--- per-boot (newest first, guest-owned) ---"):
+        if token not in report:
+            errors.append("assemble-native.sh REPORT heredoc lost trends token: %s" % token)
+    for token in ("TRENDS VERIFY OK", "TRENDS BOOTS:", "TRENDS EVENTS:",
+                  "trend_boots_kept=", "trend_events_sum=", "s/.* events=",
+                  "guest trend rows carry no events"):
+        if token not in vg_diag:
+            errors.append("verify-graphics.sh lost trends token: %s" % token)
+    for token in ("TRENDS VERIFY OK", "DIAGNOSTICS TRENDS PERSISTENCE VERIFY OK",
+                  '"trends": {', "TRENDS BOOTS:", "TRENDS EVENTS:", "s/.* events=",
+                  "guest trend rows carry no events"):
+        if token not in build_text:
+            errors.append("build.sh lost trends gate: %s" % token)
+    if build_text.count('sys.exit("TRENDS DRIFT') < 2:
+        errors.append("build.sh receipt block lost a TRENDS DRIFT refusal")
+    # Check the real refusal statement, not any occurrence of the drift label:
+    # the self-test's expected-error literals must not be able to stand in.
+    if ("diagnostics_trends_verified" not in rg_text
+            or 'errors.append("diagnostics trends drift: guest per-boot trend report was not proven")'
+            not in rg_text):
+        errors.append("release gate lost the trends acceptance check")
+
     # 6. the receipt records the same baseline the build verifies
     build = (ROOT / "platform/image/build.sh").read_text(encoding="utf-8")
     for token in ("build_baseline", "BASELINE DRIFT", "package-versions.txt",
@@ -485,12 +534,16 @@ def main() -> int:
     if (rel.get("tool") != "scripts/verify-release.py"
             or rel.get("read_only") is not True
             or rel.get("schema") != 3
-            or len(rel.get("checks", [])) != 17
+            or len(rel.get("checks", [])) != 18
             or "diagnostics_persistence_verified" not in rel.get("checks", [])
             or "diagnostics_operations_verified" not in rel.get("checks", [])
+            or "diagnostics_trends_verified" not in rel.get("checks", [])
             or "login_policy_verified" not in rel.get("checks", [])
             or rel.get("min_diagnostics_events") != 2
             or rel.get("min_boots_seen") != 2
+            or rel.get("min_trend_boots") != 2
+            or rel.get("trend_boot_limit") != 8
+            or rel.get("trend_byte_limit") != 4096
             or rel.get("framebuffer_samples") != 9
             or rel.get("publish_surface") != ["knix.img", "origin/main"]):
         errors.append("manifest.release acceptance policy drifted")

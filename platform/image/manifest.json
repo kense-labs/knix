@@ -24,7 +24,7 @@
       "platform/identity/knix-release": "6f0d9eb37a09f1bbf9bb51241c9aa713b3f18566761b24dcd922fb1341c06535",
       "platform/identity/identity.json": "c216c0805f0dc4dd0976de4161786d4c3e16184fa4e63d24a0bab8e81659369b",
       "platform/identity/packages.json": "bb7996b818eda8521ab69b499037f6e63a20497cc737ecbcc328c60add389a2d",
-      "platform/identity/session.json": "e7345ec3b46b2bd42a28d8e822f2527913587cb62037bae6cf21574bf42103b6",
+      "platform/identity/session.json": "d059c45678954ab272b3272f6b8a1cf9eefdd2c76353318eb28d4250c9cc1334",
       "platform/identity/brand.manifest.json": "a6a3dbea169c6217d763ad9cf0898ca76425168994e9112982e8090de6c4db6f"
     },
     "brand_sha256": {
@@ -37,11 +37,11 @@
       "repos/linux/arch/arm64/configs/virt.config": "7cd8a9d570fd42fb3fce2724f7293f2f8e4bf24193acf315b5fbd676d1963319",
       "platform/image/build-kernel.sh": "b24314037ad1843e4055b210ad83fb6ad55631b56784a1df4f85acadc086e5f0",
       "platform/image/build-rootfs.sh": "1559ba0d87811baa4038e3a5ecadfa26b75e08603242ca76ec787328c92d0b94",
-      "platform/image/assemble-native.sh": "b660d87cdab8aa562ddabeaacbad21a6d86c2298d9ae16002898df6ec02b5bdd",
-      "platform/image/build.sh": "995107a72c693601ef576252559b28f0e03256cc1391add06300f6f136952cc1"
+      "platform/image/assemble-native.sh": "63538d8200eee4d70ef9ef22c4927e17e3895aa03cf762f5b224d6384264e93b",
+      "platform/image/build.sh": "e39250b8021df5146742b131b2ac95bf9bc208c63ea89c481060fb0d1a97e06b"
     },
     "verification_sha256": {
-      "platform/image/verify-graphics.sh": "4a62245dc26311becc203e6007f00d752494f1e6dac69f6889558a0eac7d4282",
+      "platform/image/verify-graphics.sh": "8113413a8df2414e1c53ba1559622dc5b0dae4ee87a3717af666301672e58a5f",
       "platform/image/verify-framebuffer.py": "ba40bede3ed7ceac7dccffa14ee9f23472625c052d531ae9774b8effec4fe1d2",
       "platform/image/verify-login.sh": "4e41402298a7f257d5acb27851b5b5240921fd319a19c8ec505b212f79a6fa9f"
     },
@@ -62,8 +62,8 @@
       "graphics_modules": ["virtio-gpu", "virtio_input"]
     },
     "rootfs": {
-      "tarball_sha256": "067ffe6427c50e22f35bbb9a6d22dcad3de23dfaa9924f4ba55c0b2bd36f6fd6",
-      "tarball_bytes": 226778666,
+      "tarball_sha256": "2bdde845f737234b17de627ee839e5d12b937002adde306ccce54956cce7bc02",
+      "tarball_bytes": 226804470,
       "package_set_sha256": "bb7996b818eda8521ab69b499037f6e63a20497cc737ecbcc328c60add389a2d",
       "package_count": 39,
       "package_versions_sha256": "11417d90b6bfa1d8ad5e35e170fde4a4f5ec8c0a79c576bbabb617d37480e5bf",
@@ -106,6 +106,9 @@
     "verify-graphics.sh requires the guest report to describe the final failed state and the guest history to contain more than one reported crash before any receipt is written",
     "the guest OnFailure= script keeps cross-boot statistics, a bounded rotated archive and an err-priority journal alert with a login-visible notice; verify-graphics.sh requires DIAGNOSTICS OPS VERIFY OK and ROTATION VERIFY OK from an isolated /run drill",
     "build.sh relaunches the same disk and requires DIAGNOSTICS OPS PERSISTENCE VERIFY OK: a guest-triggered failure in the second boot must add a new boot id to the archive and advance the statistics before any receipt is written",
+    "the same guest OnFailure= script recomputes a bounded per-boot trend report from its own archive family: events, failed states, start-limit hits, restart peak and first/last timestamps per boot, plus cumulative boots_seen / total_events / limit_boots / max_events_per_boot",
+    "verify-graphics.sh requires TRENDS VERIFY OK: the trend report matches the guest statistics, its rows sum exactly, stays within 8 boots / 4096 bytes and never rewrites the production archive",
+    "build.sh requires DIAGNOSTICS TRENDS PERSISTENCE VERIFY OK: after the guest reports a failure in the second boot the trend report must carry both boots before any receipt is written",
     "GPU=none leaves the autostart condition unmet and keeps the serial console and ssh as the full fallback path, with zero failed units",
     "build.sh compares every kernel/rootfs summary field and both lockfiles against build_baseline before assembling",
     "scripts/verify-repro.py checks all pinned inputs, the lockfile and the absence of binary build artifacts"
@@ -228,7 +231,20 @@
         "verification": "verify-graphics.sh requires DIAGNOSTICS OPS VERIFY OK and ROTATION VERIFY OK from an isolated /run drill; build.sh --build relaunches the same disk, makes the guest report one failure in that second boot and requires DIAGNOSTICS OPS PERSISTENCE VERIFY OK before writing the receipt",
         "fallback": "GPU=none produces no failed state, so no alert is raised; the serial console and ssh remain the full fallback path"
       },
-      "fallback": "the guest-owned archive, statistics, alert and persistent journal keep the durable record; /run/knix is only a runtime snapshot; GPU=none produces no failure and keeps the serial console and ssh as the full fallback path"
+      "trends": {
+        "owner": "guest",
+        "manager": "systemd",
+        "report": "/var/lib/knix/session-failure.trends",
+        "source": "the same guest-owned session-failure.log archive family that produces the statistics",
+        "boot_limit": 8,
+        "byte_limit": 4096,
+        "per_boot_fields": ["events", "failed_states", "limit_events", "restarts_peak", "first_seen", "last_seen"],
+        "min_boots_seen": 2,
+        "rule": "the same guest OnFailure= script recomputes a bounded per-boot profile from its own archive on every failure; no host collector, network service or external analytics channel is involved",
+        "verification": "verify-graphics.sh requires TRENDS VERIFY OK: guest-owned report, boots_seen and total_events equal the guest statistics, per-boot rows sum to trend_events_sum, all six fields present, rows within boot_limit and bytes within byte_limit, with the production archive and statistics byte-identical; build.sh --build relaunches the same disk and requires DIAGNOSTICS TRENDS PERSISTENCE VERIFY OK after a guest-triggered failure in the second boot",
+        "fallback": "GPU=none produces no failed state, so no trend row is added; the serial console and ssh remain the full fallback path"
+      },
+      "fallback": "the guest-owned archive, statistics, trends, alert and persistent journal keep the durable record; /run/knix is only a runtime snapshot; GPU=none produces no failure and keeps the serial console and ssh as the full fallback path"
     }
   },
   "baseline_refresh": {
@@ -241,7 +257,7 @@
     "kernel_drift_never_refreshed": "rebuild with build-kernel.sh --apply instead",
     "ci_gate": "--self-test exercises the policy without guest artifacts"
   },
-  "receipt": "platform/image/build.sh writes $KNIX_DEV_DIR/BUILD-RECEIPT.json (schema 3) with the artifact sha256, the canonical build_baseline sha256, the graphics.session verification result including autostart, crash recovery, crash-loop limiting, the number of guest-reported failure diagnostics, the guest-owned persistence and cross-boot operations proof, the graphics.framebuffer pixel proof, and every build input digest",
+  "receipt": "platform/image/build.sh writes $KNIX_DEV_DIR/BUILD-RECEIPT.json (schema 3) with the artifact sha256, the canonical build_baseline sha256, the graphics.session verification result including autostart, crash recovery, crash-loop limiting, the number of guest-reported failure diagnostics, the guest-owned persistence and cross-boot operations proof, the graphics.framebuffer pixel proof, the guest-owned per-boot diagnostics trend report, and every build input digest",
   "release": {
     "tool": "scripts/verify-release.py",
     "schema": 3,
@@ -264,12 +280,16 @@
       "session_diagnostics_verified",
       "diagnostics_persistence_verified",
       "diagnostics_operations_verified",
+      "diagnostics_trends_verified",
       "login_policy_verified",
       "framebuffer_pixels_verified",
       "single_publish_surface"
     ],
     "min_diagnostics_events": 2,
     "min_boots_seen": 2,
+    "min_trend_boots": 2,
+    "trend_boot_limit": 8,
+    "trend_byte_limit": 4096,
     "framebuffer_samples": 9,
     "min_framebuffer_bar_pixels": 100,
     "publish_surface": ["knix.img", "origin/main"],

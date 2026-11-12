@@ -82,12 +82,16 @@ jobs:
           if (rel.get("tool") != "scripts/verify-release.py"
                   or rel.get("read_only") is not True
                   or rel.get("schema") != 3
-                  or len(rel.get("checks", [])) != 17
+                  or len(rel.get("checks", [])) != 18
                   or "diagnostics_persistence_verified" not in rel.get("checks", [])
                   or "diagnostics_operations_verified" not in rel.get("checks", [])
+                  or "diagnostics_trends_verified" not in rel.get("checks", [])
                   or "login_policy_verified" not in rel.get("checks", [])
                   or rel.get("min_diagnostics_events") != 2
                   or rel.get("min_boots_seen") != 2
+                  or rel.get("min_trend_boots") != 2
+                  or rel.get("trend_boot_limit") != 8
+                  or rel.get("trend_byte_limit") != 4096
                   or rel.get("framebuffer_samples") != 9
                   or rel.get("publish_surface") != ["knix.img", "origin/main"]):
               bad.append(("manifest.release", "acceptance policy drifted"))
@@ -102,7 +106,9 @@ jobs:
                             "diagnostics persistence drift",
                             "diagnostics_persistence_verified",
                             "diagnostics operations drift",
-                            "diagnostics_operations_verified"):
+                            "diagnostics_operations_verified",
+                            "diagnostics trends drift",
+                            "diagnostics_trends_verified"):
                   if token not in gate:
                       bad.append(("verify-release.py", token, "missing"))
           for group, entries in m["inputs"].items():
@@ -365,6 +371,49 @@ jobs:
               bad.append(("build.sh receipt block", "LOGIN DRIFT refusal", "missing"))
           if "login_policy_verified" not in m.get("release", {}).get("checks", []):
               bad.append(("release.checks", "login_policy_verified", "missing"))
+          # diagnostics trends: the same guest OnFailure= script recomputes a
+          # bounded per-boot profile from its own archive, with no host input.
+          dt = gfx.get("diagnostics", {}).get("trends", {})
+          expected_fields = ["events", "failed_states", "limit_events",
+                            "restarts_peak", "first_seen", "last_seen"]
+          if (dt.get("owner") != "guest" or dt.get("manager") != "systemd"
+                  or dt.get("report") != "/var/lib/knix/session-failure.trends"
+                  or dt.get("boot_limit") != 8 or dt.get("byte_limit") != 4096
+                  or dt.get("per_boot_fields") != expected_fields
+                  or dt.get("min_boots_seen") != 2):
+              bad.append(("graphics.diagnostics.trends", "guest trend contract", "missing"))
+          st = session_doc.get("diagnostics", {}).get("trends", {})
+          if (st.get("owner") != "guest" or st.get("boot_limit") != 8
+                  or st.get("byte_limit") != 4096
+                  or st.get("per_boot_fields") != expected_fields
+                  or st.get("min_boots_seen") != 2):
+              bad.append(("session.json diagnostics.trends", "guest trend contract", "missing"))
+          report = pasm.split("<<'REPORT'\n", 1)[-1].split("\nREPORT\n", 1)[0]
+          for token in ("session-failure.trends", "TREND_BOOTS=8",
+                        "TREND_LIMIT=4096", "write_trends()",
+                        "trend_events_sum=", "restarts_peak=", "s/.* events="):
+              if token not in report:
+                  bad.append(("assemble-native.sh REPORT", token, "missing"))
+          for token in ("TRENDS VERIFY OK", "TRENDS BOOTS:", "TRENDS EVENTS:",
+                        "trend_boots_kept=", "s/.* events=",
+                        "guest trend rows carry no events"):
+              if token not in pvg:
+                  bad.append(("verify-graphics.sh", token, "missing"))
+          for token in ("TRENDS VERIFY OK", "DIAGNOSTICS TRENDS PERSISTENCE VERIFY OK",
+                        '"trends": {', "s/.* events=",
+                        "guest trend rows carry no events"):
+              if token not in pbuild:
+                  bad.append(("build.sh", token, "missing"))
+          if pbuild.count('sys.exit("TRENDS DRIFT') < 2:
+              bad.append(("build.sh receipt block", "TRENDS DRIFT refusal", "missing"))
+          # The self-test also contains the drift label as an expected error;
+          # require the actual refusal statement rather than a bare substring.
+          if ("diagnostics_trends_verified" not in gate
+                  or 'errors.append("diagnostics trends drift: guest per-boot trend report was not proven")'
+                  not in gate):
+              bad.append(("verify-release.py", "trends check", "missing"))
+          if "diagnostics_trends_verified" not in m.get("release", {}).get("checks", []):
+              bad.append(("release.checks", "diagnostics_trends_verified", "missing"))
           verify_rel = gfx.get("verify", "")
           if not (root / verify_rel).is_file():
               bad.append(("graphics.verify", verify_rel, "missing"))
@@ -463,7 +512,7 @@ jobs:
                   print("CONTRACT DRIFT:", b, file=sys.stderr)
               sys.exit(1)
           print("CONTRACT OK: %d inputs, locked kernel/rootfs baseline, one artifact, "
-                "%d build stages, UEFI self-boot + graphics + framebuffer + crash loop + diagnostics + persistence + operations + login policy + release gate" %
+                "%d build stages, UEFI self-boot + graphics + framebuffer + crash loop + diagnostics + persistence + operations + trends + login policy + release gate" %
                 (checked, len(m.get("build_stages", []))))
           PY
 
